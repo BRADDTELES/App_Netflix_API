@@ -33,14 +33,13 @@ import com.danilloteles.appnetflixapi.R
 
 @Composable
 fun MenuSection() {
-
-    val imagemFundo = R.drawable.capa
-
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(200.dp)
     ) {
+
+        val imagemFundo = R.drawable.capa
 
         AsyncImage(
             model = imagemFundo,

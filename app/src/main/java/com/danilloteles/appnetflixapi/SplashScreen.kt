@@ -28,7 +28,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.danilloteles.appnetflixapi.ui.theme.Vermelho
+import com.danilloteles.appnetflixapi.ui.theme.VERMELHO
 import kotlinx.coroutines.delay
 
 @Composable
@@ -73,13 +73,13 @@ fun SplashScreen(
                 painter = painterResource(R.drawable.ic_netflix_splash),
                 contentDescription = "Netflix Logo",
                 modifier = Modifier.size(120.dp),
-                colorFilter = ColorFilter.tint(Vermelho)
+                colorFilter = ColorFilter.tint(VERMELHO)
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
             CircularProgressIndicator(
-                color = Vermelho,
+                color = VERMELHO,
                 modifier = Modifier.size(36.dp),
                 strokeWidth = 3.dp
             )
