@@ -1,4 +1,4 @@
-package com.danilloteles.appnetflixapi.view
+package com.danilloteles.appnetflixapi.view.componentes
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -17,9 +17,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.danilloteles.appnetflixapi.auxiliar.getPopularMovies
+import com.danilloteles.appnetflixapi.model.Movie
 
 @Composable
-fun PopularMoviesSection() {
+fun PopularMoviesSection(
+    onMovieClick: (Movie) -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -41,7 +44,7 @@ fun PopularMoviesSection() {
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             items(getPopularMovies()) { movie ->
-                MovieItem(movie = movie)
+                MovieItem(movie = movie, onMovieClick = onMovieClick)
             }
         }
 
@@ -51,5 +54,7 @@ fun PopularMoviesSection() {
 @Preview
 @Composable
 fun PopularMoviesSectionPreview() {
-    PopularMoviesSection()
+    PopularMoviesSection(
+        onMovieClick = {}
+    )
 }

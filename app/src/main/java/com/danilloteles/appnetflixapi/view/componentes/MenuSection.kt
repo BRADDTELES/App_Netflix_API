@@ -1,4 +1,4 @@
-package com.danilloteles.appnetflixapi.view
+package com.danilloteles.appnetflixapi.view.componentes
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

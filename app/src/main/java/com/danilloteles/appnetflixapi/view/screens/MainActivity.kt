@@ -1,22 +1,21 @@
-package com.danilloteles.appnetflixapi
+package com.danilloteles.appnetflixapi.view.screens
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import com.danilloteles.appnetflixapi.ui.theme.AppNetflixAPITheme
-import com.danilloteles.appnetflixapi.view.MenuSection
-import com.danilloteles.appnetflixapi.view.NetflixTopBar
-import com.danilloteles.appnetflixapi.view.PopularMoviesSection
+import com.danilloteles.appnetflixapi.view.navigation.NetflixApp
+import com.danilloteles.appnetflixapi.model.Movie
+import com.danilloteles.appnetflixapi.view.componentes.MenuSection
+import com.danilloteles.appnetflixapi.view.componentes.NetflixTopBar
+import com.danilloteles.appnetflixapi.view.componentes.PopularMoviesSection
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,7 +31,9 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun NetflixScreen() {
+fun NetflixScreen(
+    onMovieClick: (Movie) -> Unit
+) {
 
     Scaffold(
         topBar = {
@@ -46,7 +47,9 @@ fun NetflixScreen() {
 
             MenuSection()
 
-            PopularMoviesSection()
+            PopularMoviesSection(
+                onMovieClick = onMovieClick
+            )
 
         }
 
@@ -56,5 +59,7 @@ fun NetflixScreen() {
 @Preview
 @Composable
 fun NetflixScreenPreview() {
-    NetflixScreen()
+    NetflixScreen(
+        onMovieClick = {}
+    )
 }

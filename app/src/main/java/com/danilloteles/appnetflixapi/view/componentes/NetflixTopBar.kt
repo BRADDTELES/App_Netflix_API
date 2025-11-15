@@ -1,4 +1,4 @@
-package com.danilloteles.appnetflixapi.view
+package com.danilloteles.appnetflixapi.view.componentes
 
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme

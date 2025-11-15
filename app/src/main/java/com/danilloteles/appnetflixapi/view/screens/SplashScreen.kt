@@ -1,6 +1,5 @@
-package com.danilloteles.appnetflixapi
+package com.danilloteles.appnetflixapi.view.screens
 
-import android.widget.Space
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
@@ -28,6 +27,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.danilloteles.appnetflixapi.R
 import com.danilloteles.appnetflixapi.ui.theme.VERMELHO
 import kotlinx.coroutines.delay
 

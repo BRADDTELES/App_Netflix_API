@@ -1,5 +1,6 @@
-package com.danilloteles.appnetflixapi.view
+package com.danilloteles.appnetflixapi.view.componentes
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,21 +21,24 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.danilloteles.appnetflixapi.R
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import com.danilloteles.appnetflixapi.R
 import com.danilloteles.appnetflixapi.model.Movie
 
 @Composable
 fun MovieItem(
-    movie: Movie
+    movie: Movie,
+    onMovieClick: (Movie) -> Unit
 ) {
 
     val context = LocalContext.current
 
     Column(
-        modifier = Modifier.width(160.dp),
+        modifier = Modifier
+            .width(160.dp)
+            .clickable{ onMovieClick(movie) },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         AsyncImage(
@@ -74,6 +78,7 @@ fun MovieItemPreview() {
             id = 1,
             title = "Filme",
             imagemUrl = R.drawable.capa
-        )
+        ),
+        onMovieClick = {}
     )
 }
