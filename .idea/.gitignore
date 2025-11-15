@@ -3,3 +3,12 @@
 /workspace.xml
 # Editor-based HTTP Client requests
 /httpRequests/
+deploymentTargetSelector.xml
+compiler.xml
+deviceManager.xml
+gradle.xml
+migrations.xml
+misc.xml
+runConfigurations.xml
+vcs.xml
+workspace.xml
