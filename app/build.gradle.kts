@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -42,7 +43,16 @@ android {
 }
 
 dependencies {
-    // Splash Screen API (recomendada pela Google)
+
+    // Room
+    implementation(libs.androidx.room.runtime)
+    // Add the KSP plugin to your project
+    ksp(libs.androidx.room.compiler)
+    // Kotlin Extensions and Coroutines support for Room
+    implementation(libs.androidx.room.ktx)
+    // Navigation Compose
+    implementation(libs.androidx.navigation.compose)
+    // Splash Screen API
     implementation(libs.androidx.core.splashscreen)
     // Coil para imagens - VERSÃO 3.x (Compose Multiplatform)
     implementation(libs.coil.compose)
