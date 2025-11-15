@@ -42,6 +42,8 @@ android {
 }
 
 dependencies {
+    // Splash Screen API (recomendada pela Google)
+    implementation(libs.androidx.core.splashscreen)
     // Coil para imagens - VERSÃO 3.x (Compose Multiplatform)
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
