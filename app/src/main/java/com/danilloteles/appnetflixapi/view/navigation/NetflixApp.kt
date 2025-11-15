@@ -1,11 +1,14 @@
 package com.danilloteles.appnetflixapi.view.navigation
 
+import android.widget.Toast
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.danilloteles.appnetflixapi.auxiliar.getPopularMovies
 import com.danilloteles.appnetflixapi.constantes.AppDestinations
 import com.danilloteles.appnetflixapi.model.Movie
 import com.danilloteles.appnetflixapi.view.screens.MovieDetails
@@ -16,6 +19,7 @@ import com.danilloteles.appnetflixapi.view.screens.SplashScreen
 fun NetflixApp() {
 
     val navController = rememberNavController()
+    val context = LocalContext.current
 
     NavHost(
        navController = navController,
@@ -60,9 +64,15 @@ fun NetflixApp() {
 
             val movieId = backStackEntry.arguments?.getInt(AppDestinations.MOVIE_ID_ARG)
 
-            val movie = Movie(id = movieId ?: 0, title = "Filme ID: $movieId", imagemUrl = 0)
+            val movies = getPopularMovies()
+            val movie = movies.firstOrNull{ it.id == movieId }
 
-            MovieDetails(movie = movie)
+            if (  movie != null  ) {
+                MovieDetails(movie = movie)
+            } else {
+                Toast.makeText(context, "Filme não encontrado!", Toast.LENGTH_LONG).show()
+            }
+
         }
     }
 }

@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.danilloteles.appnetflixapi.auxiliar.getPopularMovies
 import com.danilloteles.appnetflixapi.model.Movie
+import com.danilloteles.appnetflixapi.view.itemlista.MovieItem
 
 @Composable
 fun PopularMoviesSection(
