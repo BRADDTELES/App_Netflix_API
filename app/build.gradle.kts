@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -12,6 +14,16 @@ android {
     }
 
     defaultConfig {
+        val properties = Properties()
+        val localPropertiesFile = project.rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            properties.load(localPropertiesFile.inputStream())
+        }
+        val apiKey = properties.getProperty("API_KEY") ?: ""
+        val apiReadAccessToken = properties.getProperty("API_READ_ACCESS_TOKEN") ?: ""
+        buildConfigField("String", "API_KEY", "\"$apiKey\"")
+        buildConfigField("String", "API_READ_ACCESS_TOKEN", "\"$apiReadAccessToken\"")
+
         applicationId = "com.danilloteles.appnetflixapi"
         minSdk = 24
         targetSdk = 36
@@ -43,7 +55,9 @@ android {
 }
 
 dependencies {
-
+    // Retrofit e Gson
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
     // Room
     implementation(libs.androidx.room.runtime)
     // Add the KSP plugin to your project

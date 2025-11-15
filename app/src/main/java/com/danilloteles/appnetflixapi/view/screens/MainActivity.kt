@@ -13,11 +13,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.danilloteles.appnetflixapi.view.navigation.NetflixApp
 import com.danilloteles.appnetflixapi.model.Movie
+import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
 import com.danilloteles.appnetflixapi.view.componentes.MenuSection
 import com.danilloteles.appnetflixapi.view.componentes.NetflixTopBar
 import com.danilloteles.appnetflixapi.view.componentes.PopularMoviesSection
 
 class MainActivity : ComponentActivity() {
+
+    private val filmeAPI by lazy {
+        RetrofitHelper.filmeAPI
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
 
