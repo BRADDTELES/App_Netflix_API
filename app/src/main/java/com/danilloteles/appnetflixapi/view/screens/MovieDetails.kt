@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -49,22 +52,19 @@ fun MovieDetails(
             modifier = Modifier
                 .fillMaxSize()
                 .background(BLACK)
+                .padding(paddingValues)
         ) {
             Box(
                 modifier = Modifier
-                    .padding(paddingValues)
                     .fillMaxWidth()
-                    .background(BLACK)
             ) {
 
-                val imagemCapa = R.drawable.capa
-
                 AsyncImage(
-                    model = imagemCapa,
+                    model = movie.imagemUrl,
                     contentDescription = "Imagem da capa do filme",
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(300.dp),
+                        .aspectRatio(1.5f / 2f),
                     contentScale = ContentScale.Crop
                 )
 
@@ -94,18 +94,17 @@ fun ConteudoFilme(
             .padding(16.dp)
     ) {
         Text(
-            text = "Título",
+            text = movie.title,
             color = WHITE,
             fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(16.dp)
+            fontWeight = FontWeight.Bold
         )
+        Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Descrição",
+            text = "Descrição muito longa, demostrando todo os detalhes que o breve resume é contado no filme.",
             color = WHITE,
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(16.dp),
             maxLines = 5
         )
     }
@@ -126,9 +125,9 @@ fun BotaoEditar() {
                 color = TRANSPARENT,
                 shape = RoundedCornerShape(12.dp)
             )
-            .size(72.dp)
+            .size(60.dp)
             .border(
-                width = 1.dp,
+                width = 2.dp,
                 color = WHITE,
                 shape = RoundedCornerShape(12.dp)
             )
@@ -148,7 +147,7 @@ private fun MovieDetailsPreview() {
         movie = Movie(
             id = 1,
             title = "Filme",
-            imagemUrl = R.drawable.capa
+            imagemUrl = R.drawable.movie_inception
         )
     )
 }
