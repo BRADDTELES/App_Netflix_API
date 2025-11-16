@@ -44,7 +44,8 @@ import com.danilloteles.appnetflixapi.view.componentes.NetflixTopBar
 
 @Composable
 fun MovieDetails(
-    movie: Movie
+    movie: Movie,
+    onEditClick: (Int) -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -79,7 +80,7 @@ fun MovieDetails(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.End
                 ) {
-                    BotaoEditar()
+                    BotaoEditar(onClick = { onEditClick(movie.id) })
                 }
             }
             ConteudoFilme(movie = movie)
@@ -115,11 +116,11 @@ fun ConteudoFilme(
 }
 
 @Composable
-fun BotaoEditar() {
+fun BotaoEditar(
+    onClick: () -> Unit
+) {
     IconButton(
-        onClick = {
-            /* TODO: Ação do botão de abrir a tela de edição ou editar */
-        },
+        onClick = onClick,
         modifier = Modifier
             .background(
                 color = TRANSPARENT
@@ -147,6 +148,7 @@ private fun MovieDetailsPreview() {
             id = 1,
             title = "Filme",
             imagemUrl = R.drawable.movie_inception
-        )
+        ),
+        onEditClick = {}
     )
 }
