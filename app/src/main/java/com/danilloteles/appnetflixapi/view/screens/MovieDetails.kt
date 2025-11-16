@@ -17,9 +17,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.EditNote
+import androidx.compose.material.icons.outlined.ModeEditOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,7 +44,8 @@ import com.danilloteles.appnetflixapi.view.componentes.NetflixTopBar
 
 @Composable
 fun MovieDetails(
-    movie: Movie
+    movie: Movie,
+    onEditClick: (Int) -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -75,7 +80,7 @@ fun MovieDetails(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.End
                 ) {
-                    BotaoEditar()
+                    BotaoEditar(onClick = { onEditClick(movie.id) })
                 }
             }
             ConteudoFilme(movie = movie)
@@ -111,19 +116,14 @@ fun ConteudoFilme(
 }
 
 @Composable
-fun BotaoEditar() {
-    Button(
-        onClick = {
-            /* Ação do botão de editar */
-        },
-        colors = ButtonDefaults.buttonColors(
-            containerColor = TRANSPARENT
-        ),
+fun BotaoEditar(
+    onClick: () -> Unit
+) {
+    IconButton(
+        onClick = onClick,
         modifier = Modifier
-            .padding(bottom = 8.dp)
             .background(
-                color = TRANSPARENT,
-                shape = RoundedCornerShape(12.dp)
+                color = TRANSPARENT
             )
             .size(60.dp)
             .border(
@@ -133,7 +133,7 @@ fun BotaoEditar() {
             )
     ) {
         Icon(
-            imageVector = Icons.Default.Edit,
+            imageVector = Icons.Outlined.Edit,
             contentDescription = "Botão de editar",
             tint = WHITE
         )
@@ -148,6 +148,7 @@ private fun MovieDetailsPreview() {
             id = 1,
             title = "Filme",
             imagemUrl = R.drawable.movie_inception
-        )
+        ),
+        onEditClick = {}
     )
 }

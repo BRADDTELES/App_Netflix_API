@@ -21,8 +21,8 @@ android {
         }
         val apiKey = properties.getProperty("API_KEY") ?: ""
         val apiReadAccessToken = properties.getProperty("API_READ_ACCESS_TOKEN") ?: ""
-        buildConfigField("String", "API_KEY", "\"$apiKey\"")
-        buildConfigField("String", "API_READ_ACCESS_TOKEN", "\"$apiReadAccessToken\"")
+        buildConfigField("String", "API_KEY", apiKey)
+        buildConfigField("String", "API_READ_ACCESS_TOKEN", apiReadAccessToken)
 
         applicationId = "com.danilloteles.appnetflixapi"
         minSdk = 24
@@ -51,6 +51,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
