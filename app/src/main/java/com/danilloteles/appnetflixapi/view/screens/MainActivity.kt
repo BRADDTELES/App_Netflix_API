@@ -14,6 +14,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.danilloteles.appnetflixapi.view.navigation.NetflixApp
 import com.danilloteles.appnetflixapi.model.Movie
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
+import com.danilloteles.appnetflixapi.view.componentes.FloatingActionButtonCustom
 import com.danilloteles.appnetflixapi.view.componentes.MenuSection
 import com.danilloteles.appnetflixapi.view.componentes.NetflixTopBar
 import com.danilloteles.appnetflixapi.view.componentes.PopularMoviesSection
@@ -38,12 +39,18 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun NetflixScreen(
-    onMovieClick: (Movie) -> Unit
+    onMovieClick: (Movie) -> Unit,
+    onAddClick: () -> Unit
 ) {
 
     Scaffold(
         topBar = {
             NetflixTopBar()
+        },
+        floatingActionButton = {
+            FloatingActionButtonCustom(
+                onAddClick = onAddClick
+            )
         }
     ) { paddingValues ->
 
@@ -66,6 +73,7 @@ fun NetflixScreen(
 @Composable
 fun NetflixScreenPreview() {
     NetflixScreen(
-        onMovieClick = {}
+        onMovieClick = {},
+        onAddClick = {}
     )
 }

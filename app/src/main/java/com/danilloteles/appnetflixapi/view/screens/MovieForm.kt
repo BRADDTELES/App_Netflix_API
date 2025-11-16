@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -48,10 +49,10 @@ import com.danilloteles.appnetflixapi.view.componentes.OutlinedTextFieldCustom
 
 @Composable
 fun MovieForm(
-    movie: Movie
+    movie: Movie?
 ) {
 
-    var título by remember { mutableStateOf(movie.title) }
+    var título by remember { mutableStateOf(movie?.title ?: "") }
 
     Scaffold(
         topBar = {
@@ -66,13 +67,16 @@ fun MovieForm(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
+            val aspectRatioValue = if (movie != null) (2.5f / 3f) else (4f / 3f)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(3f / 3f)
+                    .aspectRatio(aspectRatioValue)
             ) {
                 AsyncImage(
-                    model = movie.imagemUrl,
+                    model = movie?.imagemUrl,
+                    placeholder = painterResource(id = R.drawable.ic_placeholder),
+                    error = painterResource(id = R.drawable.capa),
                     contentDescription = "Imagem da capa do filme",
                     modifier = Modifier
                         .fillMaxSize(),
@@ -113,7 +117,7 @@ fun MovieForm(
             )
             Button(
                 onClick = {
-                    /* Ação do botão salvar ou editar o filme */
+                    /* TODO: Ação do botão salvar ou editar o filme */
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Red

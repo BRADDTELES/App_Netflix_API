@@ -45,7 +45,10 @@ fun PopularMoviesSection(
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             items(getPopularMovies()) { movie ->
-                MovieItem(movie = movie, onMovieClick = onMovieClick)
+                MovieItem(
+                    movie = movie,
+                    onMovieClick = onMovieClick
+                )
             }
         }
 

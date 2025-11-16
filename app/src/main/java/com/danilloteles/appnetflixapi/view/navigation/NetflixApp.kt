@@ -48,6 +48,11 @@ fun NetflixApp() {
                     navController.navigate(
                         route = "${AppDestinations.MOVIE_DETAILS_SCREEN}/${movie.id}"
                     )
+                },
+                onAddClick = {
+                    navController.navigate(
+                        route = "${AppDestinations.MOVIE_FORM_SCREEN}/0"
+                    )
                 }
             )
         }
@@ -89,19 +94,19 @@ fun NetflixApp() {
                     name = AppDestinations.MOVIE_ID_ARG
                 ) {
                     type = NavType.IntType
+                    defaultValue = 0
                 }
             )
         ) { backStackEntry ->
 
             val movieId = backStackEntry.arguments?.getInt(AppDestinations.MOVIE_ID_ARG)
 
-            val movies = getPopularMovies()
-            val movie = movies.firstOrNull{ it.id == movieId }
-
-            if (  movie != null  ) {
+            if (  movieId != 0  ) {
+                val movies = getPopularMovies()
+                val movie = movies.firstOrNull{ it.id == movieId }
                 MovieForm(movie = movie)
             } else {
-                Toast.makeText(context, "Filme não encontrado!", Toast.LENGTH_LONG).show()
+                MovieForm(movie = null)
             }
         }
 
