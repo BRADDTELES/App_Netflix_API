@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 package com.danilloteles.appnetflixapi.view.screens
 
 import androidx.compose.foundation.background
@@ -17,13 +19,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.SaveAs
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MediumFloatingActionButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -51,6 +59,7 @@ import com.danilloteles.appnetflixapi.ui.theme.TRANSPARENT
 import com.danilloteles.appnetflixapi.ui.theme.VERMELHO
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
 import com.danilloteles.appnetflixapi.utils.DetailsUiState
+import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
 import com.danilloteles.appnetflixapi.view.componentes.NetflixTopBar
 import com.danilloteles.appnetflixapi.view.componentes.OutlinedTextFieldCustom
 import com.danilloteles.appnetflixapi.viewmodel.MovieDetailsViewModel
@@ -75,7 +84,7 @@ fun MovieForm(
                     modifier = Modifier.fillMaxSize().background(BLACK),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = VERMELHO)
+                    LoadingIndicatorCustom(animationDelay = 400)
                 }
             }
             is DetailsUiState.Success -> {
@@ -93,6 +102,7 @@ fun MovieForm(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MovieFormContent(
     filme: Filme?
@@ -112,7 +122,7 @@ fun MovieFormContent(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-            val aspectRatioValue = if (filme != null) (2.5f / 3f) else (4f / 3f)
+            val aspectRatioValue = if (filme != null) (1.5f / 2f) else (4f / 3f)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -126,26 +136,21 @@ fun MovieFormContent(
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
-                IconButton(
-                    onClick = {
-                        /* TODO: Ação para abrir a Galeria do celular */
-                    },
+                SmallFloatingActionButton(
+                    onClick = { /* TODO: Ação para abrir a Galeria do celular */ },
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
+                    contentColor = WHITE,
+                    elevation = FloatingActionButtonDefaults.elevation(
+                        defaultElevation = 8.dp,
+                        pressedElevation = 4.dp
+                    ),
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(16.dp)
-                        .background(
-                            color = TRANSPARENT
-                        )
-                        .border(
-                            width = 2.dp,
-                            color = WHITE,
-                            shape = RoundedCornerShape(12.dp)
-                        )
+                        .padding(bottom = 16.dp, end = 24.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.PhotoLibrary,
-                        contentDescription = "Abrir a Galeria",
-                        tint = WHITE
+                        contentDescription = "Botão de editar"
                     )
                 }
             }

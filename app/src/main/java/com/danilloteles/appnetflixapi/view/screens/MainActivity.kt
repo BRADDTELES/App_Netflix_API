@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,6 +28,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.danilloteles.appnetflixapi.model.Filme
 import com.danilloteles.appnetflixapi.view.navigation.NetflixApp
+import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
 import com.danilloteles.appnetflixapi.utils.UiState
 import com.danilloteles.appnetflixapi.view.componentes.AnimatedExtendedFab
@@ -106,10 +108,10 @@ fun NetflixScreen(
             when (val state = uiState) {
                 is UiState.Loading -> {
                     Box(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.fillMaxSize().background(BLACK),
                         contentAlignment = Alignment.Center
                     ) {
-                        LoadingIndicatorCustom()
+                        LoadingIndicatorCustom(animationDelay = 400)
                     }
                 }
                 is UiState.Success -> {

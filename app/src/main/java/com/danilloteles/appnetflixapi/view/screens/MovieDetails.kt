@@ -1,32 +1,21 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 package com.danilloteles.appnetflixapi.view.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.EditNote
-import androidx.compose.material.icons.outlined.ModeEditOutline
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,17 +30,15 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
-import com.danilloteles.appnetflixapi.R
 import com.danilloteles.appnetflixapi.constantes.Constantes
 import com.danilloteles.appnetflixapi.model.Filme
-import com.danilloteles.appnetflixapi.model.Movie
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
-import com.danilloteles.appnetflixapi.ui.theme.TRANSPARENT
-import com.danilloteles.appnetflixapi.ui.theme.VERMELHO
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
 import com.danilloteles.appnetflixapi.utils.DetailsUiState
+import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
 import com.danilloteles.appnetflixapi.view.componentes.NetflixTopBar
 import com.danilloteles.appnetflixapi.viewmodel.MovieDetailsViewModel
+import com.danilloteles.appnetflixapi.view.componentes.SplitButtonAnimation
 
 @Composable
 fun MovieDetails(
@@ -66,12 +53,10 @@ fun MovieDetails(
     when (val state = uiState) {
         is DetailsUiState.Loading -> {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(BLACK),
+                modifier = Modifier.fillMaxSize().background(BLACK),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = VERMELHO)
+                LoadingIndicatorCustom(animationDelay = 400)
             }
         }
 
@@ -97,6 +82,7 @@ fun MovieDetails(
 
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ConteudoFilme(
     filme: Filme,
@@ -132,7 +118,7 @@ fun ConteudoFilme(
                         .padding(top = 16.dp, end = 16.dp),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    BotaoEditar(
+                    SplitButtonAnimation(
                         onClick = { onEditClick(filme.id) }
                     )
                 }
@@ -154,32 +140,6 @@ fun ConteudoFilme(
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
         }
-    }
-}
-
-@Composable
-fun BotaoEditar(
-    onClick: () -> Unit
-) {
-    IconButton(
-        onClick = onClick,
-        modifier = Modifier
-            .background(
-                color = TRANSPARENT
-            )
-            .size(60.dp)
-            .border(
-                width = 2.dp,
-                color = WHITE,
-                shape = RoundedCornerShape(12.dp)
-            )
-            .padding(16.dp)
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.Edit,
-            contentDescription = "Botão de editar",
-            tint = WHITE
-        )
     }
 }
 
