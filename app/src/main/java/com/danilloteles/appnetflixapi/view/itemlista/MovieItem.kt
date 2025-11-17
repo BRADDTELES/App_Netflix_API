@@ -25,12 +25,14 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.danilloteles.appnetflixapi.R
+import com.danilloteles.appnetflixapi.constantes.Constantes
+import com.danilloteles.appnetflixapi.model.Filme
 import com.danilloteles.appnetflixapi.model.Movie
 
 @Composable
 fun MovieItem(
-    movie: Movie,
-    onMovieClick: (Movie) -> Unit
+    filme: Filme,
+    onMovieClick: (Filme) -> Unit
 ) {
 
     val context = LocalContext.current
@@ -38,26 +40,26 @@ fun MovieItem(
     Column(
         modifier = Modifier
             .width(160.dp)
-            .clickable{ onMovieClick(movie) },
+            .clickable{ onMovieClick(filme) },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         AsyncImage(
             model = ImageRequest.Builder(context)
-                .data(movie.imagemUrl)
+                .data(Constantes.IMAGE_BASE_URL + filme.poster_path)
                 .crossfade(true)
                 .build(),
-            contentDescription = movie.title,
+            contentDescription = filme.title,
             modifier = Modifier
                 .width(160.dp)
                 .height(200.dp)
                 .clip(RoundedCornerShape(2.dp)),
             contentScale = ContentScale.FillHeight,
             placeholder = painterResource( R.drawable.ic_placeholder),
-            error = painterResource(R.drawable.ic_error)
+            error = painterResource(R.drawable.capa)
         )
 
         Text(
-            text = movie.title,
+            text = filme.title,
             color = Color.White,
             fontSize = 14.sp,
             modifier = Modifier.fillMaxWidth().padding(start = 20.dp, top = 8.dp),
@@ -74,10 +76,21 @@ fun MovieItem(
 @Composable
 fun MovieItemPreview() {
     MovieItem(
-        movie = Movie(
+        filme = Filme(
             id = 1,
-            title = "Filme",
-            imagemUrl = R.drawable.capa
+            title = "Filme de Teste",
+            poster_path = "/t6HIqrRAFyUMC6bZqMfPSzPNw0s.jpg",
+            adult = false,
+            backdrop_path = "",
+            original_language = "en-US",
+            original_title = "Test Movie",
+            overview = "This is a test movie for preview.",
+            popularity = 100.0,
+            release_date = "2025-11-16",
+            video = false,
+            vote_average = 7.0,
+            vote_count = 100,
+            genre_ids = emptyList(),
         ),
         onMovieClick = {}
     )

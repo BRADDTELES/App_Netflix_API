@@ -56,6 +56,9 @@ android {
 }
 
 dependencies {
+    // Lifecycle Compose
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.4")
     // Retrofit e Gson
     implementation(libs.retrofit)
     implementation(libs.converter.gson)

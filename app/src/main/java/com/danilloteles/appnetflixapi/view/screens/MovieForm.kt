@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.SaveAs
 import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -38,21 +39,65 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import com.danilloteles.appnetflixapi.R
+import com.danilloteles.appnetflixapi.constantes.Constantes
+import com.danilloteles.appnetflixapi.model.Filme
 import com.danilloteles.appnetflixapi.model.Movie
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.TRANSPARENT
+import com.danilloteles.appnetflixapi.ui.theme.VERMELHO
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
+import com.danilloteles.appnetflixapi.utils.DetailsUiState
 import com.danilloteles.appnetflixapi.view.componentes.NetflixTopBar
 import com.danilloteles.appnetflixapi.view.componentes.OutlinedTextFieldCustom
+import com.danilloteles.appnetflixapi.viewmodel.MovieDetailsViewModel
 
 @Composable
 fun MovieForm(
-    movie: Movie?
+    movieId: Int
 ) {
 
-    var título by remember { mutableStateOf(movie?.title ?: "") }
+    if (movieId == 0) {
+        MovieFormContent(filme = null)
+    } else {
+
+        val viewModel: MovieDetailsViewModel = viewModel(
+            factory = MovieDetailsViewModel.Factory(movieId)
+        )
+        val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+        when (val state = uiState) {
+            is DetailsUiState.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize().background(BLACK),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = VERMELHO)
+                }
+            }
+            is DetailsUiState.Success -> {
+                MovieFormContent(filme = state.movie)
+            }
+            is DetailsUiState.Error -> {
+                Box(
+                    modifier = Modifier.fillMaxSize().background(BLACK),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = state.message, color = WHITE)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun MovieFormContent(
+    filme: Filme?
+) {
+    var título by remember { mutableStateOf(filme?.title ?: "") }
 
     Scaffold(
         topBar = {
@@ -67,19 +112,18 @@ fun MovieForm(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-            val aspectRatioValue = if (movie != null) (2.5f / 3f) else (4f / 3f)
+            val aspectRatioValue = if (filme != null) (2.5f / 3f) else (4f / 3f)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(aspectRatioValue)
             ) {
                 AsyncImage(
-                    model = movie?.imagemUrl,
+                    model = if (filme != null) Constantes.IMAGE_BASE_URL + filme.poster_path else R.drawable.capa,
                     placeholder = painterResource(id = R.drawable.ic_placeholder),
                     error = painterResource(id = R.drawable.capa),
                     contentDescription = "Imagem da capa do filme",
-                    modifier = Modifier
-                        .fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
                 IconButton(
@@ -120,25 +164,25 @@ fun MovieForm(
                     /* TODO: Ação do botão salvar ou editar o filme */
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Red
+                    containerColor = VERMELHO
                 ),
                 modifier = Modifier.fillMaxWidth()
                     .padding(horizontal = 20.dp)
                     .background(
-                        color = Color.Red,
+                        color = VERMELHO,
                         shape = RoundedCornerShape(6.dp)
                     )
             ) {
 
                 Icon(
                     imageVector = Icons.Default.SaveAs,
-                    contentDescription = "Play",
-                    tint = Color.White
+                    contentDescription = "Salvar",
+                    tint = WHITE
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "SALVAR",
-                    color = Color.White,
+                    color = WHITE,
                     fontWeight = FontWeight.SemiBold
                 )
 
@@ -149,12 +193,29 @@ fun MovieForm(
 
 @Preview
 @Composable
-private fun MovieFormPreview(){
-    MovieForm(
-        movie = Movie(
+private fun MovieFormPreview_NewMovie(){
+    MovieFormContent(filme = null)
+}
+
+@Preview
+@Composable
+fun MovieFormPreview_EditMovie() {
+    MovieFormContent(
+        filme = Filme(
             id = 1,
-            title = "Filme",
-            imagemUrl = R.drawable.capa
+            title = "Filme em Edição",
+            poster_path = "",
+            adult = false,
+            backdrop_path = "",
+            original_language = "",
+            original_title = "",
+            overview = "",
+            popularity = 0.0,
+            release_date = "",
+            video = false,
+            vote_average = 0.0,
+            vote_count = 0,
+            genre_ids = emptyList()
         )
     )
 }

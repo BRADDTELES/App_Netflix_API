@@ -44,9 +44,9 @@ fun NetflixApp() {
             route = AppDestinations.MAIN_SCREEN
         ) {
             NetflixScreen(
-                onMovieClick = { movie ->
+                onMovieClick = { filme ->
                     navController.navigate(
-                        route = "${AppDestinations.MOVIE_DETAILS_SCREEN}/${movie.id}"
+                        route = "${AppDestinations.MOVIE_DETAILS_SCREEN}/${filme.id}"
                     )
                 },
                 onAddClick = {
@@ -70,12 +70,9 @@ fun NetflixApp() {
 
             val movieId = backStackEntry.arguments?.getInt(AppDestinations.MOVIE_ID_ARG)
 
-            val movies = getPopularMovies()
-            val movie = movies.firstOrNull{ it.id == movieId }
-
-            if (  movie != null  ) {
+            if (  movieId != null  ) {
                 MovieDetails(
-                    movie = movie,
+                    movieId = movieId,
                     onEditClick = { movieId ->
                         navController.navigate(
                             route = "${AppDestinations.MOVIE_FORM_SCREEN}/${movieId}"
@@ -99,16 +96,8 @@ fun NetflixApp() {
             )
         ) { backStackEntry ->
 
-            val movieId = backStackEntry.arguments?.getInt(AppDestinations.MOVIE_ID_ARG)
-
-            if (  movieId != 0  ) {
-                val movies = getPopularMovies()
-                val movie = movies.firstOrNull{ it.id == movieId }
-                MovieForm(movie = movie)
-            } else {
-                MovieForm(movie = null)
-            }
+            val movieId = backStackEntry.arguments?.getInt(AppDestinations.MOVIE_ID_ARG) ?: 0
+            MovieForm(movieId = movieId)
         }
-
     }
 }
