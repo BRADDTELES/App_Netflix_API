@@ -8,11 +8,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -21,16 +27,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.danilloteles.appnetflixapi.model.Filme
 import com.danilloteles.appnetflixapi.view.navigation.NetflixApp
-import com.danilloteles.appnetflixapi.model.Movie
-import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
-import com.danilloteles.appnetflixapi.ui.theme.VERMELHO
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
 import com.danilloteles.appnetflixapi.utils.UiState
-import com.danilloteles.appnetflixapi.view.componentes.FloatingActionButtonCustom
+import com.danilloteles.appnetflixapi.view.componentes.AnimatedExtendedFab
+import com.danilloteles.appnetflixapi.enums.FabState
 import com.danilloteles.appnetflixapi.view.componentes.MenuSection
 import com.danilloteles.appnetflixapi.view.componentes.NetflixTopBar
 import com.danilloteles.appnetflixapi.view.componentes.PopularMoviesSection
 import com.danilloteles.appnetflixapi.viewmodel.PopularMoviesViewModel
+import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 class MainActivity : ComponentActivity() {
 
@@ -46,55 +52,76 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun NetflixScreen(
     onMovieClick: (Filme) -> Unit,
     onAddClick: () -> Unit
 ) {
-
     // Instanciando o ViewModel
     val popularMoviesViewModel: PopularMoviesViewModel = viewModel()
-
     // Coletando o estado da UI
     val uiState by popularMoviesViewModel.uiState.collectAsStateWithLifecycle()
+
+    val listState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
+    var fabState by remember { mutableStateOf(FabState.EXPANDED) }
+
+    // Lógica para observar a rolagem e determinar o estado do FAB
+    LaunchedEffect(listState) {
+        var lastKnownScrollOffset = 0
+        snapshotFlow { listState.firstVisibleItemScrollOffset }
+            .distinctUntilChanged()
+            .collect { currentScrollOffset ->
+                fabState = if (listState.firstVisibleItemIndex == 0) {
+                    FabState.EXPANDED
+                } else if (currentScrollOffset > lastKnownScrollOffset) {
+                    FabState.HIDDEN
+                } else {
+                    FabState.COLLAPSED
+                }
+                lastKnownScrollOffset = currentScrollOffset
+            }
+    }
 
     Scaffold(
         topBar = {
             NetflixTopBar()
         },
         floatingActionButton = {
-            FloatingActionButtonCustom(
-                onAddClick = onAddClick
+            AnimatedExtendedFab(
+                modifier = Modifier.animateFloatingActionButton(
+                    visible = fabState != FabState.HIDDEN,
+                    alignment = Alignment.BottomEnd
+                ),
+                expanded = fabState == FabState.EXPANDED,
+                onClick = onAddClick
             )
         }
     ) { paddingValues ->
-
         Column(
             modifier = Modifier.padding(paddingValues)
         ) {
-
             MenuSection()
 
-            when ( val state = uiState ){
+            when (val state = uiState) {
                 is UiState.Loading -> {
                     Box(
-                        modifier = Modifier
-                            .fillMaxSize(),
+                        modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator(color = VERMELHO)
+                        LoadingIndicatorCustom()
                     }
                 }
                 is UiState.Success -> {
                     PopularMoviesSection(
                         listFilme = state.movies,
-                        onMovieClick = onMovieClick
+                        onMovieClick = onMovieClick,
+                        lazyGridState = listState
                     )
                 }
                 is UiState.Error -> {
                     Box(
-                        modifier = Modifier
-                            .fillMaxSize(),
+                        modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -104,9 +131,7 @@ fun NetflixScreen(
                     }
                 }
             }
-
         }
-
     }
 }
 
