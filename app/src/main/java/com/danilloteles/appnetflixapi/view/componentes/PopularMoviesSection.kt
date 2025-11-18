@@ -1,5 +1,7 @@
 package com.danilloteles.appnetflixapi.view.componentes
 
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,15 +18,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.danilloteles.appnetflixapi.auxiliar.getPopularMovies
 import com.danilloteles.appnetflixapi.model.Filme
-import com.danilloteles.appnetflixapi.model.Movie
 import com.danilloteles.appnetflixapi.view.itemlista.MovieItem
 
 @Composable
 fun PopularMoviesSection(
     listFilme: List<Filme>,
-    onMovieClick: (Filme) -> Unit
+    onMovieClick: (Filme) -> Unit,
+    lazyGridState: LazyGridState
 ) {
     Column(
         modifier = Modifier
@@ -43,6 +44,7 @@ fun PopularMoviesSection(
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
+            state = lazyGridState,
             horizontalArrangement = Arrangement.spacedBy(2.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
@@ -62,6 +64,7 @@ fun PopularMoviesSection(
 fun PopularMoviesSectionPreview() {
     PopularMoviesSection(
         listFilme = emptyList(),
-        onMovieClick = {}
+        onMovieClick = {},
+        lazyGridState = rememberLazyGridState()
     )
 }

@@ -57,8 +57,8 @@ android {
 
 dependencies {
     // Lifecycle Compose
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.4")
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     // Retrofit e Gson
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
@@ -79,6 +79,10 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
     // Material3 - versão gerenciada pelo BOM
     implementation(libs.androidx.material3)
+    implementation(libs.material3)
+    implementation(libs.androidx.compose.material3.v140)
+    implementation(libs.androidx.compose.material3.window.size.class1)
+    implementation(libs.androidx.compose.material3.adaptive.navigation.suite)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
