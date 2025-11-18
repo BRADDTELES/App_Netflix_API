@@ -8,12 +8,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Coffee
-import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.filled.Work
-import androidx.compose.material.icons.outlined.Coffee
-import androidx.compose.material.icons.outlined.Restaurant
-import androidx.compose.material.icons.outlined.Work
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.SortByAlpha
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -36,35 +35,41 @@ import com.danilloteles.appnetflixapi.ui.theme.GRAY
 import com.danilloteles.appnetflixapi.ui.theme.VERMELHO
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
 
+/**
+ * Um grupo de botões de filtro customizado para a tela "Minha Lista".
+ *
+ * @param selectedIndex O índice do botão atualmente selecionado (0 para Favoritos, 1 para Curtidos, 2 para A-Z).
+ * @param onIndexChange Uma função que será chamada com o novo índice sempre que um botão for selecionado.
+ * @param modifier O modificador a ser aplicado ao componente.
+ */
 @Composable
-fun ConnectedButtonGroupComposable() {
-    val options = listOf("Work", "Restaurant", "Coffee")
+fun ConnectedButtonGroupComposableCustom(
+    selectedIndex: Int,
+    onIndexChange: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val options = listOf("Favoritos", "Curtidos", "Alfabeto")
     val unCheckedIcons =
-        listOf(Icons.Outlined.Work, Icons.Outlined.Restaurant, Icons.Outlined.Coffee)
-    val checkedIcons = listOf(Icons.Filled.Work, Icons.Filled.Restaurant, Icons.Filled.Coffee)
-    var selectedIndex by remember { mutableIntStateOf(0) }
+        listOf(Icons.Outlined.StarBorder, Icons.Outlined.FavoriteBorder, Icons.Default.SortByAlpha)
+    val checkedIcons = listOf(Icons.Filled.Star, Icons.Filled.Favorite, Icons.Default.SortByAlpha)
 
     Row(
-        Modifier.padding(horizontal = 8.dp, vertical = 16.dp),
+        modifier = modifier.padding(horizontal = 8.dp, vertical = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
     ) {
-        val modifiers = listOf(
-            Modifier.weight(1f),
-            Modifier.weight(1.5f),
-            Modifier.weight(1f),
-        )
-
         options.forEachIndexed { index, label ->
             ToggleButton(
                 checked = selectedIndex == index,
-                onCheckedChange = { selectedIndex = index },
-                modifier = modifiers[index].semantics { role = Role.RadioButton },
+                onCheckedChange = { onIndexChange(index) },
+                modifier = Modifier
+                    .weight(1f) // Peso igual para todos os botões
+                    .semantics { role = Role.RadioButton },
                 shapes =
-                    when (index) {
-                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                        options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                    },
+                when (index) {
+                    0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                    options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                    else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                },
                 colors = ToggleButtonDefaults.toggleButtonColors(
                     checkedContainerColor = VERMELHO,
                     checkedContentColor = WHITE,
@@ -74,7 +79,7 @@ fun ConnectedButtonGroupComposable() {
             ) {
                 Icon(
                     if (selectedIndex == index) checkedIcons[index] else unCheckedIcons[index],
-                    contentDescription = "Localized description",
+                    contentDescription = label,
                 )
                 Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
                 Text(label)
@@ -85,6 +90,11 @@ fun ConnectedButtonGroupComposable() {
 
 @Preview
 @Composable
-private fun ConnectedButtonGroupComposablePreview(){
-    ConnectedButtonGroupComposable()
+private fun ConnectedButtonGroupComposableCustomPreview() {
+    // O Preview precisa de seu próprio estado para ser interativo
+    var selectedIndex by remember { mutableIntStateOf(0) }
+    ConnectedButtonGroupComposableCustom(
+        selectedIndex = selectedIndex,
+        onIndexChange = { newIndex -> selectedIndex = newIndex }
+    )
 }

@@ -20,12 +20,14 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Contacts
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Snooze
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButtonMenu
 import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleFloatingActionButton
@@ -41,6 +43,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
@@ -50,6 +53,41 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.danilloteles.appnetflixapi.ui.theme.BLACK
+import com.danilloteles.appnetflixapi.ui.theme.RED_50
+import com.danilloteles.appnetflixapi.ui.theme.VERMELHO
+import com.danilloteles.appnetflixapi.ui.theme.WHITE
+
+// 1. Crie um ColorScheme customizado
+@Composable
+fun FabMenuColorScheme(): ColorScheme {
+    // Copia o tema atual e sobrescreve apenas as cores desejadas
+    return MaterialTheme.colorScheme.copy(
+
+        primary = VERMELHO,
+
+        // Usado pelo FAB principal (collapsed) e itens do menu
+        primaryContainer = RED_50,
+        onPrimaryContainer = BLACK,
+
+        // Usado pelo FAB principal (expanded)
+        secondaryContainer = VERMELHO,
+        onSecondaryContainer = WHITE,
+
+        // Usado pelo texto (label) dos itens do menu
+        onSurface = BLACK
+    )
+}
+
+// 2. Crie um Composable que aplica o tema customizado
+@Composable
+fun CustomFabMenu(onNavigateToBack: () -> Unit) {
+    // Aplica o ColorScheme customizado a este trecho da UI
+    MaterialTheme(colorScheme = FabMenuColorScheme()) {
+        FabMenuComposable(onNavigateToBack = onNavigateToBack)
+    }
+}
+
 
 @Composable
 fun FabMenuComposable(onNavigateToBack: () -> Unit) {
@@ -111,18 +149,19 @@ fun FabMenuComposable(onNavigateToBack: () -> Unit) {
                 button = {
                     ToggleFloatingActionButton(
                         modifier =
-                            Modifier
-                                .semantics {
-                                    traversalIndex = -1f
-                                    stateDescription =
-                                        if (fabMenuExpanded) "Expanded" else "Collapsed"
-                                }
-                                .animateFloatingActionButton(
-                                    visible = fabVisible || fabMenuExpanded,
-                                    alignment = Alignment.BottomEnd,
-                                ),
+                        Modifier
+                            .semantics {
+                                traversalIndex = -1f
+                                stateDescription =
+                                    if (fabMenuExpanded) "Expanded" else "Collapsed"
+                            }
+                            .animateFloatingActionButton(
+                                visible = fabVisible || fabMenuExpanded,
+                                alignment = Alignment.BottomEnd,
+                            ),
                         checked = fabMenuExpanded,
                         onCheckedChange = { fabMenuExpanded = !fabMenuExpanded },
+                        // SEM o parâmetro 'colors' aqui
                     ) {
                         val imageVector by remember {
                             derivedStateOf {
@@ -140,27 +179,25 @@ fun FabMenuComposable(onNavigateToBack: () -> Unit) {
                 items.forEachIndexed { i, item ->
                     FloatingActionButtonMenuItem(
                         modifier =
-                            Modifier.semantics {
-                                isTraversalGroup = true
-                                // Add a custom a11y action to allow closing the menu when focusing
-                                // the last menu item, since the close button comes before the first
-                                // menu item in the traversal order.
-                                if (i == items.size - 1) {
-                                    customActions =
-                                        listOf(
-                                            CustomAccessibilityAction(
-                                                label = "Close menu",
-                                                action = {
-                                                    fabMenuExpanded = false
-                                                    true
-                                                },
-                                            ),
-                                        )
-                                }
-                            },
+                        Modifier.semantics {
+                            isTraversalGroup = true
+                            if (i == items.size - 1) {
+                                customActions =
+                                    listOf(
+                                        CustomAccessibilityAction(
+                                            label = "Close menu",
+                                            action = {
+                                                fabMenuExpanded = false
+                                                true
+                                            },
+                                        ),
+                                    )
+                            }
+                        },
                         onClick = { fabMenuExpanded = false },
                         icon = { Icon(item.first, contentDescription = null) },
                         text = { Text(text = item.second) },
+                        // SEM o parâmetro 'colors' aqui
                     )
                 }
             }
@@ -171,7 +208,8 @@ fun FabMenuComposable(onNavigateToBack: () -> Unit) {
 @Preview
 @Composable
 private fun FabMenuComposablePreview(){
-    FabMenuComposable(
+    // 3. Chame o Composable que aplica o tema no seu Preview
+    CustomFabMenu(
         onNavigateToBack = {}
     )
 }
