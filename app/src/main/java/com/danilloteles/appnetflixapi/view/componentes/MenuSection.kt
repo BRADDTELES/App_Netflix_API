@@ -27,7 +27,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.danilloteles.appnetflixapi.R
 
@@ -64,7 +63,9 @@ fun MenuSection() {
 }
 
 @Composable
-fun NetflixNavegacaoRow() {
+fun NetflixNavegacaoRow(
+    onClick: () -> Unit = {}
+) {
 
     val imagemLogo = R.drawable.logo
 
@@ -80,42 +81,33 @@ fun NetflixNavegacaoRow() {
             modifier = Modifier.size(48.dp)
         )
 
-        Spacer(modifier = Modifier.width(48.dp))
+        Spacer(modifier = Modifier.width(24.dp))
 
-        Text(
-            text = "Séries",
-            color = Color.White,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium
+        TextButtonSample(
+            onClick = onClick,
+            texto = "Séries"
         )
 
-        Spacer(modifier = Modifier.width(32.dp))
+        Spacer(modifier = Modifier.width(16.dp))
 
-        Text(
-            text = "Filmes",
-            color = Color.White,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium
+        TextButtonSample(
+            onClick = onClick,
+            texto = "Filmes"
         )
 
-        Spacer(modifier = Modifier.width(32.dp))
+        Spacer(modifier = Modifier.width(16.dp))
 
-        Text(
-            text = "Minha Lista",
-            color = Color.White,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium
+        TextButtonSample(
+            onClick = onClick,
+            texto = "Minha Lista"
         )
-
     }
 }
 
 @Composable
 fun BotaoAssistir() {
     Button(
-        onClick = {
-            /* Ação do botão */
-        },
+        onClick = {/* Ação do botão, não faz nada */ },
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.Red
         ),
