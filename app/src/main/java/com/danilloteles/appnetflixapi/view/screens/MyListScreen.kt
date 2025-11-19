@@ -58,21 +58,34 @@ import com.danilloteles.appnetflixapi.utils.material3expressive.ConnectedButtonG
 import com.danilloteles.appnetflixapi.utils.material3expressive.FabMenuColorScheme
 import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
 import com.danilloteles.appnetflixapi.view.componentes.PopularMoviesSection
-import com.danilloteles.appnetflixapi.viewmodel.PopularMoviesViewModel
+import com.danilloteles.appnetflixapi.viewmodel.MyListViewModel // Import alterado
+import com.danilloteles.appnetflixapi.utils.UserPreferencesRepository // Import adicionado para o ViewModelFactory
+import androidx.compose.ui.platform.LocalContext // Import adicionado para o ViewModelFactory
+import androidx.compose.runtime.LaunchedEffect // Import adicionado
 
 @Composable
 fun MyListScreen(
     onMovieClick: (Filme) -> Unit,
     onNavigateBack: () -> Unit
 ) {
-    val popularMoviesViewModel: PopularMoviesViewModel = viewModel()
-    val uiState by popularMoviesViewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current // Adicionado para o ViewModelFactory
+    val myListViewModel: MyListViewModel = viewModel( // Instância alterada
+        factory = MyListViewModel.MyListViewModelFactory(
+            UserPreferencesRepository(context)
+        )
+    )
+    val uiState by myListViewModel.uiState.collectAsStateWithLifecycle()
     val listState = rememberLazyGridState()
     val fabVisible by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
     var fabMenuExpanded by rememberSaveable { mutableStateOf(false) }
 
     // 1. Estado para controlar o índice do filtro selecionado
     var selectedFilterIndex by remember { mutableIntStateOf(0) }
+
+    // Chama loadMyListMovies() quando a tela é inicializada
+    LaunchedEffect(Unit) {
+        myListViewModel.loadMyListMovies()
+    }
 
     Scaffold(
         topBar = {

@@ -24,6 +24,7 @@ import com.danilloteles.appnetflixapi.view.screens.SplashScreen
 import kotlinx.coroutines.flow.StateFlow
 import androidx.compose.runtime.LaunchedEffect // Import adicionado
 import com.danilloteles.appnetflixapi.view.screens.MainActivity // Import adicionado para acessar o deeplinkRequestToken
+import com.danilloteles.appnetflixapi.view.screens.MyListScreen
 
 @Composable
 fun NetflixApp(
@@ -163,8 +164,15 @@ fun NetflixApp(
 
         composable(
             route = AppDestinations.MY_LIST_SCREEN
-        ){
-            Text("Minha Lista (Em construção)")
+        ) {
+            MyListScreen(
+                onMovieClick = { filme ->
+                    navController.navigate(
+                        route = "${AppDestinations.MOVIE_DETAILS_SCREEN}/${filme.id}"
+                    )
+                },
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
     }
 }
