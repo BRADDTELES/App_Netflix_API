@@ -13,6 +13,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.AddComment
+import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButtonMenu
@@ -96,7 +97,8 @@ fun MyListScreen(
             MaterialTheme(colorScheme = FabMenuColorScheme()) {
                 val items =
                     listOf(
-                        Icons.Outlined.AddComment to "Adicionar Filme"
+                        Icons.Outlined.AddComment to "Adicionar Filme",
+                        Icons.Outlined.DeleteOutline to "Remover Filme"
                     )
 
                 FloatingActionButtonMenu(

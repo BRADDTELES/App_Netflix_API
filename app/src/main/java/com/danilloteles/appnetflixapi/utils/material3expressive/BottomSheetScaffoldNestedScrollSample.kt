@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.outlined.AddToQueue
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Email
@@ -212,7 +213,7 @@ fun BottomSheetScaffoldNestedScrollSample(
                                         val rotation: Float by
                                         animateFloatAsState(
                                             targetValue = if (splitButtonChecked) 180f else 0f,
-                                            label = "Trailing Icon Rotation",
+                                            label = "Rotacionar ícone",
                                         )
                                         Icon(
                                             Icons.Filled.KeyboardArrowDown,
@@ -232,17 +233,19 @@ fun BottomSheetScaffoldNestedScrollSample(
                             onDismissRequest = { splitButtonChecked = false }
                         ) {
                             DropdownMenuItem(
-                                text = { Text("Edit") },
+                                text = { Text("Adicionar") },
                                 onClick = {
+                                    /* TODO: Ação de Adicionar o filme na lista aqui */
                                     onClick()
                                     splitButtonChecked = false
                                 },
-                                leadingIcon = { Icon(Icons.Outlined.Edit, contentDescription = null) },
+                                leadingIcon = { Icon(Icons.Outlined.AddToQueue, contentDescription = null) },
                             )
                             DropdownMenuItem(
-                                text = { Text("Delete") },
+                                text = { Text("Deletar") },
                                 onClick = {
-                                    /* TODO: Ação de Deletar o filme */
+                                    /* TODO: Ação de Deletar o filme da lista aqui */
+                                    onClick()
                                     splitButtonChecked = false
                                 },
                                 leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null) },
