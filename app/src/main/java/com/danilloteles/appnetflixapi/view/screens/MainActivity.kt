@@ -1,5 +1,6 @@
 package com.danilloteles.appnetflixapi.view.screens
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -38,9 +39,14 @@ import com.danilloteles.appnetflixapi.view.componentes.NetflixTopBar
 import com.danilloteles.appnetflixapi.view.componentes.PopularMoviesSection
 import com.danilloteles.appnetflixapi.viewmodel.PopularMoviesViewModel
 import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 class MainActivity : ComponentActivity() {
+
+    companion object {
+        val deeplinkRequestToken: MutableStateFlow<String?> = MutableStateFlow(null)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -49,7 +55,17 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            NetflixApp()
+            NetflixApp(deeplinkRequestToken = deeplinkRequestToken)
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        intent.data?.let { uri ->
+            if (  uri.scheme == "netflixapp" && uri.host == "auth"  ) {
+                val requestToken = uri.getQueryParameter("request_token")
+                deeplinkRequestToken.value = requestToken
+            }
         }
     }
 }
@@ -58,7 +74,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun NetflixScreen(
     onMovieClick: (Filme) -> Unit,
-    onAddClick: () -> Unit
+    onAddClick: () -> Unit,
+    onMyListClick: () -> Unit // Novo parâmetro
 ) {
     // Instanciando o ViewModel
     val popularMoviesViewModel: PopularMoviesViewModel = viewModel()
@@ -103,9 +120,10 @@ fun NetflixScreen(
         Column(
             modifier = Modifier.padding(paddingValues)
         ) {
-            MenuSection()
+            MenuSection(onMyListClick = onMyListClick) // Passando o onMyListClick
 
             when (val state = uiState) {
+                is UiState.Idle -> {}
                 is UiState.Loading -> {
                     Box(
                         modifier = Modifier.fillMaxSize().background(BLACK),
@@ -116,7 +134,7 @@ fun NetflixScreen(
                 }
                 is UiState.Success -> {
                     PopularMoviesSection(
-                        listFilme = state.movies,
+                        listFilme = state.data,
                         onMovieClick = onMovieClick,
                         lazyGridState = listState
                     )
@@ -142,6 +160,7 @@ fun NetflixScreen(
 fun NetflixScreenPreview() {
     NetflixScreen(
         onMovieClick = {},
-        onAddClick = {}
+        onAddClick = {},
+        onMyListClick = {} // Placeholder para o novo parâmetro
     )
 }

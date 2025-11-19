@@ -181,6 +181,7 @@ fun MyListScreen(
             )
 
             when (val state = uiState) {
+                is UiState.Idle -> {}
                 is UiState.Loading -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -191,7 +192,7 @@ fun MyListScreen(
                 }
                 is UiState.Success -> {
                     PopularMoviesSection(
-                        listFilme = state.movies,
+                        listFilme = state.data,
                         onMovieClick = onMovieClick,
                         lazyGridState = listState
                     )

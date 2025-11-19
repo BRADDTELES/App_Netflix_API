@@ -31,7 +31,9 @@ import coil3.compose.AsyncImage
 import com.danilloteles.appnetflixapi.R
 
 @Composable
-fun MenuSection() {
+fun MenuSection(
+    onMyListClick: () -> Unit = {}
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -55,7 +57,9 @@ fun MenuSection() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            NetflixNavegacaoRow()
+            NetflixNavegacaoRow(
+                onMyListClick = onMyListClick
+            )
 
             BotaoAssistir()
         }
@@ -64,7 +68,7 @@ fun MenuSection() {
 
 @Composable
 fun NetflixNavegacaoRow(
-    onClick: () -> Unit = {}
+    onMyListClick: () -> Unit = {}
 ) {
 
     val imagemLogo = R.drawable.logo
@@ -84,21 +88,21 @@ fun NetflixNavegacaoRow(
         Spacer(modifier = Modifier.width(24.dp))
 
         TextButtonSample(
-            onClick = onClick,
+            onClick = { /* TODO: Implementar navegação para séries */ },
             texto = "Séries"
         )
 
         Spacer(modifier = Modifier.width(16.dp))
 
         TextButtonSample(
-            onClick = onClick,
+            onClick = { /* TODO: Implementar navegação para filmes */ },
             texto = "Filmes"
         )
 
         Spacer(modifier = Modifier.width(16.dp))
 
         TextButtonSample(
-            onClick = onClick,
+            onClick = onMyListClick,
             texto = "Minha Lista"
         )
     }

@@ -1,9 +1,8 @@
 package com.danilloteles.appnetflixapi.utils
 
-import com.danilloteles.appnetflixapi.model.Filme
-
-sealed interface UiState {
-    object Loading : UiState
-    data class Success(val movies: List<Filme>) : UiState
-    data class Error(val message: String) : UiState
+sealed interface UiState<out T> {
+    object Idle : UiState<Nothing>
+    object Loading : UiState<Nothing>
+    data class Success<T>(val data: T) : UiState<T>
+    data class Error(val message: String) : UiState<Nothing>
 }

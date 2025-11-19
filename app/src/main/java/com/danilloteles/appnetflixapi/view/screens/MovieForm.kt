@@ -53,12 +53,13 @@ import coil3.compose.AsyncImage
 import com.danilloteles.appnetflixapi.R
 import com.danilloteles.appnetflixapi.constantes.Constantes
 import com.danilloteles.appnetflixapi.model.Filme
+import com.danilloteles.appnetflixapi.model.FilmeDetalhes
 import com.danilloteles.appnetflixapi.model.Movie
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.TRANSPARENT
 import com.danilloteles.appnetflixapi.ui.theme.VERMELHO
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
-import com.danilloteles.appnetflixapi.utils.DetailsUiState
+import com.danilloteles.appnetflixapi.utils.UiState
 import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
 import com.danilloteles.appnetflixapi.view.componentes.NetflixTopBar
 import com.danilloteles.appnetflixapi.view.componentes.OutlinedTextFieldCustom
@@ -79,7 +80,8 @@ fun MovieForm(
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
         when (val state = uiState) {
-            is DetailsUiState.Loading -> {
+            is UiState.Idle -> {}
+            is UiState.Loading -> {
                 Box(
                     modifier = Modifier.fillMaxSize().background(BLACK),
                     contentAlignment = Alignment.Center
@@ -87,10 +89,10 @@ fun MovieForm(
                     LoadingIndicatorCustom(animationDelay = 400)
                 }
             }
-            is DetailsUiState.Success -> {
-                MovieFormContent(filme = state.movie)
+            is UiState.Success -> {
+                MovieFormContent(filme = state.data)
             }
-            is DetailsUiState.Error -> {
+            is UiState.Error -> {
                 Box(
                     modifier = Modifier.fillMaxSize().background(BLACK),
                     contentAlignment = Alignment.Center
@@ -105,7 +107,7 @@ fun MovieForm(
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MovieFormContent(
-    filme: Filme?
+    filme: FilmeDetalhes?
 ) {
     var título by remember { mutableStateOf(filme?.title ?: "") }
 
@@ -206,21 +208,32 @@ private fun MovieFormPreview_NewMovie(){
 @Composable
 fun MovieFormPreview_EditMovie() {
     MovieFormContent(
-        filme = Filme(
-            id = 1,
-            title = "Filme em Edição",
-            poster_path = "",
+        filme = FilmeDetalhes(
             adult = false,
             backdrop_path = "",
+            belongs_to_collection = "",
+            budget = 0,
+            genres = emptyList(),
+            homepage = "",
+            id = 0,
+            imdb_id = "",
             original_language = "",
             original_title = "",
-            overview = "",
+            overview = "This is a test movie for preview.",
             popularity = 0.0,
+            poster_path = "/t6HIqrRAFyUMC6bZqMfPSzPNw0s.jpg",
+            production_companies = emptyList(),
+            production_countries = emptyList(),
             release_date = "",
+            revenue = 0,
+            runtime = 0,
+            spoken_languages = emptyList(),
+            status = "",
+            tagline = "",
+            title = "Movie title",
             video = false,
             vote_average = 0.0,
-            vote_count = 0,
-            genre_ids = emptyList()
+            vote_count = 0
         )
     )
 }

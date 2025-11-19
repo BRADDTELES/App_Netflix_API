@@ -54,9 +54,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import com.danilloteles.appnetflixapi.constantes.Constantes
 import com.danilloteles.appnetflixapi.model.Filme
+import com.danilloteles.appnetflixapi.model.FilmeDetalhes
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
-import com.danilloteles.appnetflixapi.utils.DetailsUiState
+import com.danilloteles.appnetflixapi.utils.UiState
 import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
 import com.danilloteles.appnetflixapi.view.componentes.NetflixTopBar
 import com.danilloteles.appnetflixapi.viewmodel.MovieDetailsViewModel
@@ -72,7 +73,8 @@ fun MyMovieDetailsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     when (val state = uiState) {
-        is DetailsUiState.Loading -> {
+        is UiState.Idle -> {}
+        is UiState.Loading -> {
             Box(
                 modifier = Modifier.fillMaxSize().background(BLACK),
                 contentAlignment = Alignment.Center
@@ -81,14 +83,14 @@ fun MyMovieDetailsScreen(
             }
         }
 
-        is DetailsUiState.Success -> {
+        is UiState.Success -> {
             MyMovieDetailContent(
-                filme = state.movie,
+                filme = state.data,
                 onEditClick = onEditClick
             )
         }
 
-        is DetailsUiState.Error -> {
+        is UiState.Error -> {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -104,7 +106,7 @@ fun MyMovieDetailsScreen(
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun MyMovieDetailContent(
-    filme: Filme,
+    filme: FilmeDetalhes,
     onEditClick: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -234,21 +236,32 @@ fun MyMovieDetailContent(
 @Composable
 private fun MyMovieDetailsScreenPreview() {
     MyMovieDetailContent(
-        filme = Filme(
-            id = 1,
-            title = "Movie title",
-            poster_path = "/t6HIqrRAFyUMC6bZqMfPSzPNw0s.jpg",
+        filme = FilmeDetalhes(
             adult = false,
             backdrop_path = "",
-            original_language = "en-US",
-            original_title = "Test Movie",
+            belongs_to_collection = "",
+            budget = 0,
+            genres = emptyList(),
+            homepage = "",
+            id = 0,
+            imdb_id = "",
+            original_language = "",
+            original_title = "",
             overview = "This is a test movie for preview.",
-            popularity = 100.0,
-            release_date = "2025-11-16",
+            popularity = 0.0,
+            poster_path = "/t6HIqrRAFyUMC6bZqMfPSzPNw0s.jpg",
+            production_companies = emptyList(),
+            production_countries = emptyList(),
+            release_date = "",
+            revenue = 0,
+            runtime = 0,
+            spoken_languages = emptyList(),
+            status = "",
+            tagline = "",
+            title = "Movie title",
             video = false,
-            vote_average = 7.0,
-            vote_count = 100,
-            genre_ids = emptyList(),
+            vote_average = 0.0,
+            vote_count = 0
         ),
         onEditClick = {}
     )
