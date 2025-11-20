@@ -3,10 +3,8 @@
 package com.danilloteles.appnetflixapi.view.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,9 +15,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -31,68 +33,70 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import com.danilloteles.appnetflixapi.constantes.Constantes
-import com.danilloteles.appnetflixapi.model.Filme
+import com.danilloteles.appnetflixapi.model.FilmeDetalhes
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
-import com.danilloteles.appnetflixapi.utils.DetailsUiState
+import com.danilloteles.appnetflixapi.utils.events.UiState
 import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
 import com.danilloteles.appnetflixapi.view.componentes.NetflixTopBar
 import com.danilloteles.appnetflixapi.viewmodel.MovieDetailsViewModel
-import com.danilloteles.appnetflixapi.view.componentes.SplitButtonAnimation
 
 @Composable
 fun MovieDetails(
-    movieId: Int,
-    onEditClick: (Int) -> Unit
+    movieId: Int
 ) {
     val viewModel: MovieDetailsViewModel = viewModel(
         factory = MovieDetailsViewModel.Factory(movieId)
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(uiState) {
+        if (uiState is UiState.Error) {
+            snackbarHostState.showSnackbar((uiState as UiState.Error).message)
+        }
+    }
 
     when (val state = uiState) {
-        is DetailsUiState.Loading -> {
-            Box(
-                modifier = Modifier.fillMaxSize().background(BLACK),
-                contentAlignment = Alignment.Center
-            ) {
-                LoadingIndicatorCustom(animationDelay = 400)
-            }
-        }
-
-        is DetailsUiState.Success -> {
-            ConteudoFilme(
-                filme = state.movie,
-                onEditClick = onEditClick
-            )
-        }
-
-        is DetailsUiState.Error -> {
+        is UiState.Idle -> {}
+        is UiState.Loading -> {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(BLACK),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = state.message, color = WHITE)
+                LoadingIndicatorCustom(animationDelay = 400)
             }
         }
+
+        is UiState.Success -> {
+            ConteudoFilme(
+                filme = state.data,
+                snackbarHostState = snackbarHostState
+            )
+        }
+
+        is UiState.Error -> {
+            // O erro agora é tratado pelo Snackbar.
+            // Exibir um estado vazio ou um componente que permita ao usuário tentar novamente.
+            // Por simplicidade, exibimos uma caixa vazia.
+            Box(modifier = Modifier.fillMaxSize().background(BLACK))
+        }
     }
-
-
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ConteudoFilme(
-    filme: Filme,
-    onEditClick: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    filme: FilmeDetalhes,
+    snackbarHostState: SnackbarHostState
 ) {
     Scaffold(
         topBar = {
             NetflixTopBar()
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -112,16 +116,6 @@ fun ConteudoFilme(
                         .aspectRatio(1.5f / 2f),
                     contentScale = ContentScale.Crop
                 )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp, end = 16.dp),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    SplitButtonAnimation(
-                        onClick = { onEditClick(filme.id) }
-                    )
-                }
             }
             Spacer(modifier = Modifier.height(16.dp))
             Text(
@@ -146,30 +140,34 @@ fun ConteudoFilme(
 @Preview
 @Composable
 private fun ConteudoFilmePreview() {
-    Scaffold(
-        topBar = {
-            NetflixTopBar()
-        }
-    ) { paddingValues ->
-        ConteudoFilme(
-            filme = Filme(
-                id = 1,
-                title = "Filme de Teste",
-                poster_path = "/t6HIqrRAFyUMC6bZqMfPSzPNw0s.jpg",
-                adult = false,
-                backdrop_path = "",
-                original_language = "en-US",
-                original_title = "Test Movie",
-                overview = "This is a test movie for preview.",
-                popularity = 100.0,
-                release_date = "2025-11-16",
-                video = false,
-                vote_average = 7.0,
-                vote_count = 100,
-                genre_ids = emptyList(),
-            ),
-            onEditClick = {},
-            modifier = Modifier.padding(paddingValues)
-        )
-    }
+    ConteudoFilme(
+        filme = FilmeDetalhes(
+            adult = false,
+            backdrop_path = "",
+            belongs_to_collection = "",
+            budget = 0,
+            genres = emptyList(),
+            homepage = "",
+            id = 0,
+            imdb_id = "",
+            original_language = "",
+            original_title = "",
+            overview = "This is a test movie for preview.",
+            popularity = 0.0,
+            poster_path = "/t6HIqrRAFyUMC6bZqMfPSzPNw0s.jpg",
+            production_companies = emptyList(),
+            production_countries = emptyList(),
+            release_date = "",
+            revenue = 0,
+            runtime = 0,
+            spoken_languages = emptyList(),
+            status = "",
+            tagline = "",
+            title = "Movie title",
+            video = false,
+            vote_average = 0.0,
+            vote_count = 0
+        ),
+        snackbarHostState = SnackbarHostState()
+    )
 }

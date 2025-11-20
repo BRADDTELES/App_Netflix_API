@@ -1,6 +1,8 @@
 package com.danilloteles.appnetflixapi.view.screens
 
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -12,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -26,21 +27,25 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.danilloteles.appnetflixapi.enums.FabState
 import com.danilloteles.appnetflixapi.model.Filme
-import com.danilloteles.appnetflixapi.view.navigation.NetflixApp
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
-import com.danilloteles.appnetflixapi.utils.UiState
-import com.danilloteles.appnetflixapi.view.componentes.AnimatedExtendedFab
-import com.danilloteles.appnetflixapi.enums.FabState
+import com.danilloteles.appnetflixapi.utils.events.UiState
+import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
 import com.danilloteles.appnetflixapi.view.componentes.MenuSection
 import com.danilloteles.appnetflixapi.view.componentes.NetflixTopBar
 import com.danilloteles.appnetflixapi.view.componentes.PopularMoviesSection
+import com.danilloteles.appnetflixapi.view.navigation.NetflixApp
 import com.danilloteles.appnetflixapi.viewmodel.PopularMoviesViewModel
-import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 class MainActivity : ComponentActivity() {
+
+    companion object {
+        val deeplinkRequestToken: MutableStateFlow<String?> = MutableStateFlow(null)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -49,7 +54,27 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            NetflixApp()
+            NetflixApp(deeplinkRequestToken = deeplinkRequestToken)
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        Log.d("TAG-MainActivity", "onNewIntent chamado com URI: ${intent.data}")
+        intent.data?.let { uri ->
+            if (  uri.scheme == "netflixapp" && uri.host == "auth"  ) {
+                val requestToken = uri.getQueryParameter("request_token")
+                Log.d("TAG-MainActivity", "Deep link reconhecido. Request token extraído: $requestToken")
+                deeplinkRequestToken.value = requestToken
+                Log.d("TAG-MainActivity", "deeplinkRequestToken.value atualizado para: ${deeplinkRequestToken.value}")
+            } else {
+                Log.d("TAG-MainActivity", "URI do deep link não corresponde aos critérios.")
+                Log.d("TAG-MainActivity", "Esperado scheme: netflixapp, host: auth")
+                Log.d("TAG-MainActivity", "URI recebida: $uri")
+                Log.d("TAG-MainActivity", "Scheme recebido: ${uri.scheme}, Host recebido: ${uri.host}")
+            }
+        } ?: run {
+            Log.d("TAG-MainActivity", "Intent.data é nulo em onNewIntent.")
         }
     }
 }
@@ -58,7 +83,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun NetflixScreen(
     onMovieClick: (Filme) -> Unit,
-    onAddClick: () -> Unit
+    onAddClick: () -> Unit,
+    onMyListClick: () -> Unit // Novo parâmetro
 ) {
     // Instanciando o ViewModel
     val popularMoviesViewModel: PopularMoviesViewModel = viewModel()
@@ -88,24 +114,15 @@ fun NetflixScreen(
     Scaffold(
         topBar = {
             NetflixTopBar()
-        },
-        floatingActionButton = {
-            AnimatedExtendedFab(
-                modifier = Modifier.animateFloatingActionButton(
-                    visible = fabState != FabState.HIDDEN,
-                    alignment = Alignment.BottomEnd
-                ),
-                expanded = fabState == FabState.EXPANDED,
-                onClick = onAddClick
-            )
         }
     ) { paddingValues ->
         Column(
             modifier = Modifier.padding(paddingValues)
         ) {
-            MenuSection()
+            MenuSection(onMyListClick = onMyListClick) // Passando o onMyListClick
 
             when (val state = uiState) {
+                is UiState.Idle -> {}
                 is UiState.Loading -> {
                     Box(
                         modifier = Modifier.fillMaxSize().background(BLACK),
@@ -116,7 +133,7 @@ fun NetflixScreen(
                 }
                 is UiState.Success -> {
                     PopularMoviesSection(
-                        listFilme = state.movies,
+                        listFilme = state.data,
                         onMovieClick = onMovieClick,
                         lazyGridState = listState
                     )
@@ -142,6 +159,7 @@ fun NetflixScreen(
 fun NetflixScreenPreview() {
     NetflixScreen(
         onMovieClick = {},
-        onAddClick = {}
+        onAddClick = {},
+        onMyListClick = {} // Placeholder para o novo parâmetro
     )
 }

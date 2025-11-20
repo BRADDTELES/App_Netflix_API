@@ -27,22 +27,21 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.danilloteles.appnetflixapi.R
 
 @Composable
-fun MenuSection() {
+fun MenuSection(
+    onMyListClick: () -> Unit = {}
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(200.dp)
     ) {
 
-        val imagemFundo = R.drawable.capa
-
         AsyncImage(
-            model = imagemFundo,
+            model = R.drawable.capa,
             contentDescription = "Capa do filme",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
@@ -56,7 +55,9 @@ fun MenuSection() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            NetflixNavegacaoRow()
+            NetflixNavegacaoRow(
+                onMyListClick = onMyListClick
+            )
 
             BotaoAssistir()
         }
@@ -64,7 +65,9 @@ fun MenuSection() {
 }
 
 @Composable
-fun NetflixNavegacaoRow() {
+fun NetflixNavegacaoRow(
+    onMyListClick: () -> Unit = {}
+) {
 
     val imagemLogo = R.drawable.logo
 
@@ -80,42 +83,33 @@ fun NetflixNavegacaoRow() {
             modifier = Modifier.size(48.dp)
         )
 
-        Spacer(modifier = Modifier.width(48.dp))
+        Spacer(modifier = Modifier.width(24.dp))
 
-        Text(
-            text = "Séries",
-            color = Color.White,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium
+        TextButtonSample(
+            onClick = { /* TODO: Implementar navegação para séries */ },
+            texto = "Séries"
         )
 
-        Spacer(modifier = Modifier.width(32.dp))
+        Spacer(modifier = Modifier.width(16.dp))
 
-        Text(
-            text = "Filmes",
-            color = Color.White,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium
+        TextButtonSample(
+            onClick = { /* TODO: Implementar navegação para filmes */ },
+            texto = "Filmes"
         )
 
-        Spacer(modifier = Modifier.width(32.dp))
+        Spacer(modifier = Modifier.width(16.dp))
 
-        Text(
-            text = "Minha Lista",
-            color = Color.White,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium
+        TextButtonSample(
+            onClick = onMyListClick,
+            texto = "Minha Lista"
         )
-
     }
 }
 
 @Composable
 fun BotaoAssistir() {
     Button(
-        onClick = {
-            /* Ação do botão */
-        },
+        onClick = {/* Ação do botão, não faz nada */ },
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.Red
         ),

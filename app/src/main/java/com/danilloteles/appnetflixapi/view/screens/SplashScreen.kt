@@ -14,6 +14,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -31,6 +34,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.danilloteles.appnetflixapi.R
+import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.VERMELHO
 import kotlinx.coroutines.delay
 
@@ -50,7 +54,7 @@ fun SplashScreen(
     }
 
     LaunchedEffect(Unit) {
-        delay(2500)
+        delay(6000)
         onTimeout()
     }
 
@@ -68,7 +72,7 @@ fun SplashScreen(
                 initialValue = 0f,
                 targetValue = 1f,
                 animationSpec = tween(
-                    durationMillis = 1000,
+                    durationMillis = 4000,
                     easing = FastOutSlowInEasing
                 )
             ) { value, _ ->
@@ -89,13 +93,8 @@ fun SplashScreen(
                 colorFilter = ColorFilter.tint(VERMELHO)
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            CircularProgressIndicator(
-                color = VERMELHO,
-                modifier = Modifier.size(36.dp),
-                strokeWidth = 3.dp
-            )
+            Spacer(modifier = Modifier.height(32.dp))
+            IndeterminateCircularProgressIndicatorSample()
         }
 
     }
@@ -107,4 +106,31 @@ fun SplashScreenPreview() {
     SplashScreen(
         onTimeout = {}
     )
+}
+
+@Preview
+@Composable
+fun IndeterminateCircularProgressIndicatorSample() {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) { CircularProgressIndicator(
+        color = VERMELHO
+    ) }
+}
+
+@Preview
+@Composable
+fun IndeterminateLinearProgressIndicatorSample() {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) { LinearProgressIndicator(
+        color = VERMELHO,
+        trackColor = BLACK
+    ) }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Preview
+@Composable
+fun IndeterminateLinearWavyProgressIndicatorSample() {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) { LinearWavyProgressIndicator(
+        color = VERMELHO,
+        trackColor = BLACK
+    ) }
 }

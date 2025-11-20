@@ -3,8 +3,9 @@ package com.danilloteles.appnetflixapi.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.danilloteles.appnetflixapi.model.Filme
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
-import com.danilloteles.appnetflixapi.utils.UiState
+import com.danilloteles.appnetflixapi.utils.events.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -13,8 +14,8 @@ class PopularMoviesViewModel : ViewModel() {
 
     private val filmeAPI = RetrofitHelper.filmeAPI
 
-    private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
-    val uiState: StateFlow<UiState> = _uiState
+    private val _uiState = MutableStateFlow<UiState<List<Filme>>>(UiState.Loading)
+    val uiState: StateFlow<UiState<List<Filme>>> = _uiState
 
     init {
         buscarFilmesPopulares()

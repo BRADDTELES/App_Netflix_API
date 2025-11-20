@@ -62,12 +62,6 @@ dependencies {
     // Retrofit e Gson
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
-    // Room
-    implementation(libs.androidx.room.runtime)
-    // Add the KSP plugin to your project
-    ksp(libs.androidx.room.compiler)
-    // Kotlin Extensions and Coroutines support for Room
-    implementation(libs.androidx.room.ktx)
     // Navigation Compose
     implementation(libs.androidx.navigation.compose)
     // Splash Screen API
@@ -80,6 +74,16 @@ dependencies {
     // Material3 - versão gerenciada pelo BOM
     implementation(libs.androidx.material3)
     implementation(libs.material3)
+    // DataStore
+    implementation(libs.androidx.datastore.preferences)
+    // Browser
+    implementation(libs.androidx.browser)
+    // Room
+    implementation(libs.androidx.room.runtime)
+    // Add the KSP plugin to your project
+    ksp(libs.androidx.room.compiler)
+    // Kotlin Extensions and Coroutines support for Room
+    implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.compose.material3.v140)
     implementation(libs.androidx.compose.material3.window.size.class1)
     implementation(libs.androidx.compose.material3.adaptive.navigation.suite)
