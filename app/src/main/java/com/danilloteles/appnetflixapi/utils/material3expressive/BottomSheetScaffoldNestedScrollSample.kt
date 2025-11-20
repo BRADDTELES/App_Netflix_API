@@ -82,8 +82,7 @@ import com.danilloteles.appnetflixapi.ui.theme.WHITE
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun BottomSheetScaffoldNestedScrollSample(
-    /*filme: Filme,*/
-    movie: Movie,
+    filme: Filme,
     onClick: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
@@ -91,19 +90,16 @@ fun BottomSheetScaffoldNestedScrollSample(
     val scaffoldState = rememberBottomSheetScaffoldState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
-    var splitButtonChecked by remember { mutableStateOf(false) }
-
     BottomSheetScaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         sheetContent = {
-
             Box(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 AsyncImage(
                     model =
                         /*Constantes.IMAGE_BASE_URL + filme.poster_path,*/
-                        movie.imagemUrl,
+                        R.drawable.movie_show_vizinha,
                     contentDescription = "Capa do filme",
                     modifier = Modifier
                         .fillMaxWidth()
@@ -145,7 +141,9 @@ fun BottomSheetScaffoldNestedScrollSample(
                     containerColor = Color.Red
                 ),
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(
+                        onClick = onNavigateBack
+                    ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar", tint = WHITE)
                     }
                 },
@@ -227,7 +225,6 @@ fun BottomSheetScaffoldNestedScrollSample(
                                 }
                             },
                         )
-
                         DropdownMenu(
                             expanded = splitButtonChecked,
                             onDismissRequest = { splitButtonChecked = false }
@@ -261,7 +258,7 @@ fun BottomSheetScaffoldNestedScrollSample(
                 Text(
                     text =
                         /*filme.title,*/
-                        movie.title,
+                        "Movie title",
                     color = WHITE,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
@@ -275,7 +272,11 @@ fun BottomSheetScaffoldNestedScrollSample(
                 Text(
                     text =
                         /*filme.overview,*/
-                        movie.descricao,
+                        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vestibulum semper eros ut faucibus. Aenean ultricies volutpat dapibus. Aenean quis malesuada est, sit amet porttitor neque. Nunc faucibus lacus neque, ac sodales nunc dignissim a. Ut libero ante, tincidunt vitae luctus sed, feugiat in felis. Sed volutpat consectetur nulla ut ullamcorper. Integer nibh magna, scelerisque vel orci nec, convallis eleifend metus. Pellentesque pulvinar mauris id leo luctus, sit amet blandit felis luctus. Curabitur nec vulputate lectus. Fusce consectetur felis vel pretium viverra. Fusce mattis elit at nisl luctus, vitae ultricies erat pharetra. Suspendisse eu accumsan neque. Sed elementum nibh eu maximus mollis. Proin cursus ex vel est luctus ultricies. Nulla mollis rhoncus fermentum.\n" +
+                                "\n" +
+                                "Ut sapien felis, placerat ut eleifend id, vestibulum non leo. Phasellus ac sapien ut odio faucibus aliquet sit amet ac ligula. Curabitur ultrices eleifend nibh id iaculis. Etiam dictum arcu eu quam dictum ultrices. Quisque ut eros nisi. Nulla vitae posuere ex. Praesent venenatis nulla eget mattis pellentesque. Fusce nec dictum nisl.\n" +
+                                "\n" +
+                                "Maecenas diam mauris, maximus non risus et, pulvinar faucibus nibh. Nunc ultricies sodales convallis. Phasellus rhoncus eu neque id finibus. Sed eu vehicula tortor. Nullam convallis erat ut quam bibendum venenatis. Vivamus suscipit nisi at est mollis interdum. Sed placerat nulla in tortor convallis, eu finibus dolor tincidunt. Vestibulum efficitur, mauris eget euismod rhoncus, neque dui maximus orci, non rutrum nisl eros ac ex. Morbi aliquam porttitor velit in pharetra. Mauris id feugiat felis, ac fringilla nibh. Aenean pulvinar, velit eu eleifend semper, metus nisi facilisis enim, ut hendrerit ipsum mauris eget quam.",
                     color = WHITE,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -290,7 +291,7 @@ fun BottomSheetScaffoldNestedScrollSample(
 @Composable
 fun BottomSheetScaffoldNestedScrollSamplePreview() {
     BottomSheetScaffoldNestedScrollSample(
-        /*filme = Filme(
+        filme = Filme(
             id = 1,
             title = "Movie title",
             poster_path = "/t6HIqrRAFyUMC6bZqMfPSzPNw0s.jpg",
@@ -307,16 +308,6 @@ fun BottomSheetScaffoldNestedScrollSamplePreview() {
             vote_average = 7.0,
             vote_count = 100,
             genre_ids = emptyList(),
-        ),*/
-        movie = Movie(
-            id = 1,
-            title = "Movie title",
-            descricao = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vestibulum semper eros ut faucibus. Aenean ultricies volutpat dapibus. Aenean quis malesuada est, sit amet porttitor neque. Nunc faucibus lacus neque, ac sodales nunc dignissim a. Ut libero ante, tincidunt vitae luctus sed, feugiat in felis. Sed volutpat consectetur nulla ut ullamcorper. Integer nibh magna, scelerisque vel orci nec, convallis eleifend metus. Pellentesque pulvinar mauris id leo luctus, sit amet blandit felis luctus. Curabitur nec vulputate lectus. Fusce consectetur felis vel pretium viverra. Fusce mattis elit at nisl luctus, vitae ultricies erat pharetra. Suspendisse eu accumsan neque. Sed elementum nibh eu maximus mollis. Proin cursus ex vel est luctus ultricies. Nulla mollis rhoncus fermentum.\n" +
-                    "\n" +
-                    "Ut sapien felis, placerat ut eleifend id, vestibulum non leo. Phasellus ac sapien ut odio faucibus aliquet sit amet ac ligula. Curabitur ultrices eleifend nibh id iaculis. Etiam dictum arcu eu quam dictum ultrices. Quisque ut eros nisi. Nulla vitae posuere ex. Praesent venenatis nulla eget mattis pellentesque. Fusce nec dictum nisl.\n" +
-                    "\n" +
-                    "Maecenas diam mauris, maximus non risus et, pulvinar faucibus nibh. Nunc ultricies sodales convallis. Phasellus rhoncus eu neque id finibus. Sed eu vehicula tortor. Nullam convallis erat ut quam bibendum venenatis. Vivamus suscipit nisi at est mollis interdum. Sed placerat nulla in tortor convallis, eu finibus dolor tincidunt. Vestibulum efficitur, mauris eget euismod rhoncus, neque dui maximus orci, non rutrum nisl eros ac ex. Morbi aliquam porttitor velit in pharetra. Mauris id feugiat felis, ac fringilla nibh. Aenean pulvinar, velit eu eleifend semper, metus nisi facilisis enim, ut hendrerit ipsum mauris eget quam.",
-            imagemUrl = R.drawable.movie_show_vizinha
         ),
         onClick = {},
         onNavigateBack = {}

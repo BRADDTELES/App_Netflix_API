@@ -40,10 +40,8 @@ fun MenuSection(
             .height(200.dp)
     ) {
 
-        val imagemFundo = R.drawable.capa
-
         AsyncImage(
-            model = imagemFundo,
+            model = R.drawable.capa,
             contentDescription = "Capa do filme",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop

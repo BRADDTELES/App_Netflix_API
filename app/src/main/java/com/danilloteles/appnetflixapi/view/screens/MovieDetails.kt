@@ -54,7 +54,9 @@ fun MovieDetails(
         is UiState.Idle -> {}
         is UiState.Loading -> {
             Box(
-                modifier = Modifier.fillMaxSize().background(BLACK),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(BLACK),
                 contentAlignment = Alignment.Center
             ) {
                 LoadingIndicatorCustom(animationDelay = 400)
@@ -87,8 +89,7 @@ fun MovieDetails(
 @Composable
 fun ConteudoFilme(
     filme: FilmeDetalhes,
-    onEditClick: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    onEditClick: (Int) -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -147,41 +148,34 @@ fun ConteudoFilme(
 @Preview
 @Composable
 private fun ConteudoFilmePreview() {
-    Scaffold(
-        topBar = {
-            NetflixTopBar()
-        }
-    ) { paddingValues ->
-        ConteudoFilme(
-            filme = FilmeDetalhes(
-                adult = false,
-                backdrop_path = "",
-                belongs_to_collection = "",
-                budget = 0,
-                genres = emptyList(),
-                homepage = "",
-                id = 0,
-                imdb_id = "",
-                original_language = "",
-                original_title = "",
-                overview = "This is a test movie for preview.",
-                popularity = 0.0,
-                poster_path = "/t6HIqrRAFyUMC6bZqMfPSzPNw0s.jpg",
-                production_companies = emptyList(),
-                production_countries = emptyList(),
-                release_date = "",
-                revenue = 0,
-                runtime = 0,
-                spoken_languages = emptyList(),
-                status = "",
-                tagline = "",
-                title = "Movie title",
-                video = false,
-                vote_average = 0.0,
-                vote_count = 0
-            ),
-            onEditClick = {},
-            modifier = Modifier.padding(paddingValues)
-        )
-    }
+    ConteudoFilme(
+        filme = FilmeDetalhes(
+            adult = false,
+            backdrop_path = "",
+            belongs_to_collection = "",
+            budget = 0,
+            genres = emptyList(),
+            homepage = "",
+            id = 0,
+            imdb_id = "",
+            original_language = "",
+            original_title = "",
+            overview = "This is a test movie for preview.",
+            popularity = 0.0,
+            poster_path = "/t6HIqrRAFyUMC6bZqMfPSzPNw0s.jpg",
+            production_companies = emptyList(),
+            production_countries = emptyList(),
+            release_date = "",
+            revenue = 0,
+            runtime = 0,
+            spoken_languages = emptyList(),
+            status = "",
+            tagline = "",
+            title = "Movie title",
+            video = false,
+            vote_average = 0.0,
+            vote_count = 0
+        ),
+        onEditClick = {}
+    )
 }
