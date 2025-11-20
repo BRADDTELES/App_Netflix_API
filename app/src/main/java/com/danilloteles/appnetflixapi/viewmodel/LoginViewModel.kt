@@ -39,13 +39,13 @@ class LoginViewModel(
                     response.body()?.let { tokenResponse ->
                         if (tokenResponse.success) {
                             requestToken = tokenResponse.request_token
-                            val authUrl = "https://www.themoviedb.org/authenticate/$requestToken"
+                            val authUrl = "https://www.themoviedb.org/authenticate/$requestToken?redirect_to=netflixapp://auth"
                             _loginEvent.emit(LoginEvent.OpenWebView(authUrl))
                             _uiState.value = UiState.Success(Unit)
                         } else {
                             _uiState.value = UiState.Error("Falha ap obter request token.")
                             Log.e(
-                                "LoginViewModel",
+                                "TAG-LoginViewModel",
                                 "Falha ap obter request token: ${tokenResponse.request_token}"
                             )
                         }
@@ -54,16 +54,17 @@ class LoginViewModel(
                     }
                 } else {
                     _uiState.value = UiState.Error("Erro HTTP ao obter request token.")
-                    Log.e("LoginViewModel", "Erro HTTP ao obter request token: ${response.code()}")
+                    Log.e("TAG-LoginViewModel", "Erro HTTP ao obter request token: ${response.code()}")
                 }
             } catch (e: Exception) {
                 _uiState.value = UiState.Error("Erro de conexão ao obter request token.")
-                Log.e("LoginViewModel", "Erro: ${e.message}", e)
+                Log.e("TAG-LoginViewModel", "Erro: ${e.message}", e)
             }
         }
     }
 
     fun createSession() {
+        Log.d("TAG-LoginViewModel", "Iniciando createSession com requestToken: $requestToken")
         viewModelScope.launch {
             _uiState.value = UiState.Loading
             requestToken?.let { token ->
@@ -73,27 +74,29 @@ class LoginViewModel(
                     if (response.isSuccessful) {
                         response.body()?.let { sessionIdResponse ->
                             if (sessionIdResponse.success) {
+                                Log.d("TAG-LoginViewModel", "Session ID criado com sucesso: ${sessionIdResponse.session_id}")
                                 userPreferencesRepository.saveSessionId(sessionIdResponse.session_id)
                                 _loginEvent.emit(LoginEvent.LoginSuccess)
+                                Log.d("TAG-LoginViewModel", "LoginEvent.LoginSuccess emitido.")
                                 _uiState.value = UiState.Success(Unit)
                             } else {
                                 _uiState.value = UiState.Error("Falha ao criar session id.")
                                 Log.e(
-                                    "LoginViewModel",
+                                    "TAG-LoginViewModel",
                                     "Falha ao criar sessão: ${sessionIdResponse.success}"
                                 )
                             }
                         } ?: run {
                             _uiState.value = UiState.Error("Resposta vazia ao criar session id.")
-                            Log.e("LoginViewModel", "Resposta vazia ao criar session id.")
+                            Log.e("TAG-LoginViewModel", "Resposta vazia ao criar session id.")
                         }
                     } else {
                         _uiState.value = UiState.Error("Erro HTTP ao criar session id.")
-                        Log.e("LoginViewModel", "Erro HTTP ao criar session id: ${response.code()}")
+                        Log.e("TAG-LoginViewModel", "Erro HTTP ao criar session id: ${response.code()}")
                     }
                 } catch (e: Exception) {
                     _uiState.value = UiState.Error("Erro de conexão ao criar session id")
-                    Log.e("LoginViewModel", "Erro: ${e.message}", e)
+                    Log.e("TAG-LoginViewModel", "Erro: ${e.message}", e)
                 }
             } ?: run {
                 _uiState.value =

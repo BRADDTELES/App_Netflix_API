@@ -22,12 +22,18 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleFloatingActionButton
 import androidx.compose.material3.ToggleFloatingActionButtonDefaults.animateIcon
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.animateFloatingActionButton
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -62,37 +68,115 @@ import com.danilloteles.appnetflixapi.viewmodel.MyListViewModel // Import altera
 import com.danilloteles.appnetflixapi.utils.UserPreferencesRepository // Import adicionado para o ViewModelFactory
 import androidx.compose.ui.platform.LocalContext // Import adicionado para o ViewModelFactory
 import androidx.compose.runtime.LaunchedEffect // Import adicionado
+import com.danilloteles.appnetflixapi.utils.MyListPreferencesRepository
+import android.util.Log // Import adicionado
+import androidx.compose.material3.ExposedDropdownMenuDefaults.TrailingIcon
 
 @Composable
 fun MyListScreen(
     onMovieClick: (Filme) -> Unit,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToListForm: () -> Unit
 ) {
     val context = LocalContext.current // Adicionado para o ViewModelFactory
     val myListViewModel: MyListViewModel = viewModel( // Instância alterada
         factory = MyListViewModel.MyListViewModelFactory(
-            UserPreferencesRepository(context)
+            UserPreferencesRepository(context),
+            MyListPreferencesRepository(context)
         )
     )
     val uiState by myListViewModel.uiState.collectAsStateWithLifecycle()
+    val userListsUiState by myListViewModel.userListsUiState.collectAsStateWithLifecycle()
     val listState = rememberLazyGridState()
     val fabVisible by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
     var fabMenuExpanded by rememberSaveable { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Estado para controlar o dropdown de listas
+    var expanded by remember { mutableStateOf(false) }
+    var selectedListId by rememberSaveable { mutableStateOf<String?>(null) }
+    var selectedListName by rememberSaveable { mutableStateOf("Minhas Listas") }
 
     // 1. Estado para controlar o índice do filtro selecionado
     var selectedFilterIndex by remember { mutableIntStateOf(0) }
 
     // Chama loadMyListMovies() quando a tela é inicializada
     LaunchedEffect(Unit) {
-        myListViewModel.loadMyListMovies()
+        myListViewModel.loadMyListMovies() // Carrega a lista padrão ao iniciar
+    }
+
+    LaunchedEffect(userListsUiState) {
+        if (userListsUiState is UiState.Success && selectedListId == null) {
+            val lists = (userListsUiState as UiState.Success).data
+            // Tenta selecionar a lista "Minha Lista" por padrão ou a primeira lista
+            val primaryList = lists.firstOrNull { it.name == "Minha Lista" } ?: lists.firstOrNull()
+            primaryList?.let {
+                selectedListId = it.id.toString()
+                selectedListName = it.name
+                myListViewModel.loadMyListMovies(it.id.toString())
+            }
+        }
+    }
+
+    LaunchedEffect(uiState) {
+        if (uiState is UiState.Error) {
+            snackbarHostState.showSnackbar((uiState as UiState.Error).message)
+        }
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Minha Lista") },
+                title = {
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = { expanded = !expanded },
+                    ) {
+                        Text(
+                            text = selectedListName,
+                            modifier = Modifier.menuAnchor(),
+                            color = WHITE
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                        ) {
+                            when (val state = userListsUiState) {
+                                is UiState.Success -> {
+                                    state.data.forEach { list ->
+                                        DropdownMenuItem(
+                                            text = { Text(list.name) },
+                                            onClick = {
+                                                selectedListId = list.id.toString()
+                                                selectedListName = list.name
+                                                myListViewModel.loadMyListMovies(list.id.toString())
+                                                expanded = false
+                                            }
+                                        )
+                                    }
+                                }
+                                is UiState.Loading -> {
+                                    DropdownMenuItem(
+                                        text = { Text("Carregando listas...") },
+                                        onClick = { /* No-op */ }
+                                    )
+                                }
+                                is UiState.Error -> {
+                                    DropdownMenuItem(
+                                        text = { Text("Erro ao carregar listas") },
+                                        onClick = { /* No-op */ }
+                                    )
+                                }
+                                else -> {}
+                            }
+                        }
+                    }
+                },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = {
+                        Log.d("TAG-MyListScreen", "Botão de voltar clicado.")
+                        onNavigateBack()
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Voltar",
@@ -110,7 +194,7 @@ fun MyListScreen(
             MaterialTheme(colorScheme = FabMenuColorScheme()) {
                 val items =
                     listOf(
-                        Icons.Outlined.AddComment to "Adicionar Filme",
+                        Icons.Default.Add to "Criar Nova Lista",
                         Icons.Outlined.DeleteOutline to "Remover Filme"
                     )
 
@@ -164,14 +248,20 @@ fun MyListScreen(
                                         )
                                 }
                             },
-                            onClick = { fabMenuExpanded = false },
+                            onClick = {
+                                if (item.second == "Criar Nova Lista") {
+                                    onNavigateToListForm()
+                                }
+                                fabMenuExpanded = false
+                                      },
                             icon = { Icon(item.first, contentDescription = null) },
                             text = { Text(text = item.second) },
                         )
                     }
                 }
             }
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -184,12 +274,7 @@ fun MyListScreen(
                 selectedIndex = selectedFilterIndex,
                 onIndexChange = { newIndex ->
                     selectedFilterIndex = newIndex
-                    // TODO: Adicionar a lógica de filtragens de Filmes Favoritos, Curtidos e de A-Z, vinda pela viewModel aqui.
-                    // Ex: when (newIndex) {
-                    //     0 -> viewModel.filterByFavorites()
-                    //     1 -> viewModel.filterByLikes()
-                    //     2 -> viewModel.sortByAlphabet()
-                    // }
+                    myListViewModel.applyFilter(newIndex)
                 }
             )
 
@@ -204,21 +289,38 @@ fun MyListScreen(
                     }
                 }
                 is UiState.Success -> {
-                    PopularMoviesSection(
-                        listFilme = state.data,
-                        onMovieClick = onMovieClick,
-                        lazyGridState = listState
-                    )
+                    if (state.data.isEmpty()) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Sua lista está vazia.",
+                                color = WHITE
+                            )
+                        }
+                    } else {
+                        PopularMoviesSection(
+                            listFilme = state.data,
+                            onMovieClick = onMovieClick,
+                            lazyGridState = listState
+                        )
+                    }
                 }
                 is UiState.Error -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = state.message,
-                            color = WHITE
-                        )
+                    // O erro agora é tratado pelo Snackbar.
+                    // Opcionalmente, pode-se manter o estado visual anterior ou um estado vazio.
+                    // Para simplificar, exibimos o mesmo que a lista vazia.
+                    if ((uiState as? UiState.Success)?.data.isNullOrEmpty() == true) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Sua lista está vazia.",
+                                color = WHITE
+                            )
+                        }
                     }
                 }
             }
@@ -229,5 +331,5 @@ fun MyListScreen(
 @Preview
 @Composable
 private fun MyListScreenPreview() {
-    MyListScreen(onMovieClick = {}, onNavigateBack = {})
+    MyListScreen(onMovieClick = {}, onNavigateBack = {}, onNavigateToListForm = {})
 }

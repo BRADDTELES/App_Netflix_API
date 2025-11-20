@@ -1,5 +1,6 @@
 [versions]
 agp = "8.13.1"
+browser = "1.9.0"
 coilCompose = "3.3.0"
 coilNetworkOkhttp = "3.3.0"
 converterGson = "3.0.0"
@@ -26,6 +27,7 @@ roomRuntime = "2.8.3"
 material3 = "1.5.0-alpha08"
 
 [libraries]
+androidx-browser = { module = "androidx.browser:browser", version.ref = "browser" }
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 androidx-compose-material3-adaptive-navigation-suite = { module = "androidx.compose.material3:material3-adaptive-navigation-suite", version.ref = "material3AdaptiveNavigationSuite" }
 androidx-compose-material3-v140 = { module = "androidx.compose.material3:material3", version.ref = "material3Version" }

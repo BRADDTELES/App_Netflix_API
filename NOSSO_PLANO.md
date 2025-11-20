@@ -44,7 +44,7 @@ O TMDB é a fonte única da verdade para todos os dados de filmes (títulos, pô
 
 ---
 
-### **Prioridade 2: Gerenciamento da "Minha Lista" (Lógica Unificada) - EM ANDAMENTO**
+### **Prioridade 2: Gerenciamento da "Minha Lista" (Lógica Unificada) - CONCLUÍDA**
 **Objetivo:** Centralizar toda a lógica de interação com a "Minha Lista" na tela `MyMovieDetails`, que se tornará a tela de detalhes padrão para qualquer filme no aplicativo.
 
 **Plano de Ação:**
@@ -57,18 +57,12 @@ O TMDB é a fonte única da verdade para todos os dados de filmes (títulos, pô
 
 2.  **Lógica do `SplitButtonLayout` em `MyMovieDetails.kt`:**
     *   **Cenário 1: Filme NÃO está na lista.**
-        *   O botão principal exibirá "Adicionar à Lista".
-        *   O `onClick` acionará a função de **adicionar** no ViewModel, que deve:
-            a. Verificar se a `session_id` existe (se não, redirecionar para o login).
-            b. Garantir que a lista principal "Minha Lista" exista e que temos o `list_id` (criando-a na primeira vez, se necessário, com `POST /list`).
-            c. Executar a chamada `POST /list/{list_id}/add_item`, passando o `movie_id`.
-            d. Após o sucesso, atualizar a UI para refletir que o filme foi adicionado (o botão agora deve mudar para o cenário 2).
+        *   Dentro do `DropdownMenu`, a opção "Adicionar à Lista" será exibida.
+        *   O `onClick` acionará a função de **adicionar** no ViewModel.
     *   **Cenário 2: Filme JÁ ESTÁ na lista.**
-        *   O botão principal exibirá "Remover da Lista" ou um ícone de `✓`.
+        *   Dentro do `DropdownMenu`, a opção "Remover da Lista" será exibida.
         *   O `onClick` acionará a função de **remover** no ViewModel.
-        *   A função deve chamar `POST /list/{list_id}/remove_item`, passando o `movie_id`.
-        *   Após o sucesso, atualizar a UI para refletir que o filme foi removido (o botão agora deve voltar para o cenário 1).
-    *   **STATUS**: Lógica do ViewModel implementada em `MyMovieDetailsViewModel.kt`. **Falta integrar esta lógica na UI de `MyMovieDetails.kt`**.
+    *   **STATUS**: Concluído. A UI em `MyMovieDetails.kt` foi integrada com o ViewModel, e o `DropdownMenu` agora permite adicionar/remover o filme da lista dinamicamente.
 
 **Endpoints a serem usados:**
 *   `POST /list` (para criar a lista na primeira vez)
@@ -80,20 +74,20 @@ O TMDB é a fonte única da verdade para todos os dados de filmes (títulos, pô
 
 ---
 
-### **Prioridade 3: Exibição da "Minha Lista" - EM ANDAMENTO**
+### **Prioridade 3: Exibição da "Minha Lista" - CONCLUÍDA**
 **Objetivo:** Mostrar ao usuário os filmes que ele adicionou à sua lista.
 
 **Plano de Ação:**
 1.  **ViewModel (`MyListViewModel.kt`):**
     *   Quando a `MyListScreen` for iniciada, o `ViewModel` deve usar a `session_id` e o `list_id` salvos.
     *   Fazer a chamada `GET /list/{list_id}` para buscar todos os filmes contidos na lista.
-    *   **STATUS**: Esqueleto e `loadMyListMovies()` implementados em `MyListViewModel.kt`. Ainda precisa de toda a lógica para obter `list_id` (que será resolvida na Prioridade 2).
+    *   **STATUS**: Concluído. A lógica para obter/criar o `list_id` primário e carregar os filmes reais da lista do usuário foi implementada. A funcionalidade de filtro (Padrão, Melhor Avaliados, A-Z) também foi adicionada.
 
 2.  **Tela (`MyListScreen.kt`):**
     *   A tela deve observar o estado do `ViewModel`.
     *   Exibir uma `LazyColumn` ou `LazyVerticalGrid` com os filmes retornados pela API.
     *   Mostrar um estado de "Carregando..." enquanto a chamada está em progresso e uma mensagem de "Sua lista está vazia" se a API não retornar filmes.
-    *   **STATUS**: `MyListScreen.kt` foi atualizada para usar `MyListViewModel` e `loadMyListMovies()`. A exibição da lista está usando `PopularMoviesSection`.
+    *   **STATUS**: `MyListScreen.kt` foi atualizada para usar `MyListViewModel` e `loadMyListMovies()`. A exibição da lista está usando `PopularMoviesSection`. A lógica de filtragem foi conectada aos botões na UI.
     *   **Integração com `NetflixApp.kt`**: `MyListScreen` foi integrada ao `NavHost` em `NetflixApp.kt`.
 
 3.  **Navegação:**
@@ -111,5 +105,5 @@ O TMDB é a fonte única da verdade para todos os dados de filmes (títulos, pô
 
 *   **Feedback Visual:** Adicionar indicadores de carregamento (`CircularProgressIndicator`) em todas as telas durante as chamadas de API e usar `Snackbar` para mensagens de sucesso/erro (ex: "Filme adicionado à lista!").
 *   **Gerenciamento de Múltiplas Listas:** Transformar a `MovieForm.kt` em `ListForm.kt` para permitir que usuários avançados criem e gerenciem múltiplas listas personalizadas.
-*   **Estado Offline:** Implementar um banco de dados local (Room) para fazer cache da "Minha Lista", permitindo que o usuário veja seus filmes salvos mesmo sem conexão à internet.
-*   **STATUS**: Pendente.
+*   **Estado Offline ("Minha Lista"):** Implementar cache offline para a "Minha Lista" utilizando `DataStore Preferences` (via `Gson`).
+    *   **Nota:** O `session_id`, `account_id` e `primary_list_id` já são gerenciados com `DataStore Preferences` via `UserPreferencesRepository.kt`.

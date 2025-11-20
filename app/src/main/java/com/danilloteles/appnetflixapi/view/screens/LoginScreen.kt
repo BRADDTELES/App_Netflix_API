@@ -42,7 +42,8 @@ import com.danilloteles.appnetflixapi.constantes.AppDestinations.LOGIN_SCREEN
 import com.danilloteles.appnetflixapi.utils.UserPreferencesRepository
 import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
 import com.danilloteles.appnetflixapi.constantes.AppDestinations.REQUEST_TOKEN_ARG // Import adicionado
-
+import android.util.Log
+import androidx.core.net.toUri
 
 @Composable
 fun LoginScreen(
@@ -59,18 +60,20 @@ fun LoginScreen(
 
     val uiState by loginViewModel.uiState.collectAsStateWithLifecycle()
 
+    Log.d("TAG-LoginScreen", "deepLinkRequestToken na composição: $deepLinkRequestToken")
+
     // LaunchedEffect para lidar com eventos do ViewModel
     LaunchedEffect(Unit) {
         loginViewModel.loginEvent.collect { event ->
+            Log.d("TAG-LoginScreen", "Evento de login recebido: $event")
             when (event) {
                 is LoginEvent.OpenWebView -> {
                     val customTabsIntent = CustomTabsIntent.Builder().build()
-                    customTabsIntent.launchUrl(context, Uri.parse(event.url))
+                    customTabsIntent.launchUrl(context, event.url.toUri())
                 }
                 LoginEvent.LoginSuccess -> {
-                    Toast.makeText(context, "Login realizado com sucesso!", Toast.LENGTH_SHORT).show()
                     navController.navigate(AppDestinations.MY_LIST_SCREEN) {
-                        popUpTo(LOGIN_SCREEN) { inclusive = true } // Garante que a LoginScreen é removida
+                        popUpTo(AppDestinations.MAIN_SCREEN) { inclusive = false }
                     }
                     // Resetar o token no ViewModel para evitar processamento duplicado
                     MainActivity.deeplinkRequestToken.value = null
@@ -81,6 +84,11 @@ fun LoginScreen(
 
     // LaunchedEffect para lidar com o deepLinkRequestToken
     LaunchedEffect(deepLinkRequestToken) {
+        if (deepLinkRequestToken != null) {
+            Log.d("TAG-LoginScreen", "LaunchedEffect(deepLinkRequestToken) acionado com token: $deepLinkRequestToken")
+        } else {
+            Log.d("TAG-LoginScreen", "LaunchedEffect(deepLinkRequestToken) acionado, mas token é nulo.")
+        }
         deepLinkRequestToken?.let { token ->
             loginViewModel.requestToken = token // Define o requestToken no ViewModel
             loginViewModel.createSession() // Inicia a criação da sessão
@@ -104,7 +112,7 @@ fun LoginScreen(
                 contentDescription = "Logo do TMDB",
                 modifier = Modifier.size(80.dp)
             )
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(72.dp))
             Button(
                 onClick = { loginViewModel.authenticateWithTmdb() },
                 colors = ButtonDefaults.buttonColors(
@@ -139,13 +147,4 @@ fun LoginScreen(
             else -> {} // Idle ou Success (não mostra nada na tela de login nesses estados)
         }
     }
-}
-
-@Preview
-@Composable
-private fun LoginScreenPreview(){
-    // Para o Preview, você precisará mockar o NavController e o ViewModel
-    // Não é possível criar uma instância real de NavController ou ViewModel aqui.
-    // Pode-se criar um NavController mock ou remover o NavController do Preview se ele não for essencial.
-    // LoginScreen(navController = rememberNavController()) // Isso não funcionará no Preview sem um NavHost
 }

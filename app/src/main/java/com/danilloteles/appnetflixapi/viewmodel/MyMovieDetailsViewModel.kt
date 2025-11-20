@@ -8,7 +8,10 @@ import com.danilloteles.appnetflixapi.api.FilmeAPI
 import com.danilloteles.appnetflixapi.model.AddRemoveListItemRequest
 import com.danilloteles.appnetflixapi.model.CreateListRequest
 import com.danilloteles.appnetflixapi.model.FilmeDetalhes
+import com.danilloteles.appnetflixapi.model.Filme
+import com.danilloteles.appnetflixapi.model.TmdbList
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
+import com.danilloteles.appnetflixapi.utils.MyListPreferencesRepository
 import com.danilloteles.appnetflixapi.utils.UiState
 import com.danilloteles.appnetflixapi.utils.UserPreferencesRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +22,8 @@ import kotlinx.coroutines.launch
 class MyMovieDetailsViewModel(
     private val movieId: Int,
     private val filmeAPI: FilmeAPI,
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val myListPreferencesRepository: MyListPreferencesRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<UiState<FilmeDetalhes>>(UiState.Loading)
@@ -30,6 +34,9 @@ class MyMovieDetailsViewModel(
 
     private val _myListActionUiState = MutableStateFlow<UiState<Unit>>(UiState.Idle)
     val myListActionUiState: StateFlow<UiState<Unit>> = _myListActionUiState
+
+    private val _userListsUiState = MutableStateFlow<UiState<List<TmdbList>>>(UiState.Idle)
+    val userListsUiState: StateFlow<UiState<List<TmdbList>>> = _userListsUiState
 
     private var primaryListId: String? = null
     private var accountId: Int? = null
@@ -43,6 +50,7 @@ class MyMovieDetailsViewModel(
             userPreferencesRepository.primaryListId.first()?.let {
                 primaryListId = it
             }
+            loadUserLists() // Carrega as listas do usuário
             checkIfMovieInMyList()
         }
     }
@@ -69,76 +77,60 @@ class MyMovieDetailsViewModel(
         }
     }
 
-    private suspend fun getOrCreatePrimaryListId(sessionId: String): String? {
-        // Tenta obter o primaryListId do DataStore
-        userPreferencesRepository.primaryListId.first()?.let {
-            primaryListId = it
-            return it
-        }
-
-        // Se não estiver no DataStore, tenta buscar as listas do usuário
-        val accId = accountId ?: userPreferencesRepository.accountId.first()?.toIntOrNull()
-        if (accId == null) {
-            // Se o accountId não estiver disponível, tenta buscar os detalhes da conta
-            val accountDetailsResponse = filmeAPI.getAccountDetails(sessionId)
-            if (accountDetailsResponse.isSuccessful) {
-                accountDetailsResponse.body()?.let { details ->
-                    accountId = details.id
-                    userPreferencesRepository.saveAccountId(details.id.toString())
-                }
-            }
-        }
-
-        accountId?.let { id ->
-            try {
-                val listsResponse = filmeAPI.getAccountLists(id, sessionId)
-                if (listsResponse.isSuccessful) {
-                    listsResponse.body()?.results?.firstOrNull { it.name == "Minha Lista" }?.let { list ->
-                        primaryListId = list.id.toString()
-                        userPreferencesRepository.savePrimaryListId(list.id.toString())
-                        return list.id.toString()
+    private fun loadUserLists() {
+        viewModelScope.launch {
+            _userListsUiState.value = UiState.Loading
+            userPreferencesRepository.sessionId.first()?.let { sessionId ->
+                val currentAccountId = getOrCreateAccountId(sessionId)
+                if (currentAccountId != null) {
+                    try {
+                        val response = filmeAPI.getAccountLists(currentAccountId, sessionId)
+                        if (response.isSuccessful) {
+                            response.body()?.let { accountListsResponse ->
+                                _userListsUiState.value = UiState.Success(accountListsResponse.results)
+                            } ?: run {
+                                _userListsUiState.value = UiState.Error("Não foi possível carregar as listas do usuário.")
+                            }
+                        } else {
+                            _userListsUiState.value = UiState.Error("Erro ao carregar listas do usuário: ${response.code()}")
+                        }
+                    } catch (e: Exception) {
+                        _userListsUiState.value = UiState.Error("Erro de conexão ao carregar listas: ${e.message}")
                     }
+                } else {
+                    _userListsUiState.value = UiState.Error("Usuário não autenticado ou Account ID não disponível.")
                 }
-            } catch (e: Exception) {
-                Log.e("MyMovieDetailsViewModel", "Erro ao buscar listas da conta: ${e.message}", e)
+            } ?: run {
+                _userListsUiState.value = UiState.Error("Usuário não autenticado. Faça login para ver suas listas.")
             }
-        }
-
-        // Se a lista não foi encontrada, cria uma nova
-        return try {
-            val createListRequest = CreateListRequest(
-                name = "Minha Lista",
-                description = "Minha lista de filmes e séries favoritas",
-                iso_639_1 = "pt-BR"
-            )
-            val createResponse = filmeAPI.createList(sessionId, createListRequest)
-            if (createResponse.isSuccessful) {
-                createResponse.body()?.let { response ->
-                    if (response.success) {
-                        primaryListId = response.list_id.toString()
-                        userPreferencesRepository.savePrimaryListId(response.list_id.toString())
-                        response.list_id.toString()
-                    } else {
-                        Log.e("MyMovieDetailsViewModel", "Falha ao criar lista: ${response.status_message}")
-                        null
-                    }
-                }
-            } else {
-                Log.e("MyMovieDetailsViewModel", "Erro HTTP ao criar lista: ${createResponse.code()}")
-                null
-            }
-        } catch (e: Exception) {
-            Log.e("MyMovieDetailsViewModel", "Erro de conexão ao criar lista: ${e.message}", e)
-            null
         }
     }
 
+    // Função auxiliar para obter ou criar o accountId
+    private suspend fun getOrCreateAccountId(sessionId: String): Int? {
+        // Tenta obter do DataStore
+        accountId ?: userPreferencesRepository.accountId.first()?.toIntOrNull()?.let {
+            accountId = it
+            return it
+        }
 
-    private fun checkIfMovieInMyList() {
+        // Se não estiver no DataStore, busca da API
+        val accountDetailsResponse = filmeAPI.getAccountDetails(sessionId)
+        if (accountDetailsResponse.isSuccessful) {
+            accountDetailsResponse.body()?.let { details ->
+                accountId = details.id
+                userPreferencesRepository.saveAccountId(details.id.toString())
+                return details.id
+            }
+        }
+        return null
+    }
+
+    private fun checkIfMovieInMyList(listIdToCheck: String? = null) {
         viewModelScope.launch {
             userPreferencesRepository.sessionId.first()?.let { sessionId ->
-                val listId = getOrCreatePrimaryListId(sessionId)
-                listId?.let { id ->
+                val targetListId = listIdToCheck ?: primaryListId ?: userPreferencesRepository.primaryListId.first()
+                targetListId?.let { id ->
                     try {
                         val response = filmeAPI.getListDetails(id, sessionId)
                         if (response.isSuccessful) {
@@ -162,35 +154,66 @@ class MyMovieDetailsViewModel(
     }
 
 
-    fun addOrRemoveMovie() {
+    fun addOrRemoveMovie(targetListId: String? = null) {
         viewModelScope.launch {
             _myListActionUiState.value = UiState.Loading
             userPreferencesRepository.sessionId.first()?.let { sessionId ->
-                val listId = getOrCreatePrimaryListId(sessionId)
-                listId?.let { id ->
-                    val request = AddRemoveListItemRequest(media_id = movieId)
-                    try {
-                        val response = if (_isInMyList.value) {
-                            filmeAPI.removeMovieFromList(id, sessionId, request)
-                        } else {
-                            filmeAPI.addMovieToList(id, sessionId, request)
-                        }
-
-                        if (response.isSuccessful && response.body()?.status_code == 1 || response.body()?.status_code == 12 || response.body()?.status_code == 13) {
-                            _isInMyList.value = !_isInMyList.value
-                            _myListActionUiState.value = UiState.Success(Unit)
-                        } else {
-                            val errorMessage = response.body()?.status_message ?: "Falha desconhecida."
-                            _myListActionUiState.value = UiState.Error(errorMessage)
-                            Log.e("MyMovieDetailsViewModel", "Falha ao adicionar/remover filme: ${response.code()} - $errorMessage")
-                        }
-                    } catch (e: Exception) {
-                        _myListActionUiState.value = UiState.Error("Erro de conexão ao adicionar/remover filme.")
-                        Log.e("MyMovieDetailsViewModel", "Erro de conexão ao adicionar/remover filme: ${e.message}", e)
-                    }
-                } ?: run {
+                val listToModifyId = targetListId ?: userPreferencesRepository.primaryListId.first()
+                if (listToModifyId == null) {
                     _myListActionUiState.value = UiState.Error("Erro: ID da lista não disponível. Tente novamente.")
                     Log.e("MyMovieDetailsViewModel", "List ID não disponível para adicionar/remover filme.")
+                    return@launch
+                }
+
+                val request = AddRemoveListItemRequest(media_id = movieId)
+                try {
+                    val response = if (_isInMyList.value) {
+                        filmeAPI.removeMovieFromList(listToModifyId, sessionId, request)
+                    } else {
+                        filmeAPI.addMovieToList(listToModifyId, sessionId, request)
+                    }
+
+                    if (response.isSuccessful && response.body()?.status_code == 1 || response.body()?.status_code == 12 || response.body()?.status_code == 13) {
+                        _isInMyList.value = !_isInMyList.value
+                        _myListActionUiState.value = UiState.Success(Unit)
+
+                        // Atualizar o cache do DataStore (ainda genérico para a "Minha Lista" principal)
+                        val currentCachedList = myListPreferencesRepository.myMovieList.first().toMutableList()
+                        if (_isInMyList.value) { // Se o filme foi adicionado (agora _isInMyList é true)
+                            (_uiState.value as? UiState.Success)?.data?.let { filmeDetalhes ->
+                                val filmeToAdd = Filme(
+                                    adult = filmeDetalhes.adult,
+                                    backdrop_path = filmeDetalhes.backdrop_path ?: "",
+                                    genre_ids = filmeDetalhes.genres.map { it.id },
+                                    id = filmeDetalhes.id,
+                                    original_language = filmeDetalhes.original_language,
+                                    original_title = filmeDetalhes.original_title,
+                                    overview = filmeDetalhes.overview,
+                                    popularity = filmeDetalhes.popularity,
+                                    poster_path = filmeDetalhes.poster_path ?: "",
+                                    release_date = filmeDetalhes.release_date,
+                                    title = filmeDetalhes.title,
+                                    video = filmeDetalhes.video,
+                                    vote_average = filmeDetalhes.vote_average,
+                                    vote_count = filmeDetalhes.vote_count
+                                )
+                                if (!currentCachedList.any { it.id == filmeToAdd.id }) {
+                                    currentCachedList.add(filmeToAdd)
+                                }
+                            }
+                        } else { // Se o filme foi removido (agora _isInMyList é false)
+                            currentCachedList.removeAll { it.id == movieId }
+                        }
+                        myListPreferencesRepository.saveMyMovieList(currentCachedList)
+                        Log.d("MyMovieDetailsVM", "Cache da lista atualizado. Filme ID: $movieId, Adicionado: ${_isInMyList.value}")
+                    } else {
+                        val errorMessage = response.body()?.status_message ?: "Falha desconhecida."
+                        _myListActionUiState.value = UiState.Error(errorMessage)
+                        Log.e("MyMovieDetailsViewModel", "Falha ao adicionar/remover filme: ${response.code()} - $errorMessage")
+                    }
+                } catch (e: Exception) {
+                    _myListActionUiState.value = UiState.Error("Erro de conexão ao adicionar/remover filme.")
+                    Log.e("MyMovieDetailsViewModel", "Erro de conexão ao adicionar/remover filme: ${e.message}", e)
                 }
             } ?: run {
                 _myListActionUiState.value = UiState.Error("Erro: Usuário não autenticado. Faça login para gerenciar sua lista.")
@@ -199,10 +222,15 @@ class MyMovieDetailsViewModel(
         }
     }
 
+    fun resetMyListActionUiState() {
+        _myListActionUiState.value = UiState.Idle
+    }
+
 
     class Factory(
         private val movieId: Int,
-        private val userPreferencesRepository: UserPreferencesRepository
+        private val userPreferencesRepository: UserPreferencesRepository,
+        private val myListPreferencesRepository: MyListPreferencesRepository
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(MyMovieDetailsViewModel::class.java)) {
@@ -210,7 +238,8 @@ class MyMovieDetailsViewModel(
                 return MyMovieDetailsViewModel(
                     movieId,
                     RetrofitHelper.filmeAPI,
-                    userPreferencesRepository
+                    userPreferencesRepository,
+                    myListPreferencesRepository
                 ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")

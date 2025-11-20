@@ -41,6 +41,7 @@ import com.danilloteles.appnetflixapi.viewmodel.PopularMoviesViewModel
 import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import android.util.Log
 
 class MainActivity : ComponentActivity() {
 
@@ -61,11 +62,21 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        Log.d("TAG-MainActivity", "onNewIntent chamado com URI: ${intent.data}")
         intent.data?.let { uri ->
             if (  uri.scheme == "netflixapp" && uri.host == "auth"  ) {
                 val requestToken = uri.getQueryParameter("request_token")
+                Log.d("TAG-MainActivity", "Deep link reconhecido. Request token extraído: $requestToken")
                 deeplinkRequestToken.value = requestToken
+                Log.d("TAG-MainActivity", "deeplinkRequestToken.value atualizado para: ${deeplinkRequestToken.value}")
+            } else {
+                Log.d("TAG-MainActivity", "URI do deep link não corresponde aos critérios.")
+                Log.d("TAG-MainActivity", "Esperado scheme: netflixapp, host: auth")
+                Log.d("TAG-MainActivity", "URI recebida: $uri")
+                Log.d("TAG-MainActivity", "Scheme recebido: ${uri.scheme}, Host recebido: ${uri.host}")
             }
+        } ?: run {
+            Log.d("TAG-MainActivity", "Intent.data é nulo em onNewIntent.")
         }
     }
 }

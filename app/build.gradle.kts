@@ -77,7 +77,7 @@ dependencies {
     // DataStore
     implementation(libs.androidx.datastore.preferences)
     // Browser
-    implementation("androidx.browser:browser:1.9.0")
+    implementation(libs.androidx.browser)
     // Room
     implementation(libs.androidx.room.runtime)
     // Add the KSP plugin to your project

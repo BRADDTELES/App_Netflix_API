@@ -17,9 +17,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -42,13 +46,19 @@ import com.danilloteles.appnetflixapi.view.componentes.SplitButtonAnimation
 
 @Composable
 fun MovieDetails(
-    movieId: Int,
-    onEditClick: (Int) -> Unit
+    movieId: Int
 ) {
     val viewModel: MovieDetailsViewModel = viewModel(
         factory = MovieDetailsViewModel.Factory(movieId)
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(uiState) {
+        if (uiState is UiState.Error) {
+            snackbarHostState.showSnackbar((uiState as UiState.Error).message)
+        }
+    }
 
     when (val state = uiState) {
         is UiState.Idle -> {}
@@ -66,35 +76,30 @@ fun MovieDetails(
         is UiState.Success -> {
             ConteudoFilme(
                 filme = state.data,
-                onEditClick = onEditClick
+                snackbarHostState = snackbarHostState
             )
         }
 
         is UiState.Error -> {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(BLACK),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = state.message, color = WHITE)
-            }
+            // O erro agora é tratado pelo Snackbar.
+            // Exibir um estado vazio ou um componente que permita ao usuário tentar novamente.
+            // Por simplicidade, exibimos uma caixa vazia.
+            Box(modifier = Modifier.fillMaxSize().background(BLACK))
         }
     }
-
-
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ConteudoFilme(
     filme: FilmeDetalhes,
-    onEditClick: (Int) -> Unit
+    snackbarHostState: SnackbarHostState
 ) {
     Scaffold(
         topBar = {
             NetflixTopBar()
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -114,16 +119,6 @@ fun ConteudoFilme(
                         .aspectRatio(1.5f / 2f),
                     contentScale = ContentScale.Crop
                 )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp, end = 16.dp),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    SplitButtonAnimation(
-                        onClick = { onEditClick(filme.id) }
-                    )
-                }
             }
             Spacer(modifier = Modifier.height(16.dp))
             Text(
@@ -176,6 +171,6 @@ private fun ConteudoFilmePreview() {
             vote_average = 0.0,
             vote_count = 0
         ),
-        onEditClick = {}
+        snackbarHostState = SnackbarHostState()
     )
 }
