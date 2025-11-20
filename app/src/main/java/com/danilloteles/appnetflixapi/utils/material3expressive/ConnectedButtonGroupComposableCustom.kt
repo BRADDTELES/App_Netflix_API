@@ -11,8 +11,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.SortByAlpha
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.StarBorder
+import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -38,7 +40,7 @@ import com.danilloteles.appnetflixapi.ui.theme.WHITE
 /**
  * Um grupo de botões de filtro customizado para a tela "Minha Lista".
  *
- * @param selectedIndex O índice do botão atualmente selecionado (0 para Favoritos, 1 para Curtidos, 2 para A-Z).
+ * @param selectedIndex O índice do botão atualmente selecionado (0 para Minha Lista, 1 para Populares, 2 para Melhor Avaliados, 3 para A-Z).
  * @param onIndexChange Uma função que será chamada com o novo índice sempre que um botão for selecionado.
  * @param modifier O modificador a ser aplicado ao componente.
  */
@@ -48,13 +50,13 @@ fun ConnectedButtonGroupComposableCustom(
     onIndexChange: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val options = listOf("Favoritos", "Curtidos", "Alfabeto")
+    val options = listOf("", "", "", "")
     val unCheckedIcons =
-        listOf(Icons.Outlined.StarBorder, Icons.Outlined.FavoriteBorder, Icons.Default.SortByAlpha)
-    val checkedIcons = listOf(Icons.Filled.Star, Icons.Filled.Favorite, Icons.Default.SortByAlpha)
+        listOf(Icons.Outlined.Favorite, Icons.Outlined.ThumbUp,Icons.Outlined.Star, Icons.Default.SortByAlpha)
+    val checkedIcons = listOf(Icons.Filled.Favorite, Icons.Filled.ThumbUp,Icons.Filled.Star, Icons.Default.SortByAlpha)
 
     Row(
-        modifier = modifier.padding(horizontal = 8.dp, vertical = 16.dp),
+        modifier = modifier.padding(start = 30.dp, end = 30.dp, top = 16.dp, bottom = 0.dp),
         horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
     ) {
         options.forEachIndexed { index, label ->

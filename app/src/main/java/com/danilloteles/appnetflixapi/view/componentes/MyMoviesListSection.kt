@@ -9,20 +9,18 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.danilloteles.appnetflixapi.model.Filme
 import com.danilloteles.appnetflixapi.view.itemlista.MovieItem
 
 @Composable
-fun PopularMoviesSection(
+fun MyMoviesListSection(
     listFilme: List<Filme>,
     onMovieClick: (Filme) -> Unit,
     lazyGridState: LazyGridState
@@ -35,7 +33,7 @@ fun PopularMoviesSection(
     ) {
 
         Text(
-            text = "Populares",
+            text = "Lista de Filmes",
             color = Color.White,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
@@ -57,14 +55,4 @@ fun PopularMoviesSection(
         }
 
     }
-}
-
-@Preview
-@Composable
-fun PopularMoviesSectionPreview() {
-    PopularMoviesSection(
-        listFilme = emptyList(),
-        onMovieClick = {},
-        lazyGridState = rememberLazyGridState()
-    )
 }

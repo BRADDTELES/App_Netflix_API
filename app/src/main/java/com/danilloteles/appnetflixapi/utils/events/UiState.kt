@@ -1,4 +1,4 @@
-package com.danilloteles.appnetflixapi.utils
+package com.danilloteles.appnetflixapi.utils.events
 
 sealed interface UiState<out T> {
     object Idle : UiState<Nothing>

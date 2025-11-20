@@ -1,5 +1,5 @@
 /* TODO: Classe por enquanto sem uso */
-package com.danilloteles.appnetflixapi.utils
+package com.danilloteles.appnetflixapi.utils.events
 
 import com.danilloteles.appnetflixapi.model.FilmeDetalhes
 

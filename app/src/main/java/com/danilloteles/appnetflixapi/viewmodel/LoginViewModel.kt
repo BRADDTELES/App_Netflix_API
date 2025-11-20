@@ -7,9 +7,9 @@ import androidx.lifecycle.viewModelScope
 import com.danilloteles.appnetflixapi.api.FilmeAPI
 import com.danilloteles.appnetflixapi.model.CreateSessionRequest
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
-import com.danilloteles.appnetflixapi.utils.LoginEvent
-import com.danilloteles.appnetflixapi.utils.UiState
-import com.danilloteles.appnetflixapi.utils.UserPreferencesRepository
+import com.danilloteles.appnetflixapi.utils.events.LoginEvent
+import com.danilloteles.appnetflixapi.utils.events.UiState
+import com.danilloteles.appnetflixapi.datasource.UserPreferencesRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow

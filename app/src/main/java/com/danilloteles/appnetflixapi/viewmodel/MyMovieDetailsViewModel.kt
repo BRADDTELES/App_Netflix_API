@@ -6,14 +6,12 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.danilloteles.appnetflixapi.api.FilmeAPI
 import com.danilloteles.appnetflixapi.model.AddRemoveListItemRequest
-import com.danilloteles.appnetflixapi.model.CreateListRequest
 import com.danilloteles.appnetflixapi.model.FilmeDetalhes
-import com.danilloteles.appnetflixapi.model.Filme
 import com.danilloteles.appnetflixapi.model.TmdbList
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
-import com.danilloteles.appnetflixapi.utils.MyListPreferencesRepository
-import com.danilloteles.appnetflixapi.utils.UiState
-import com.danilloteles.appnetflixapi.utils.UserPreferencesRepository
+import com.danilloteles.appnetflixapi.datasource.MyListPreferencesRepository
+import com.danilloteles.appnetflixapi.utils.events.UiState
+import com.danilloteles.appnetflixapi.datasource.UserPreferencesRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -23,7 +21,8 @@ class MyMovieDetailsViewModel(
     private val movieId: Int,
     private val filmeAPI: FilmeAPI,
     private val userPreferencesRepository: UserPreferencesRepository,
-    private val myListPreferencesRepository: MyListPreferencesRepository
+    private val myListPreferencesRepository: MyListPreferencesRepository,
+    private val listId: String? // listId passed from navigation
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<UiState<FilmeDetalhes>>(UiState.Loading)
@@ -47,11 +46,12 @@ class MyMovieDetailsViewModel(
             userPreferencesRepository.accountId.first()?.toIntOrNull()?.let {
                 accountId = it
             }
-            userPreferencesRepository.primaryListId.first()?.let {
-                primaryListId = it
-            }
-            loadUserLists() // Carrega as listas do usuário
-            checkIfMovieInMyList()
+            // primaryListId from repo might be needed if not passed via navigation.
+            // For now, it's safer to load it here as a fallback.
+            primaryListId = userPreferencesRepository.primaryListId.first()
+
+            loadUserLists() // Load all user lists for selection
+            checkIfMovieInMyList() // Check if movie is in the *relevant* list
         }
     }
 
@@ -72,7 +72,7 @@ class MyMovieDetailsViewModel(
                 }
             } catch (e: Exception) {
                 _uiState.value = UiState.Error("Erro de conexão ao carregar detalhes: ${e.message}")
-                Log.e("MyMovieDetailsViewModel", "Erro: ${e.message}", e)
+                Log.e("TAG-MyMovieDetailsViewModel", "Erro: ${e.message}", e)
             }
         }
     }
@@ -88,6 +88,7 @@ class MyMovieDetailsViewModel(
                         if (response.isSuccessful) {
                             response.body()?.let { accountListsResponse ->
                                 _userListsUiState.value = UiState.Success(accountListsResponse.results)
+                                // Optionally set primaryListId if needed here, but it's loaded in init
                             } ?: run {
                                 _userListsUiState.value = UiState.Error("Não foi possível carregar as listas do usuário.")
                             }
@@ -127,97 +128,95 @@ class MyMovieDetailsViewModel(
     }
 
     private fun checkIfMovieInMyList(listIdToCheck: String? = null) {
+        Log.d("TAG-MyMovieDetailsViewModel", "checkIfMovieInMyList iniciado para movieId: $movieId")
         viewModelScope.launch {
+            Log.d("TAG-MyMovieDetailsViewModel", "listIdToCheck (param): $listIdToCheck, ViewModel listId (constructor): $listId, ViewModel primaryListId: $primaryListId")
             userPreferencesRepository.sessionId.first()?.let { sessionId ->
-                val targetListId = listIdToCheck ?: primaryListId ?: userPreferencesRepository.primaryListId.first()
-                targetListId?.let { id ->
+                Log.d("TAG-MyMovieDetailsViewModel", "SessionId obtido: $sessionId")
+                val repoPrimaryListId = userPreferencesRepository.primaryListId.first()
+                Log.d("TAG-MyMovieDetailsViewModel", "Repo primaryListId: $repoPrimaryListId")
+
+                val finalTargetListId = listIdToCheck ?: listId ?: primaryListId ?: repoPrimaryListId
+                Log.d("TAG-MyMovieDetailsViewModel", "TargetListId final para verificação: $finalTargetListId")
+
+                finalTargetListId?.let { id ->
                     try {
+                        Log.d("TAG-MyMovieDetailsViewModel", "Chamando API para getListDetails para listId: $id")
                         val response = filmeAPI.getListDetails(id, sessionId)
                         if (response.isSuccessful) {
                             val listDetails = response.body()
-                            _isInMyList.value = listDetails?.items?.any { it.id == movieId } ?: false
+                            val containsMovie = listDetails?.items?.any { it.id == movieId } ?: false
+                            _isInMyList.value = containsMovie
+                            Log.d("TAG-MyMovieDetailsViewModel", "API getListDetails para listId $id retornou ${listDetails?.items?.size ?: 0} itens. Contém movie $movieId: $containsMovie. _isInMyList atualizado para: ${_isInMyList.value}")
                         } else {
-                            Log.e("MyMovieDetailsViewModel", "Erro ao verificar filme na lista: ${response.code()}")
+                            Log.e("TAG-MyMovieDetailsViewModel", "Erro ao verificar filme na lista: ${response.code()}")
                             _isInMyList.value = false
                         }
                     } catch (e: Exception) {
-                        Log.e("MyMovieDetailsViewModel", "Erro de conexão ao verificar filme na lista: ${e.message}", e)
+                        Log.e("TAG-MyMovieDetailsViewModel", "Erro de conexão ao verificar filme na lista: ${e.message}", e)
                         _isInMyList.value = false
                     }
                 } ?: run {
+                    Log.d("TAG-MyMovieDetailsViewModel", "Nenhum targetListId disponível para verificar filme na lista.")
                     _isInMyList.value = false // Não há list_id primário definido
                 }
             } ?: run {
+                Log.d("TAG-MyMovieDetailsViewModel", "Usuário não autenticado. Não foi possível verificar filme na lista.")
                 _isInMyList.value = false // Usuário não autenticado
             }
         }
     }
 
-
-    fun addOrRemoveMovie(targetListId: String? = null) {
+    fun addOrRemoveMovie(targetListIdForAction: String? = null) {
+        Log.d("TAG-MyMovieDetailsViewModel", "addOrRemoveMovie iniciado. MovieId: $movieId, targetListIdForAction: $targetListIdForAction")
         viewModelScope.launch {
             _myListActionUiState.value = UiState.Loading
             userPreferencesRepository.sessionId.first()?.let { sessionId ->
-                val listToModifyId = targetListId ?: userPreferencesRepository.primaryListId.first()
-                if (listToModifyId == null) {
+                Log.d("TAG-MyMovieDetailsViewModel", "SessionId obtido: $sessionId")
+                
+                val finalListToModifyId = targetListIdForAction ?: listId ?: primaryListId ?: userPreferencesRepository.primaryListId.first()
+                
+                if (finalListToModifyId == null) {
                     _myListActionUiState.value = UiState.Error("Erro: ID da lista não disponível. Tente novamente.")
-                    Log.e("MyMovieDetailsViewModel", "List ID não disponível para adicionar/remover filme.")
+                    Log.e("TAG-MyMovieDetailsViewModel", "List ID não disponível para adicionar/remover filme.")
                     return@launch
                 }
 
                 val request = AddRemoveListItemRequest(media_id = movieId)
+                Log.d("TAG-MyMovieDetailsViewModel", "Requisição API: $request para listId: $finalListToModifyId")
                 try {
                     val response = if (_isInMyList.value) {
-                        filmeAPI.removeMovieFromList(listToModifyId, sessionId, request)
+                        Log.d("TAG-MyMovieDetailsViewModel", "Tentando remover filme (ID: $movieId) da lista (ID: $finalListToModifyId).")
+                        filmeAPI.removeMovieFromList(finalListToModifyId, sessionId, request)
                     } else {
-                        filmeAPI.addMovieToList(listToModifyId, sessionId, request)
+                        Log.d("TAG-MyMovieDetailsViewModel", "Tentando adicionar filme (ID: $movieId) à lista (ID: $finalListToModifyId).")
+                        filmeAPI.addMovieToList(finalListToModifyId, sessionId, request)
                     }
 
-                    if (response.isSuccessful && response.body()?.status_code == 1 || response.body()?.status_code == 12 || response.body()?.status_code == 13) {
+                    Log.d("TAG-MyMovieDetailsViewModel", "Resposta da API - isSuccessful: ${response.isSuccessful}, Code: ${response.code()}, Body: ${response.body()}")
+
+                    if (response.isSuccessful && (response.body()?.status_code == 1 || response.body()?.status_code == 12 || response.body()?.status_code == 13)) {
                         _isInMyList.value = !_isInMyList.value
                         _myListActionUiState.value = UiState.Success(Unit)
 
-                        // Atualizar o cache do DataStore (ainda genérico para a "Minha Lista" principal)
-                        val currentCachedList = myListPreferencesRepository.myMovieList.first().toMutableList()
-                        if (_isInMyList.value) { // Se o filme foi adicionado (agora _isInMyList é true)
-                            (_uiState.value as? UiState.Success)?.data?.let { filmeDetalhes ->
-                                val filmeToAdd = Filme(
-                                    adult = filmeDetalhes.adult,
-                                    backdrop_path = filmeDetalhes.backdrop_path ?: "",
-                                    genre_ids = filmeDetalhes.genres.map { it.id },
-                                    id = filmeDetalhes.id,
-                                    original_language = filmeDetalhes.original_language,
-                                    original_title = filmeDetalhes.original_title,
-                                    overview = filmeDetalhes.overview,
-                                    popularity = filmeDetalhes.popularity,
-                                    poster_path = filmeDetalhes.poster_path ?: "",
-                                    release_date = filmeDetalhes.release_date,
-                                    title = filmeDetalhes.title,
-                                    video = filmeDetalhes.video,
-                                    vote_average = filmeDetalhes.vote_average,
-                                    vote_count = filmeDetalhes.vote_count
-                                )
-                                if (!currentCachedList.any { it.id == filmeToAdd.id }) {
-                                    currentCachedList.add(filmeToAdd)
-                                }
-                            }
-                        } else { // Se o filme foi removido (agora _isInMyList é false)
-                            currentCachedList.removeAll { it.id == movieId }
-                        }
-                        myListPreferencesRepository.saveMyMovieList(currentCachedList)
-                        Log.d("MyMovieDetailsVM", "Cache da lista atualizado. Filme ID: $movieId, Adicionado: ${_isInMyList.value}")
+                        // TODO: Atualizar o cache do DataStore de forma mais granular (por listId)
+                        // Por enquanto, o cache é genérico, então forçamos um refresh na MyListScreen ao voltar
+                        // Forçamos o refresh chamando checkIfMovieInMyList novamente para a lista original
+                        // Assim, MyListScreen deve ser atualizada.
+                        checkIfMovieInMyList(finalListToModifyId) // Re-verifica o estado para a lista modificada
+                        Log.d("TAG-MyMovieDetailsViewModel", "Cache da lista atualizado. Filme ID: $movieId, _isInMyList: ${_isInMyList.value}")
                     } else {
                         val errorMessage = response.body()?.status_message ?: "Falha desconhecida."
                         _myListActionUiState.value = UiState.Error(errorMessage)
-                        Log.e("MyMovieDetailsViewModel", "Falha ao adicionar/remover filme: ${response.code()} - $errorMessage")
+                        Log.e("TAG-MyMovieDetailsViewModel", "Falha ao adicionar/remover filme: ${response.code()} - $errorMessage")
                     }
                 } catch (e: Exception) {
                     _myListActionUiState.value = UiState.Error("Erro de conexão ao adicionar/remover filme.")
-                    Log.e("MyMovieDetailsViewModel", "Erro de conexão ao adicionar/remover filme: ${e.message}", e)
+                    Log.e("TAG-MyMovieDetailsViewModel", "Erro de conexão ao adicionar/remover filme: ${e.message}", e)
                 }
             } ?: run {
                 _myListActionUiState.value = UiState.Error("Erro: Usuário não autenticado. Faça login para gerenciar sua lista.")
-                Log.e("MyMovieDetailsViewModel", "Usuário não autenticado para adicionar/remover filme.")
+                Log.e("TAG-MyMovieDetailsViewModel", "Usuário não autenticado para adicionar/remover filme.")
             }
         }
     }
@@ -226,11 +225,11 @@ class MyMovieDetailsViewModel(
         _myListActionUiState.value = UiState.Idle
     }
 
-
     class Factory(
         private val movieId: Int,
         private val userPreferencesRepository: UserPreferencesRepository,
-        private val myListPreferencesRepository: MyListPreferencesRepository
+        private val myListPreferencesRepository: MyListPreferencesRepository,
+        private val listId: String? // listId from navigation
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(MyMovieDetailsViewModel::class.java)) {
@@ -239,11 +238,11 @@ class MyMovieDetailsViewModel(
                     movieId,
                     RetrofitHelper.filmeAPI,
                     userPreferencesRepository,
-                    myListPreferencesRepository
+                    myListPreferencesRepository,
+                    listId
                 ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }
     }
 }
-

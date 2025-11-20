@@ -3,10 +3,8 @@
 package com.danilloteles.appnetflixapi.view.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -38,11 +36,10 @@ import com.danilloteles.appnetflixapi.constantes.Constantes
 import com.danilloteles.appnetflixapi.model.FilmeDetalhes
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
-import com.danilloteles.appnetflixapi.utils.UiState
+import com.danilloteles.appnetflixapi.utils.events.UiState
 import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
 import com.danilloteles.appnetflixapi.view.componentes.NetflixTopBar
 import com.danilloteles.appnetflixapi.viewmodel.MovieDetailsViewModel
-import com.danilloteles.appnetflixapi.view.componentes.SplitButtonAnimation
 
 @Composable
 fun MovieDetails(

@@ -1,6 +1,6 @@
 package com.danilloteles.appnetflixapi.constantes
 
-object AppDestinations {
+object Navigation {
     const val SPLASH_SCREEN = "splash"
     const val MAIN_SCREEN = "main"
     const val LIST_FORM_SCREEN = "list_form"
@@ -11,8 +11,10 @@ object AppDestinations {
 
     const val MOVIE_ID_ARG = "movieId"
     const val REQUEST_TOKEN_ARG = "request_token"
+    const val LIST_ID_ARG = "listId" // Novo argumento para o ID da lista
 
     val MOVIE_DETAILS_ROUTE = "$MOVIE_DETAILS_SCREEN/{$MOVIE_ID_ARG}"
     val LIST_FORM_ROUTE = LIST_FORM_SCREEN
     val LOGIN_ROUTE = "$LOGIN_SCREEN?$REQUEST_TOKEN_ARG={$REQUEST_TOKEN_ARG}"
+    val MY_MOVIE_DETAILS_ROUTE = "$MY_MOVIE_DETAILS/{$MOVIE_ID_ARG}?$LIST_ID_ARG={$LIST_ID_ARG}" // Adiciona listId como parâmetro opcional
 }

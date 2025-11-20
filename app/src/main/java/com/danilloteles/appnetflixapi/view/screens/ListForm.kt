@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -11,17 +12,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.SaveAs
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -38,10 +39,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
+import com.danilloteles.appnetflixapi.ui.theme.TRANSPARENT
 import com.danilloteles.appnetflixapi.ui.theme.VERMELHO
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
-import com.danilloteles.appnetflixapi.utils.UiState
-import com.danilloteles.appnetflixapi.utils.UserPreferencesRepository
+import com.danilloteles.appnetflixapi.utils.events.UiState
+import com.danilloteles.appnetflixapi.datasource.UserPreferencesRepository
 import com.danilloteles.appnetflixapi.view.componentes.NetflixTopBar
 import com.danilloteles.appnetflixapi.view.componentes.OutlinedTextFieldCustom
 import com.danilloteles.appnetflixapi.viewmodel.ListFormViewModel
@@ -84,7 +86,6 @@ fun ListForm() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-
             OutlinedTextFieldCustom(
                 value = listName,
                 onValueChange = { listName = it },
@@ -96,19 +97,34 @@ fun ListForm() {
                     keyboardType = KeyboardType.Text
                 )
             )
-            OutlinedTextFieldCustom(
+            OutlinedTextField(
                 value = listDescription,
                 onValueChange = { listDescription = it },
-                label = "Descrição",
+                label = { Text("Descrição") },
                 modifier = Modifier
                     .fillMaxWidth()
+                    .fillMaxHeight(0.3f)
                     .padding(horizontal = 20.dp),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Text
-                )
+                ),
+                colors = TextFieldDefaults.colors(
+                    cursorColor = VERMELHO, // Cor do cursor
+                    focusedIndicatorColor = VERMELHO,
+                    unfocusedIndicatorColor = VERMELHO,
+                    focusedContainerColor = TRANSPARENT,
+                    unfocusedContainerColor = TRANSPARENT,
+                    focusedTextColor = VERMELHO,
+                    unfocusedTextColor = VERMELHO,
+                    focusedLabelColor = VERMELHO,
+                    unfocusedLabelColor = VERMELHO
+                ),
+                maxLines = 30,
+                singleLine = false,
             )
 
-            Spacer(modifier = Modifier.weight(1f))
+
+            Spacer(modifier = Modifier.padding(bottom = 40.dp))
 
             if (uiState is UiState.Loading) {
                 CircularProgressIndicator(color = VERMELHO)

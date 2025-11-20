@@ -1,6 +1,6 @@
 package com.danilloteles.appnetflixapi.view.screens
 
-import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.Image
@@ -18,32 +18,28 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.danilloteles.appnetflixapi.R
+import com.danilloteles.appnetflixapi.constantes.Navigation
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.VERMELHO
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalUriHandler
-import androidx.navigation.NavController
-import com.danilloteles.appnetflixapi.viewmodel.LoginViewModel
-import com.danilloteles.appnetflixapi.utils.LoginEvent
-import com.danilloteles.appnetflixapi.utils.UiState
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.danilloteles.appnetflixapi.constantes.AppDestinations
-import com.danilloteles.appnetflixapi.constantes.AppDestinations.LOGIN_SCREEN
-import com.danilloteles.appnetflixapi.utils.UserPreferencesRepository
+import com.danilloteles.appnetflixapi.utils.events.LoginEvent
+import com.danilloteles.appnetflixapi.utils.events.UiState
+import com.danilloteles.appnetflixapi.datasource.UserPreferencesRepository
 import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
-import com.danilloteles.appnetflixapi.constantes.AppDestinations.REQUEST_TOKEN_ARG // Import adicionado
-import android.util.Log
-import androidx.core.net.toUri
+import com.danilloteles.appnetflixapi.viewmodel.LoginViewModel
 
 @Composable
 fun LoginScreen(
@@ -72,8 +68,8 @@ fun LoginScreen(
                     customTabsIntent.launchUrl(context, event.url.toUri())
                 }
                 LoginEvent.LoginSuccess -> {
-                    navController.navigate(AppDestinations.MY_LIST_SCREEN) {
-                        popUpTo(AppDestinations.MAIN_SCREEN) { inclusive = false }
+                    navController.navigate(Navigation.MY_LIST_SCREEN) {
+                        popUpTo(Navigation.MAIN_SCREEN) { inclusive = false }
                     }
                     // Resetar o token no ViewModel para evitar processamento duplicado
                     MainActivity.deeplinkRequestToken.value = null

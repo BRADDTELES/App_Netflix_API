@@ -2,6 +2,7 @@ package com.danilloteles.appnetflixapi.view.screens
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -13,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -27,21 +27,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.danilloteles.appnetflixapi.enums.FabState
 import com.danilloteles.appnetflixapi.model.Filme
-import com.danilloteles.appnetflixapi.view.navigation.NetflixApp
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
-import com.danilloteles.appnetflixapi.utils.UiState
-import com.danilloteles.appnetflixapi.view.componentes.AnimatedExtendedFab
-import com.danilloteles.appnetflixapi.enums.FabState
+import com.danilloteles.appnetflixapi.utils.events.UiState
+import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
 import com.danilloteles.appnetflixapi.view.componentes.MenuSection
 import com.danilloteles.appnetflixapi.view.componentes.NetflixTopBar
 import com.danilloteles.appnetflixapi.view.componentes.PopularMoviesSection
+import com.danilloteles.appnetflixapi.view.navigation.NetflixApp
 import com.danilloteles.appnetflixapi.viewmodel.PopularMoviesViewModel
-import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import android.util.Log
 
 class MainActivity : ComponentActivity() {
 
@@ -116,16 +114,6 @@ fun NetflixScreen(
     Scaffold(
         topBar = {
             NetflixTopBar()
-        },
-        floatingActionButton = {
-            AnimatedExtendedFab(
-                modifier = Modifier.animateFloatingActionButton(
-                    visible = fabState != FabState.HIDDEN,
-                    alignment = Alignment.BottomEnd
-                ),
-                expanded = fabState == FabState.EXPANDED,
-                onClick = onAddClick
-            )
         }
     ) { paddingValues ->
         Column(

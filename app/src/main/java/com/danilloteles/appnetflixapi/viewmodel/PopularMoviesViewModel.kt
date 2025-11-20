@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.danilloteles.appnetflixapi.model.Filme
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
-import com.danilloteles.appnetflixapi.utils.UiState
+import com.danilloteles.appnetflixapi.utils.events.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch

@@ -2,6 +2,7 @@
 
 package com.danilloteles.appnetflixapi.view.screens
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,10 +13,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.outlined.AddComment
-import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.FloatingActionButtonMenu
 import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.Icon
@@ -30,11 +31,8 @@ import androidx.compose.material3.ToggleFloatingActionButtonDefaults.animateIcon
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.animateFloatingActionButton
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -45,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.isTraversalGroup
@@ -58,23 +57,18 @@ import com.danilloteles.appnetflixapi.model.Filme
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.VERMELHO
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
-import com.danilloteles.appnetflixapi.utils.UiState
-import com.danilloteles.appnetflixapi.utils.material3expressive.ConnectedButtonGroupComposable
+import com.danilloteles.appnetflixapi.datasource.MyListPreferencesRepository
+import com.danilloteles.appnetflixapi.utils.events.UiState
+import com.danilloteles.appnetflixapi.datasource.UserPreferencesRepository
 import com.danilloteles.appnetflixapi.utils.material3expressive.ConnectedButtonGroupComposableCustom
 import com.danilloteles.appnetflixapi.utils.material3expressive.FabMenuColorScheme
 import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
-import com.danilloteles.appnetflixapi.view.componentes.PopularMoviesSection
-import com.danilloteles.appnetflixapi.viewmodel.MyListViewModel // Import alterado
-import com.danilloteles.appnetflixapi.utils.UserPreferencesRepository // Import adicionado para o ViewModelFactory
-import androidx.compose.ui.platform.LocalContext // Import adicionado para o ViewModelFactory
-import androidx.compose.runtime.LaunchedEffect // Import adicionado
-import com.danilloteles.appnetflixapi.utils.MyListPreferencesRepository
-import android.util.Log // Import adicionado
-import androidx.compose.material3.ExposedDropdownMenuDefaults.TrailingIcon
+import com.danilloteles.appnetflixapi.view.componentes.MyMoviesListSection
+import com.danilloteles.appnetflixapi.viewmodel.MyListViewModel
 
 @Composable
 fun MyListScreen(
-    onMovieClick: (Filme) -> Unit,
+    onMovieClick: (Filme, String?) -> Unit,
     onNavigateBack: () -> Unit,
     onNavigateToListForm: () -> Unit
 ) {
@@ -102,18 +96,23 @@ fun MyListScreen(
 
     // Chama loadMyListMovies() quando a tela é inicializada
     LaunchedEffect(Unit) {
-        myListViewModel.loadMyListMovies() // Carrega a lista padrão ao iniciar
+        // A carga inicial da lista será feita pelo LaunchedEffect(userListsUiState)
+        // para garantir que um primaryListId esteja disponível.
     }
 
     LaunchedEffect(userListsUiState) {
-        if (userListsUiState is UiState.Success && selectedListId == null) {
+        if (userListsUiState is UiState.Success) {
             val lists = (userListsUiState as UiState.Success).data
-            // Tenta selecionar a lista "Minha Lista" por padrão ou a primeira lista
             val primaryList = lists.firstOrNull { it.name == "Minha Lista" } ?: lists.firstOrNull()
-            primaryList?.let {
-                selectedListId = it.id.toString()
-                selectedListName = it.name
-                myListViewModel.loadMyListMovies(it.id.toString())
+            if (primaryList != null) {
+                selectedListId = primaryList.id.toString()
+                selectedListName = primaryList.name
+                myListViewModel.loadMyListMovies(primaryList.id.toString())
+            } else {
+                // Se não encontrou nenhuma lista, carrega filmes em cartaz por padrão
+                selectedListId = "now_playing_movies" // ID especial para filmes em cartaz
+                selectedListName = "Filmes em Cartaz"
+                myListViewModel.loadNowPlayingMovies()
             }
         }
     }
@@ -143,6 +142,16 @@ fun MyListScreen(
                         ) {
                             when (val state = userListsUiState) {
                                 is UiState.Success -> {
+                                    DropdownMenuItem(
+                                        text = { Text("Filmes em Cartaz") },
+                                        onClick = {
+                                            selectedListId = "now_playing_movies"
+                                            selectedListName = "Filmes em Cartaz"
+                                            myListViewModel.loadNowPlayingMovies()
+                                            expanded = false
+                                        },
+                                        // Opcional: Adicionar um ícone para filmes em cartaz
+                                    )
                                     state.data.forEach { list ->
                                         DropdownMenuItem(
                                             text = { Text(list.name) },
@@ -194,8 +203,7 @@ fun MyListScreen(
             MaterialTheme(colorScheme = FabMenuColorScheme()) {
                 val items =
                     listOf(
-                        Icons.Default.Add to "Criar Nova Lista",
-                        Icons.Outlined.DeleteOutline to "Remover Filme"
+                        Icons.Default.Add to "Criar Nova Lista"
                     )
 
                 FloatingActionButtonMenu(
@@ -274,7 +282,12 @@ fun MyListScreen(
                 selectedIndex = selectedFilterIndex,
                 onIndexChange = { newIndex ->
                     selectedFilterIndex = newIndex
-                    myListViewModel.applyFilter(newIndex)
+                    when (newIndex) {
+                        0 -> myListViewModel.applyFilter(0, selectedListId) // Minha Lista
+                        1 -> myListViewModel.applyFilter(1) // Populares
+                        2 -> myListViewModel.applyFilter(2) // Melhor Avaliados
+                        3 -> myListViewModel.applyFilter(3) // A-Z
+                    }
                 }
             )
 
@@ -289,6 +302,7 @@ fun MyListScreen(
                     }
                 }
                 is UiState.Success -> {
+                    Log.d("TAG-MyListScreen", "UiState.Success recebido. Tamanho da lista: ${state.data.size}. Primeiro filme: ${state.data.firstOrNull()?.title}")
                     if (state.data.isEmpty()) {
                         Box(
                             modifier = Modifier.fillMaxSize(),
@@ -300,9 +314,9 @@ fun MyListScreen(
                             )
                         }
                     } else {
-                        PopularMoviesSection(
+                        MyMoviesListSection(
                             listFilme = state.data,
-                            onMovieClick = onMovieClick,
+                            onMovieClick = { filme -> onMovieClick(filme, selectedListId) },
                             lazyGridState = listState
                         )
                     }
@@ -331,5 +345,5 @@ fun MyListScreen(
 @Preview
 @Composable
 private fun MyListScreenPreview() {
-    MyListScreen(onMovieClick = {}, onNavigateBack = {}, onNavigateToListForm = {})
+    MyListScreen(onMovieClick = { _, _ -> }, onNavigateBack = {}, onNavigateToListForm = {})
 }

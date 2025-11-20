@@ -1,4 +1,4 @@
-package com.danilloteles.appnetflixapi.utils
+package com.danilloteles.appnetflixapi.utils.events
 
 sealed class LoginEvent {
     data class OpenWebView(val url: String) : LoginEvent()

@@ -65,30 +65,30 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
-import com.danilloteles.appnetflixapi.R
 import com.danilloteles.appnetflixapi.constantes.Constantes
 import com.danilloteles.appnetflixapi.model.FilmeDetalhes
-import com.danilloteles.appnetflixapi.model.TmdbList
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.GRAY_100
 import com.danilloteles.appnetflixapi.ui.theme.GRAY_900
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
-import com.danilloteles.appnetflixapi.utils.MyListPreferencesRepository
-import com.danilloteles.appnetflixapi.utils.UiState
-import com.danilloteles.appnetflixapi.utils.UserPreferencesRepository
+import com.danilloteles.appnetflixapi.datasource.MyListPreferencesRepository
+import com.danilloteles.appnetflixapi.utils.events.UiState
+import com.danilloteles.appnetflixapi.datasource.UserPreferencesRepository
 import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
 import com.danilloteles.appnetflixapi.viewmodel.MyMovieDetailsViewModel
 
 @Composable
 fun MyMovieDetails(
     movieId: Int,
+    listId: String?,
     onClick: (Int) -> Unit
 ) {
     val viewModel: MyMovieDetailsViewModel = viewModel(
         factory = MyMovieDetailsViewModel.Factory(
             movieId,
             UserPreferencesRepository(LocalContext.current),
-            MyListPreferencesRepository(LocalContext.current)
+            MyListPreferencesRepository(LocalContext.current),
+            listId
         )
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -108,7 +108,8 @@ fun MyMovieDetails(
             ConteudoMyMovieDetails(
                 filme = state.data,
                 viewModel = viewModel,
-                onClick = onClick
+                onClick = onClick,
+                listId = listId
             )
         }
 
@@ -130,7 +131,8 @@ fun MyMovieDetails(
 fun ConteudoMyMovieDetails(
     filme: FilmeDetalhes,
     viewModel: MyMovieDetailsViewModel?,
-    onClick: (Int) -> Unit
+    onClick: (Int) -> Unit,
+    listId: String? // listId passed from MyMovieDetails composable
 ) {
     val isInMyList by viewModel?.isInMyList?.collectAsStateWithLifecycle() ?: remember { mutableStateOf(false) }
     val myListActionUiState by viewModel?.myListActionUiState?.collectAsStateWithLifecycle() ?: remember { mutableStateOf(UiState.Idle) }
@@ -287,14 +289,18 @@ fun ConteudoMyMovieDetails(
                             )
                             DropdownMenu(
                                 expanded = splitButtonChecked,
-                                onDismissRequest = { splitButtonChecked = false }
+                                onDismissRequest = {
+                                    splitButtonChecked = false
+                                    showAddToListDropdown = false // Garante que o submenu também feche
+                                }
                             ) {
                                 if (isInMyList) {
                                     DropdownMenuItem(
                                         text = { Text("Remover da Lista") },
                                         onClick = {
-                                            viewModel?.addOrRemoveMovie(null) // Assume remove da lista principal
+                                            viewModel?.addOrRemoveMovie(listId) // Passa o listId do composable
                                             splitButtonChecked = false
+                                            showAddToListDropdown = false // Resetar após ação
                                         },
                                         leadingIcon = {
                                             Icon(Icons.Outlined.Delete, contentDescription = null)
@@ -412,6 +418,7 @@ private fun ConteudoMyMovieDetailsPreview() {
             vote_count = 0
         ),
         viewModel = null,
-        onClick = {}
+        onClick = {},
+        listId = null
     )
 }

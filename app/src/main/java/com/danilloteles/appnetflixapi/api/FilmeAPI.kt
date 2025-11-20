@@ -1,9 +1,16 @@
 package com.danilloteles.appnetflixapi.api
 
+// Imports para os novos modelos de dados
+import com.danilloteles.appnetflixapi.model.AccountDetailsResponse
+import com.danilloteles.appnetflixapi.model.AccountListsResponse
+import com.danilloteles.appnetflixapi.model.AddRemoveListItemRequest
+import com.danilloteles.appnetflixapi.model.CreateListRequest
+import com.danilloteles.appnetflixapi.model.CreateListResponse
 import com.danilloteles.appnetflixapi.model.CreateSessionRequest
-import com.danilloteles.appnetflixapi.model.Filme
 import com.danilloteles.appnetflixapi.model.FilmeDetalhes
 import com.danilloteles.appnetflixapi.model.FilmeResposta
+import com.danilloteles.appnetflixapi.model.ListDetailsResponse
+import com.danilloteles.appnetflixapi.model.ListItemResponse
 import com.danilloteles.appnetflixapi.model.RequestTokenResponse
 import com.danilloteles.appnetflixapi.model.SessionIdResponse
 import retrofit2.Response
@@ -11,16 +18,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
-import retrofit2.http.Query // Import adicionado
-
-// Imports para os novos modelos de dados
-import com.danilloteles.appnetflixapi.model.AccountDetailsResponse
-import com.danilloteles.appnetflixapi.model.AccountListsResponse
-import com.danilloteles.appnetflixapi.model.CreateListRequest
-import com.danilloteles.appnetflixapi.model.CreateListResponse
-import com.danilloteles.appnetflixapi.model.ListDetailsResponse
-import com.danilloteles.appnetflixapi.model.AddRemoveListItemRequest
-import com.danilloteles.appnetflixapi.model.ListItemResponse
+import retrofit2.http.Query
 
 
 interface FilmeAPI {
@@ -32,6 +30,12 @@ interface FilmeAPI {
     suspend fun recuperarDetalhesFilme(
         @Path("movie_id") id: Int
     ): Response<FilmeDetalhes>
+
+    @GET("movie/top_rated")
+    suspend fun recuperarFilmesMelhorAvaliados(): Response<FilmeResposta>
+
+    @GET("movie/now_playing")
+    suspend fun recuperarFilmes(): Response<FilmeResposta>
 
     @GET("authentication/token/new")
     suspend fun createRequestToken(): Response<RequestTokenResponse>

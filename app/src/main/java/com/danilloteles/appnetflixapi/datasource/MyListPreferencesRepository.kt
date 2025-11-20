@@ -1,4 +1,4 @@
-package com.danilloteles.appnetflixapi.utils
+package com.danilloteles.appnetflixapi.datasource
 
 import android.content.Context
 import androidx.datastore.core.DataStore

@@ -5,13 +5,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.danilloteles.appnetflixapi.api.FilmeAPI
-import com.danilloteles.appnetflixapi.model.CreateListRequest
 import com.danilloteles.appnetflixapi.model.Filme
 import com.danilloteles.appnetflixapi.model.TmdbList
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
-import com.danilloteles.appnetflixapi.utils.MyListPreferencesRepository
-import com.danilloteles.appnetflixapi.utils.UiState
-import com.danilloteles.appnetflixapi.utils.UserPreferencesRepository
+import com.danilloteles.appnetflixapi.datasource.MyListPreferencesRepository
+import com.danilloteles.appnetflixapi.utils.events.UiState
+import com.danilloteles.appnetflixapi.datasource.UserPreferencesRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -36,49 +35,87 @@ class MyListViewModel(
 
     init {
         loadUserLists()
+        viewModelScope.launch {
+            primaryListId = userPreferencesRepository.primaryListId.first()
+        }
     }
 
-    fun applyFilter(filterIndex: Int) {
-        val currentState = _uiState.value
-        if (currentState is UiState.Success) {
-            val sortedList = when (filterIndex) {
-                // Padrão (ordem da API)
-                0 -> originalMovies
-                // Melhores Avaliados
-                1 -> originalMovies.sortedByDescending { it.vote_average }
-                // Ordem Alfabética (A-Z)
-                2 -> originalMovies.sortedBy { it.title }
-                else -> originalMovies
+    fun applyFilter(filterIndex: Int, currentSelectedListId: String? = null) {
+        viewModelScope.launch {
+            when (filterIndex) {
+                0 -> { // Minha Lista
+                    Log.d("TAG-MyListViewModel", "Filtro 'Minha Lista' selecionado. currentSelectedListId: $currentSelectedListId")
+                    loadMyListMovies(currentSelectedListId)
+                }
+                1 -> { // Populares
+                    Log.d("TAG-MyListViewModel", "Filtro 'Populares' selecionado.")
+                    loadPopularMovies() // Chama a função para carregar filmes populares
+                }
+                2 -> { // Melhor Avaliados
+                    Log.d("TAG-MyListViewModel", "Filtro 'Melhor Avaliados' selecionado.")
+                    loadTopRatedMovies() // Chama a função para carregar filmes melhor avaliados
+                }
+                3 -> { // A-Z (Ordenação da lista atual)
+                    Log.d("TAG-MyListViewModel", "Filtro 'A-Z' selecionado. Ordenando lista atual.")
+                    val currentState = _uiState.value
+                    if (currentState is UiState.Success) {
+                        val sortedList = originalMovies.sortedBy { it.title }
+                        _uiState.value = UiState.Success(sortedList)
+                    }
+                }
             }
-            _uiState.value = UiState.Success(sortedList)
         }
     }
 
     fun loadUserLists() {
+        Log.d("TAG-MyListViewModel", "loadUserLists iniciado.")
         viewModelScope.launch {
             _userListsUiState.value = UiState.Loading
             userPreferencesRepository.sessionId.first()?.let { sessionId ->
+                Log.d("TAG-MyListViewModel", "SessionId obtido para loadUserLists: $sessionId")
                 val currentAccountId = getOrCreateAccountId(sessionId)
                 if (currentAccountId != null) {
+                    Log.d("TAG-MyListViewModel", "AccountId obtido para loadUserLists: $currentAccountId")
                     try {
                         val response = filmeAPI.getAccountLists(currentAccountId, sessionId)
                         if (response.isSuccessful) {
                             response.body()?.let { accountListsResponse ->
+                                Log.d("TAG-MyListViewModel", "API getAccountLists retornou ${accountListsResponse.results.size} listas.")
                                 _userListsUiState.value = UiState.Success(accountListsResponse.results)
+                                // Tenta identificar e salvar o primaryListId se for "Minha Lista"
+                                val foundPrimaryList = accountListsResponse.results.firstOrNull { it.name == "Minha Lista" }
+                                if (foundPrimaryList != null) {
+                                    primaryListId = foundPrimaryList.id.toString()
+                                    userPreferencesRepository.savePrimaryListId(foundPrimaryList.id.toString())
+                                    Log.d("TAG-MyListViewModel", "PrimaryListId identificado e salvo: $primaryListId")
+                                } else if (accountListsResponse.results.isNotEmpty()) {
+                                    // Se "Minha Lista" não foi encontrada, usa a primeira lista disponível como padrão
+                                    val firstList = accountListsResponse.results.first()
+                                    primaryListId = firstList.id.toString()
+                                    userPreferencesRepository.savePrimaryListId(firstList.id.toString())
+                                    Log.d("TAG-MyListViewModel", "Nenhuma lista 'Minha Lista' encontrada, usando a primeira lista disponível como PrimaryListId: $primaryListId")
+                                } else {
+                                    Log.d("TAG-MyListViewModel", "Nenhuma lista 'Minha Lista' encontrada e nenhuma outra lista disponível.")
+                                }
                             } ?: run {
                                 _userListsUiState.value = UiState.Error("Não foi possível carregar as listas do usuário.")
+                                Log.e("TAG-MyListViewModel", "Corpo da resposta da API nulo ao carregar listas do usuário.")
                             }
                         } else {
                             _userListsUiState.value = UiState.Error("Erro ao carregar listas do usuário: ${response.code()}")
+                            Log.e("TAG-MyListViewModel", "Erro HTTP ao carregar listas do usuário: ${response.code()}")
                         }
                     } catch (e: Exception) {
                         _userListsUiState.value = UiState.Error("Erro de conexão ao carregar listas: ${e.message}")
+                        Log.e("TAG-MyListViewModel", "Erro de conexão ao carregar listas do usuário: ${e.message}", e)
                     }
                 } else {
                     _userListsUiState.value = UiState.Error("Usuário não autenticado ou Account ID não disponível.")
+                    Log.e("TAG-MyListViewModel", "Usuário não autenticado ou Account ID não disponível para loadUserLists.")
                 }
             } ?: run {
                 _userListsUiState.value = UiState.Error("Usuário não autenticado. Faça login para ver suas listas.")
+                Log.e("TAG-MyListViewModel", "Sessão ID nula. Usuário não autenticado para loadUserLists.")
             }
         }
     }
@@ -104,19 +141,122 @@ class MyListViewModel(
     }
 
     // loadMyListMovies agora aceita um listId opcional
-    fun loadMyListMovies(selectedListId: String? = null) {
-        Log.d("TAG-MyListViewModel", "loadMyListMovies iniciado. selectedListId: $selectedListId")
+    fun loadNowPlayingMovies() {
+        Log.d("TAG-MyListViewModel", "loadNowPlayingMovies iniciado.")
+        viewModelScope.launch {
+            _uiState.value = UiState.Loading
+            try {
+                val response = filmeAPI.recuperarFilmes() // Chama o endpoint now_playing
+                if (response.isSuccessful) {
+                    response.body()?.let { filmeResposta ->
+                        if (filmeResposta.results.isNotEmpty()) {
+                            originalMovies = filmeResposta.results
+                            _uiState.value = UiState.Success(filmeResposta.results)
+                            Log.d("TAG-MyListViewModel", "Filmes em cartaz carregados com sucesso. ${filmeResposta.results.size} filmes.")
+                        } else {
+                            _uiState.value = UiState.Error("Nenhum filme em cartaz encontrado.")
+                            Log.d("TAG-MyListViewModel", "API retornou nenhum filme em cartaz.")
+                        }
+                    } ?: run {
+                        _uiState.value = UiState.Error("Resposta vazia ao carregar filmes em cartaz.")
+                        Log.e("TAG-MyListViewModel", "Corpo da resposta da API nulo ao carregar filmes em cartaz.")
+                    }
+                } else {
+                    _uiState.value = UiState.Error("Erro HTTP ao carregar filmes em cartaz: ${response.code()}")
+                    Log.e("TAG-MyListViewModel", "Erro HTTP ao carregar filmes em cartaz: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                _uiState.value = UiState.Error("Erro de conexão ao carregar filmes em cartaz: ${e.message}")
+                Log.e("TAG-MyListViewModel", "Erro de conexão ao carregar filmes em cartaz: ${e.message}", e)
+            }
+        }
+    }
+
+    fun loadPopularMovies() {
+        Log.d("TAG-MyListViewModel", "loadPopularMovies iniciado.")
+        viewModelScope.launch {
+            _uiState.value = UiState.Loading
+            try {
+                val response = filmeAPI.recuperarFilmesPopulares()
+                if (response.isSuccessful) {
+                    response.body()?.let { filmeResposta ->
+                        if (filmeResposta.results.isNotEmpty()) {
+                            originalMovies = filmeResposta.results
+                            _uiState.value = UiState.Success(filmeResposta.results)
+                            Log.d("TAG-MyListViewModel", "Filmes populares carregados com sucesso. ${filmeResposta.results.size} filmes.")
+                        } else {
+                            _uiState.value = UiState.Error("Nenhum filme popular encontrado.")
+                            Log.d("TAG-MyListViewModel", "API retornou nenhum filme popular.")
+                        }
+                    } ?: run {
+                        _uiState.value = UiState.Error("Resposta vazia ao carregar filmes populares.")
+                        Log.e("TAG-MyListViewModel", "Corpo da resposta da API nulo ao carregar filmes populares.")
+                    }
+                } else {
+                    _uiState.value = UiState.Error("Erro HTTP ao carregar filmes populares: ${response.code()}")
+                    Log.e("TAG-MyListViewModel", "Erro HTTP ao carregar filmes populares: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                _uiState.value = UiState.Error("Erro de conexão ao carregar filmes populares: ${e.message}")
+                Log.e("TAG-MyListViewModel", "Erro de conexão ao carregar filmes populares: ${e.message}", e)
+            }
+        }
+    }
+
+    fun loadTopRatedMovies() {
+        Log.d("TAG-MyListViewModel", "loadTopRatedMovies iniciado.")
+        viewModelScope.launch {
+            _uiState.value = UiState.Loading
+            try {
+                val response = filmeAPI.recuperarFilmesMelhorAvaliados()
+                if (response.isSuccessful) {
+                    response.body()?.let { filmeResposta ->
+                        if (filmeResposta.results.isNotEmpty()) {
+                            originalMovies = filmeResposta.results
+                            _uiState.value = UiState.Success(filmeResposta.results)
+                            Log.d("TAG-MyListViewModel", "Filmes melhor avaliados carregados com sucesso. ${filmeResposta.results.size} filmes.")
+                        } else {
+                            _uiState.value = UiState.Error("Nenhum filme melhor avaliado encontrado.")
+                            Log.d("TAG-MyListViewModel", "API retornou nenhum filme melhor avaliado.")
+                        }
+                    } ?: run {
+                        _uiState.value = UiState.Error("Resposta vazia ao carregar filmes melhor avaliados.")
+                        Log.e("TAG-MyListViewModel", "Corpo da resposta da API nulo ao carregar filmes melhor avaliados.")
+                    }
+                } else {
+                    _uiState.value = UiState.Error("Erro HTTP ao carregar filmes melhor avaliados: ${response.code()}")
+                    Log.e("TAG-MyListViewModel", "Erro HTTP ao carregar filmes melhor avaliados: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                _uiState.value = UiState.Error("Erro de conexão ao carregar filmes melhor avaliados: ${e.message}")
+                Log.e("TAG-MyListViewModel", "Erro de conexão ao carregar filmes melhor avaliados: ${e.message}", e)
+            }
+        }
+    }
+
+    // loadMyListMovies agora aceita um listId opcional e uma flag para forçar o carregamento de "now playing"
+    fun loadMyListMovies(selectedListId: String? = null, forceLoadNowPlaying: Boolean = false) {
+        Log.d("TAG-MyListViewModel", "loadMyListMovies iniciado. selectedListId: $selectedListId, forceLoadNowPlaying: $forceLoadNowPlaying")
         viewModelScope.launch {
             _uiState.value = UiState.Loading
 
-            val targetListId: String? = selectedListId ?: userPreferencesRepository.primaryListId.first()
-            Log.d("TAG-MyListViewModel", "targetListId determinado como: $targetListId")
+            // Se forçar "now playing", ou se não houver um listId válido e não autenticado, carrega now playing
+            val sessionId = userPreferencesRepository.sessionId.first()
+            val hasValidSession = !sessionId.isNullOrEmpty()
 
-            if (targetListId == null) {
-                _uiState.value = UiState.Error("Nenhuma lista selecionada ou lista principal não definida.")
-                Log.e("TAG-MyListViewModel", "Nenhuma lista selecionada ou lista principal não definida.")
+            val effectiveTargetListId: String? = if (hasValidSession) {
+                selectedListId ?: primaryListId ?: userPreferencesRepository.primaryListId.first()
+            } else {
+                null
+            }
+
+            if (forceLoadNowPlaying || effectiveTargetListId == null) {
+                Log.d("TAG-MyListViewModel", "Carregando filmes em cartaz devido a forceLoadNowPlaying ou effectiveTargetListId ser nulo.")
+                loadNowPlayingMovies()
                 return@launch
             }
+
+            Log.d("TAG-MyListViewModel", "targetListId determinado como: $effectiveTargetListId")
 
             // 1. Tenta carregar do cache primeiro (para a lista específica)
             // TODO: Precisa de uma forma de armazenar cache por listId
@@ -132,15 +272,15 @@ class MyListViewModel(
             }
 
             // 2. Sempre tenta buscar a lista atualizada da API em segundo plano
-            userPreferencesRepository.sessionId.first()?.let { sessionId ->
-                Log.d("TAG-MyListViewModel", "SessionId obtido: $sessionId")
-                if (targetListId != null) {
+            sessionId?.let { validSessionId ->
+                Log.d("TAG-MyListViewModel", "SessionId obtido: $validSessionId")
+                if (effectiveTargetListId != null) {
                     try {
-                        Log.d("TAG-MyListViewModel", "Chamando API para getListDetails para listId: $targetListId")
-                        val response = filmeAPI.getListDetails(targetListId, sessionId)
+                        Log.d("TAG-MyListViewModel", "Chamando API para getListDetails para listId: $effectiveTargetListId")
+                        val response = filmeAPI.getListDetails(effectiveTargetListId, validSessionId)
                         if (response.isSuccessful) {
                             response.body()?.let { listDetails ->
-                                Log.d("TAG-MyListViewModel", "API retornou ${listDetails.items.size} itens para listId: $targetListId")
+                                Log.d("TAG-MyListViewModel", "API retornou ${listDetails.items.size} itens para listId: $effectiveTargetListId")
                                 if (listDetails.items.isNotEmpty()) {
                                     val movies = listDetails.items.map { item ->
                                         Filme(
@@ -170,30 +310,32 @@ class MyListViewModel(
                                     originalMovies = emptyList()
                                     _uiState.value = UiState.Success(emptyList())
                                     myListPreferencesRepository.clearMyMovieList() // Limpa o cache se a lista estiver vazia
-                                    Log.d("TAG-MyListViewModel", "Lista da API vazia para listId: $targetListId. Cache limpo.")
+                                    Log.d("TAG-MyListViewModel", "Lista da API vazia para listId: $effectiveTargetListId. Cache limpo.")
                                 }
                             } ?: run {
                                 _uiState.value = UiState.Error("Não foi possível carregar os detalhes da lista.")
-                                Log.e("TAG-MyListViewModel", "Corpo da resposta da API nulo ao carregar lista para listId: $targetListId.")
+                                Log.e("TAG-MyListViewModel", "Corpo da resposta da API nulo ao carregar lista para listId: $effectiveTargetListId.")
                             }
-                        } else {
+                        }
+                        else {
                             if (_uiState.value !is UiState.Success) {
                                 _uiState.value = UiState.Error("Erro ao carregar lista da API: ${response.code()}")
                             }
-                            Log.e("TAG-MyListViewModel", "Erro HTTP ao carregar lista para listId: $targetListId: ${response.code()}")
+                            Log.e("TAG-MyListViewModel", "Erro HTTP ao carregar lista para listId: $effectiveTargetListId: ${response.code()}")
                         }
                     } catch (e: Exception) {
                         if (_uiState.value !is UiState.Success) {
                             _uiState.value = UiState.Error("Erro de conexão ao carregar lista da API: ${e.message}")
                         }
-                        Log.e("TAG-MyListViewModel", "Erro de conexão ao carregar lista para listId: $targetListId: ${e.message}", e)
+                        Log.e("TAG-MyListViewModel", "Erro de conexão ao carregar lista para listId: $effectiveTargetListId: ${e.message}", e)
                     }
+                } else {
+                    Log.d("TAG-MyListViewModel", "effectiveTargetListId é nulo, carregando filmes em cartaz como fallback.")
+                    loadNowPlayingMovies()
                 }
             } ?: run {
-                if (_uiState.value !is UiState.Success) {
-                    _uiState.value = UiState.Error("Usuário não autenticado. Faça login para ver sua lista.")
-                }
-                Log.e("TAG-MyListViewModel", "Sessão ID nula. Usuário não autenticado. Não foi possível carregar filmes.")
+                Log.d("TAG-MyListViewModel", "Sessão ID nula. Usuário não autenticado. Carregando filmes em cartaz como fallback.")
+                loadNowPlayingMovies()
             }
         }
     }
