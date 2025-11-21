@@ -128,7 +128,7 @@ fun NetflixScreen(
                         modifier = Modifier.fillMaxSize().background(BLACK),
                         contentAlignment = Alignment.Center
                     ) {
-                        LoadingIndicatorCustom(animationDelay = 400)
+                        LoadingIndicatorCustom(animationDelay = 1000)
                     }
                 }
                 is UiState.Success -> {

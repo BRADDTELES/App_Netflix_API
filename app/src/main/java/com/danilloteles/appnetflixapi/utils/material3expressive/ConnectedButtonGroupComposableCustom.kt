@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Airplay
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.SortByAlpha
 import androidx.compose.material.icons.filled.Star
@@ -52,8 +53,8 @@ fun ConnectedButtonGroupComposableCustom(
 ) {
     val options = listOf("", "", "", "")
     val unCheckedIcons =
-        listOf(Icons.Outlined.Favorite, Icons.Outlined.ThumbUp,Icons.Outlined.Star, Icons.Default.SortByAlpha)
-    val checkedIcons = listOf(Icons.Filled.Favorite, Icons.Filled.ThumbUp,Icons.Filled.Star, Icons.Default.SortByAlpha)
+        listOf(Icons.Outlined.Favorite, Icons.Outlined.ThumbUp,Icons.Outlined.Star, Icons.Default.Airplay)
+    val checkedIcons = listOf(Icons.Filled.Favorite, Icons.Filled.ThumbUp,Icons.Filled.Star, Icons.Filled.Airplay)
 
     Row(
         modifier = modifier.padding(start = 30.dp, end = 30.dp, top = 16.dp, bottom = 0.dp),

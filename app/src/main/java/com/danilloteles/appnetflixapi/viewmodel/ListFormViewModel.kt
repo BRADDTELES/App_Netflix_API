@@ -33,7 +33,7 @@ class ListFormViewModel(
 
             try {
                 val request = CreateListRequest(name = name, description = description, iso_639_1 = "pt-BR")
-                val response = filmeAPI.createList(sessionId, request)
+                val response = filmeAPI.criarLista(sessionId, request)
                 if (response.isSuccessful && response.body() != null) {
                     _uiState.value = UiState.Success(response.body()!!)
                 } else {

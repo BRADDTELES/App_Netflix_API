@@ -134,7 +134,7 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    LoadingIndicatorCustom(animationDelay = 400)
+                    LoadingIndicatorCustom(animationDelay = 1000)
                 }
             }
             is UiState.Error -> {

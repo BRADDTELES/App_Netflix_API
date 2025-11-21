@@ -1,6 +1,6 @@
 package com.danilloteles.appnetflixapi.model
 
-data class Movie(
+data class FilmeFicticio(
     val id: Int,
     val title: String,
     val descricao: String,

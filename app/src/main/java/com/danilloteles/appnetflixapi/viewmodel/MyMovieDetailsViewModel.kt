@@ -84,7 +84,7 @@ class MyMovieDetailsViewModel(
                 val currentAccountId = getOrCreateAccountId(sessionId)
                 if (currentAccountId != null) {
                     try {
-                        val response = filmeAPI.getAccountLists(currentAccountId, sessionId)
+                        val response = filmeAPI.obterListasDeContas(currentAccountId, sessionId)
                         if (response.isSuccessful) {
                             response.body()?.let { accountListsResponse ->
                                 _userListsUiState.value = UiState.Success(accountListsResponse.results)
@@ -116,7 +116,7 @@ class MyMovieDetailsViewModel(
         }
 
         // Se não estiver no DataStore, busca da API
-        val accountDetailsResponse = filmeAPI.getAccountDetails(sessionId)
+        val accountDetailsResponse = filmeAPI.obterDetalhesDaConta(sessionId)
         if (accountDetailsResponse.isSuccessful) {
             accountDetailsResponse.body()?.let { details ->
                 accountId = details.id
@@ -142,7 +142,7 @@ class MyMovieDetailsViewModel(
                 finalTargetListId?.let { id ->
                     try {
                         Log.d("TAG-MyMovieDetailsViewModel", "Chamando API para getListDetails para listId: $id")
-                        val response = filmeAPI.getListDetails(id, sessionId)
+                        val response = filmeAPI.obterDetalhesDaLista(id, sessionId)
                         if (response.isSuccessful) {
                             val listDetails = response.body()
                             val containsMovie = listDetails?.items?.any { it.id == movieId } ?: false
@@ -187,10 +187,10 @@ class MyMovieDetailsViewModel(
                 try {
                     val response = if (_isInMyList.value) {
                         Log.d("TAG-MyMovieDetailsViewModel", "Tentando remover filme (ID: $movieId) da lista (ID: $finalListToModifyId).")
-                        filmeAPI.removeMovieFromList(finalListToModifyId, sessionId, request)
+                        filmeAPI.removerFilmeDaLista(finalListToModifyId, sessionId, request)
                     } else {
                         Log.d("TAG-MyMovieDetailsViewModel", "Tentando adicionar filme (ID: $movieId) à lista (ID: $finalListToModifyId).")
-                        filmeAPI.addMovieToList(finalListToModifyId, sessionId, request)
+                        filmeAPI.adicionarFilmeALista(finalListToModifyId, sessionId, request)
                     }
 
                     Log.d("TAG-MyMovieDetailsViewModel", "Resposta da API - isSuccessful: ${response.isSuccessful}, Code: ${response.code()}, Body: ${response.body()}")

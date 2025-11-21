@@ -24,6 +24,7 @@ import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -35,6 +36,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SplitButtonDefaults
 import androidx.compose.material3.SplitButtonLayout
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
@@ -100,7 +102,7 @@ fun MyMovieDetails(
                 modifier = Modifier.fillMaxSize().background(BLACK),
                 contentAlignment = Alignment.Center
             ) {
-                LoadingIndicatorCustom(animationDelay = 400)
+                LoadingIndicatorCustom(animationDelay = 2000)
             }
         }
 
@@ -139,7 +141,8 @@ fun ConteudoMyMovieDetails(
     val userListsUiState by viewModel?.userListsUiState?.collectAsStateWithLifecycle() ?: remember { mutableStateOf(UiState.Idle) }
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var showAddToListDropdown by remember { mutableStateOf(false) } // Estado para o dropdown "Adicionar à Lista"
+    // Estado para controlar a expansão do menu de seleção de lista
+    var showListSelection by remember { mutableStateOf(false) }
 
     LaunchedEffect(myListActionUiState) {
         when (val state = myListActionUiState) {
@@ -229,6 +232,7 @@ fun ConteudoMyMovieDetails(
                         horizontalArrangement = Arrangement.End
                     ) {
                         Box {
+
                             var splitButtonChecked by remember { mutableStateOf(false) }
 
                             SplitButtonLayout(
@@ -253,7 +257,7 @@ fun ConteudoMyMovieDetails(
                                     val description = "Toggle Button"
                                     TooltipBox(
                                         positionProvider =
-                                        TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
+                                            TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
                                         tooltip = { PlainTooltip { Text(description) } },
                                         state = rememberTooltipState(),
                                     ) {
@@ -265,10 +269,10 @@ fun ConteudoMyMovieDetails(
                                                 contentColor = GRAY_900
                                             ),
                                             modifier =
-                                            Modifier.semantics {
-                                                stateDescription = if (splitButtonChecked) "Expanded" else "Collapsed"
-                                                contentDescription = description
-                                            },
+                                                Modifier.semantics {
+                                                    stateDescription = if (splitButtonChecked) "Expanded" else "Collapsed"
+                                                    contentDescription = description
+                                                },
                                         ) {
                                             val rotation: Float by
                                             animateFloatAsState(
@@ -278,9 +282,9 @@ fun ConteudoMyMovieDetails(
                                             Icon(
                                                 Icons.Filled.KeyboardArrowDown,
                                                 modifier =
-                                                Modifier.size(SplitButtonDefaults.TrailingIconSize).graphicsLayer {
-                                                    this.rotationZ = rotation
-                                                },
+                                                    Modifier.size(SplitButtonDefaults.TrailingIconSize).graphicsLayer {
+                                                        this.rotationZ = rotation
+                                                    },
                                                 contentDescription = "Expandir menu",
                                             )
                                         }
@@ -291,67 +295,69 @@ fun ConteudoMyMovieDetails(
                                 expanded = splitButtonChecked,
                                 onDismissRequest = {
                                     splitButtonChecked = false
-                                    showAddToListDropdown = false // Garante que o submenu também feche
+                                    showListSelection = false // Garante que a seleção também feche
                                 }
                             ) {
                                 if (isInMyList) {
                                     DropdownMenuItem(
                                         text = { Text("Remover da Lista") },
                                         onClick = {
-                                            viewModel?.addOrRemoveMovie(listId) // Passa o listId do composable
+                                            viewModel?.addOrRemoveMovie(listId)
                                             splitButtonChecked = false
-                                            showAddToListDropdown = false // Resetar após ação
                                         },
                                         leadingIcon = {
                                             Icon(Icons.Outlined.Delete, contentDescription = null)
                                         },
                                     )
-                                } else {
+                                } else if (showListSelection) {
+                                    // --- INÍCIO DO CÓDIGO CORRIGIDO ---
+                                    // Exibe um título para o submenu
                                     DropdownMenuItem(
-                                        text = { Text("Adicionar à Lista") },
-                                        onClick = { showAddToListDropdown = true }, // Abre o submenu de listas
-                                        leadingIcon = {
-                                            Icon(Icons.Outlined.AddToQueue, contentDescription = null)
-                                        },
+                                        text = { Text("Selecione uma lista", fontWeight = FontWeight.Bold) },
+                                        onClick = { /* Item não clicável, apenas um título */ },
+                                        enabled = false // Desativa o clique
                                     )
-                                    // Submenu para selecionar a lista
-                                    DropdownMenu(
-                                        expanded = showAddToListDropdown,
-                                        onDismissRequest = { showAddToListDropdown = false }
-                                    ) {
-                                        when (val state = userListsUiState) {
-                                            is UiState.Success -> {
+
+                                    when (val state = userListsUiState) {
+                                        is UiState.Success -> {
+                                            if (state.data.isEmpty()) {
+                                                DropdownMenuItem(
+                                                    text = { Text("Nenhuma lista encontrada") },
+                                                    onClick = { },
+                                                    enabled = false
+                                                )
+                                            } else {
                                                 state.data.forEach { list ->
                                                     DropdownMenuItem(
                                                         text = { Text(list.name) },
                                                         onClick = {
                                                             viewModel?.addOrRemoveMovie(list.id.toString())
+                                                            // Fecha tudo após a seleção
+                                                            showListSelection = false
                                                             splitButtonChecked = false
-                                                            showAddToListDropdown = false
                                                         }
                                                     )
                                                 }
                                             }
-                                            is UiState.Loading -> {
-                                                DropdownMenuItem(
-                                                    text = { Text("Carregando listas...") },
-                                                    onClick = { /* No-op */ }
-                                                )
-                                            }
-                                            is UiState.Error -> {
-                                                DropdownMenuItem(
-                                                    text = { Text("Erro ao carregar listas") },
-                                                    onClick = { /* No-op */ }
-                                                )
-                                            }
-                                            else -> {
-                                                DropdownMenuItem(
-                                                    text = { Text("Nenhuma lista disponível") },
-                                                    onClick = { /* No-op */ }
-                                                )
-                                            }
                                         }
+                                        is UiState.Loading -> {
+                                            DropdownMenuItem(text = { Text("Carregando listas...") }, onClick = {}, enabled = false)
+                                        }
+                                        is UiState.Error -> {
+                                            DropdownMenuItem(text = { Text("Erro ao carregar") }, onClick = {}, enabled = false)
+                                        }
+                                        else -> {} // UiState.Idle
                                     }
+                                    // --- FIM DO CÓDIGO CORRIGIDO ---
+                                } else {
+                                    // Botão inicial para "Adicionar à Lista"
+                                    DropdownMenuItem(
+                                        text = { Text("Adicionar à Lista") },
+                                        onClick = { showListSelection = true }, // Ativa o modo de seleção de lista
+                                        leadingIcon = {
+                                            Icon(Icons.Outlined.AddToQueue, contentDescription = null)
+                                        },
+                                    )
                                 }
                             }
                         }

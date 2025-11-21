@@ -34,7 +34,7 @@ class LoginViewModel(
         viewModelScope.launch {
             _uiState.value = UiState.Loading
             try {
-                val response = filmeAPI.createRequestToken()
+                val response = filmeAPI.criarTokenDeSolicitacao()
                 if (response.isSuccessful) {
                     response.body()?.let { tokenResponse ->
                         if (tokenResponse.success) {
@@ -70,7 +70,7 @@ class LoginViewModel(
             requestToken?.let { token ->
                 try {
                     val response =
-                        filmeAPI.createSessionId(CreateSessionRequest(request_token = token))
+                        filmeAPI.criarIDdaSessão(CreateSessionRequest(request_token = token))
                     if (response.isSuccessful) {
                         response.body()?.let { sessionIdResponse ->
                             if (sessionIdResponse.success) {

@@ -112,7 +112,7 @@ fun MyListScreen(
                 // Se não encontrou nenhuma lista, carrega filmes em cartaz por padrão
                 selectedListId = "now_playing_movies" // ID especial para filmes em cartaz
                 selectedListName = "Filmes em Cartaz"
-                myListViewModel.loadNowPlayingMovies()
+                myListViewModel.carregarFilmesTocandoAgora()
             }
         }
     }
@@ -147,7 +147,7 @@ fun MyListScreen(
                                         onClick = {
                                             selectedListId = "now_playing_movies"
                                             selectedListName = "Filmes em Cartaz"
-                                            myListViewModel.loadNowPlayingMovies()
+                                            myListViewModel.carregarFilmesTocandoAgora()
                                             expanded = false
                                         },
                                         // Opcional: Adicionar um ícone para filmes em cartaz
@@ -298,7 +298,7 @@ fun MyListScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        LoadingIndicatorCustom(animationDelay = 400)
+                        LoadingIndicatorCustom(animationDelay = 2000)
                     }
                 }
                 is UiState.Success -> {
