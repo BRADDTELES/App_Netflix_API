@@ -53,13 +53,19 @@ import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.paging.LoadState
+import androidx.paging.compose.collectAsLazyPagingItems
+import com.danilloteles.appnetflixapi.api.FilmeAPI
 import com.danilloteles.appnetflixapi.model.Filme
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.VERMELHO
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
-import com.danilloteles.appnetflixapi.datasource.MyListPreferencesRepository
+import com.danilloteles.appnetflixapi.datasource.datastore.MyListPreferencesRepository
 import com.danilloteles.appnetflixapi.utils.events.UiState
-import com.danilloteles.appnetflixapi.datasource.UserPreferencesRepository
+import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
+import com.danilloteles.appnetflixapi.repository.FilmeRepository
+import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
+import com.danilloteles.appnetflixapi.utils.events.MovieListFilterState
 import com.danilloteles.appnetflixapi.utils.material3expressive.ConnectedButtonGroupComposableCustom
 import com.danilloteles.appnetflixapi.utils.material3expressive.FabMenuColorScheme
 import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
@@ -73,14 +79,23 @@ fun MyListScreen(
     onNavigateToListForm: () -> Unit
 ) {
     val context = LocalContext.current // Adicionado para o ViewModelFactory
+
+    val filmeRepository = remember {
+        FilmeRepository(RetrofitHelper.filmeAPI)
+    }
+
     val myListViewModel: MyListViewModel = viewModel( // Instância alterada
         factory = MyListViewModel.MyListViewModelFactory(
             UserPreferencesRepository(context),
-            MyListPreferencesRepository(context)
+            MyListPreferencesRepository(context),
+            filmeRepository = filmeRepository
         )
     )
-    val uiState by myListViewModel.uiState.collectAsStateWithLifecycle()
+
+    val moviesPagingItems = myListViewModel.moviesStream.collectAsLazyPagingItems()
+
     val userListsUiState by myListViewModel.userListsUiState.collectAsStateWithLifecycle()
+
     val listState = rememberLazyGridState()
     val fabVisible by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
     var fabMenuExpanded by rememberSaveable { mutableStateOf(false) }
@@ -91,14 +106,10 @@ fun MyListScreen(
     var selectedListId by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedListName by rememberSaveable { mutableStateOf("Minhas Listas") }
 
+    val currentFilter by myListViewModel.currentFilter.collectAsStateWithLifecycle()
+
     // 1. Estado para controlar o índice do filtro selecionado
     var selectedFilterIndex by remember { mutableIntStateOf(0) }
-
-    // Chama loadMyListMovies() quando a tela é inicializada
-    LaunchedEffect(Unit) {
-        // A carga inicial da lista será feita pelo LaunchedEffect(userListsUiState)
-        // para garantir que um primaryListId esteja disponível.
-    }
 
     LaunchedEffect(userListsUiState) {
         if (userListsUiState is UiState.Success) {
@@ -107,19 +118,13 @@ fun MyListScreen(
             if (primaryList != null) {
                 selectedListId = primaryList.id.toString()
                 selectedListName = primaryList.name
-                myListViewModel.loadMyListMovies(primaryList.id.toString())
+                myListViewModel.applyFilter(MovieListFilterState.MyList(primaryList.id.toString()))
             } else {
                 // Se não encontrou nenhuma lista, carrega filmes em cartaz por padrão
                 selectedListId = "now_playing_movies" // ID especial para filmes em cartaz
                 selectedListName = "Filmes em Cartaz"
-                myListViewModel.carregarFilmesTocandoAgora()
+                myListViewModel.applyFilter(MovieListFilterState.NowPlaying)
             }
-        }
-    }
-
-    LaunchedEffect(uiState) {
-        if (uiState is UiState.Error) {
-            snackbarHostState.showSnackbar((uiState as UiState.Error).message)
         }
     }
 
@@ -147,7 +152,7 @@ fun MyListScreen(
                                         onClick = {
                                             selectedListId = "now_playing_movies"
                                             selectedListName = "Filmes em Cartaz"
-                                            myListViewModel.carregarFilmesTocandoAgora()
+                                            myListViewModel.applyFilter(MovieListFilterState.NowPlaying)
                                             expanded = false
                                         },
                                         // Opcional: Adicionar um ícone para filmes em cartaz
@@ -158,7 +163,7 @@ fun MyListScreen(
                                             onClick = {
                                                 selectedListId = list.id.toString()
                                                 selectedListName = list.name
-                                                myListViewModel.loadMyListMovies(list.id.toString())
+                                                myListViewModel.applyFilter(MovieListFilterState.MyList(list.id.toString()))
                                                 expanded = false
                                             }
                                         )
@@ -279,63 +284,49 @@ fun MyListScreen(
         ) {
             // 2. Componente customizado sendo usado com o estado
             ConnectedButtonGroupComposableCustom(
-                selectedIndex = selectedFilterIndex,
+                selectedIndex = when (currentFilter) {
+                    is MovieListFilterState.MyList -> 0
+                    MovieListFilterState.Popular -> 1
+                    MovieListFilterState.TopRated -> 2
+                    MovieListFilterState.NowPlaying -> 3
+                },
                 onIndexChange = { newIndex ->
-                    selectedFilterIndex = newIndex
-                    when (newIndex) {
-                        0 -> myListViewModel.applyFilter(0, selectedListId) // Minha Lista
-                        1 -> myListViewModel.applyFilter(1) // Populares
-                        2 -> myListViewModel.applyFilter(2) // Melhor Avaliados
-                        3 -> myListViewModel.applyFilter(3) // A-Z
+                    val newFilter = when (newIndex) {
+                        0 -> MovieListFilterState.MyList(selectedListId)
+                        1 -> MovieListFilterState.Popular
+                        2 -> MovieListFilterState.TopRated
+                        3 -> MovieListFilterState.NowPlaying
+                        else -> MovieListFilterState.Popular
                     }
+                    myListViewModel.applyFilter(newFilter)
                 }
             )
 
-            when (val state = uiState) {
-                is UiState.Idle -> {}
-                is UiState.Loading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        LoadingIndicatorCustom(animationDelay = 2000)
-                    }
-                }
-                is UiState.Success -> {
-                    Log.d("TAG-MyListScreen", "UiState.Success recebido. Tamanho da lista: ${state.data.size}. Primeiro filme: ${state.data.firstOrNull()?.title}")
-                    if (state.data.isEmpty()) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "Sua lista está vazia.",
-                                color = WHITE
-                            )
-                        }
-                    } else {
-                        MyMoviesListSection(
-                            listFilme = state.data,
-                            onMovieClick = { filme -> onMovieClick(filme, selectedListId) },
-                            lazyGridState = listState
-                        )
-                    }
-                }
-                is UiState.Error -> {
-                    // O erro agora é tratado pelo Snackbar.
-                    // Opcionalmente, pode-se manter o estado visual anterior ou um estado vazio.
-                    // Para simplificar, exibimos o mesmo que a lista vazia.
-                    if ((uiState as? UiState.Success)?.data.isNullOrEmpty() == true) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "Sua lista está vazia.",
-                                color = WHITE
-                            )
-                        }
-                    }
+            Box(
+                modifier = Modifier.fillMaxSize().background(BLACK),
+                contentAlignment = Alignment.Center
+            ) {
+                if (moviesPagingItems.loadState.refresh is LoadState.Loading) {
+                    LoadingIndicatorCustom(animationDelay = 2000)
+                } else if (moviesPagingItems.loadState.refresh is LoadState.Error) {
+                    val error = moviesPagingItems.loadState.refresh as LoadState.Error
+                    Text(
+                        text = "Erro ao carregar filmes.",
+                        color = WHITE
+                    )
+                    Log.e("TAG-MyListScreen","Erro ao carregar filmes: ${error.error.localizedMessage}")
+                } else if (moviesPagingItems.itemCount == 0){
+                    Text(
+                        text = "Nenhum filme encontrado.",
+                        color = WHITE
+                    )
+                    Log.e("TAG-MyListScreen","Nenhum filme encontrado.")
+                } else {
+                    MyMoviesListSection(
+                        listFilme = moviesPagingItems,
+                        onMovieClick = { filme -> onMovieClick(filme, selectedListId) },
+                        lazyGridState = listState
+                    )
                 }
             }
         }

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -27,8 +28,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.paging.LoadState
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.danilloteles.appnetflixapi.enums.FabState
 import com.danilloteles.appnetflixapi.model.Filme
+import com.danilloteles.appnetflixapi.repository.FilmeRepository
+import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
 import com.danilloteles.appnetflixapi.utils.events.UiState
@@ -38,6 +43,7 @@ import com.danilloteles.appnetflixapi.view.componentes.NetflixTopBar
 import com.danilloteles.appnetflixapi.view.componentes.PopularMoviesSection
 import com.danilloteles.appnetflixapi.view.navigation.NetflixApp
 import com.danilloteles.appnetflixapi.viewmodel.PopularMoviesViewModel
+import com.danilloteles.appnetflixapi.viewmodel.PopularMoviesViewModelFactory
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 
@@ -86,12 +92,16 @@ fun NetflixScreen(
     onAddClick: () -> Unit,
     onMyListClick: () -> Unit // Novo parâmetro
 ) {
-    // Instanciando o ViewModel
-    val popularMoviesViewModel: PopularMoviesViewModel = viewModel()
-    // Coletando o estado da UI
-    val uiState by popularMoviesViewModel.uiState.collectAsStateWithLifecycle()
+    val filmeApi = RetrofitHelper.filmeAPI
+    val filmeRepository = remember { FilmeRepository(filmeApi) }
 
-    val listState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
+    val popularMoviesViewModel: PopularMoviesViewModel = viewModel(
+        factory = PopularMoviesViewModelFactory(filmeRepository)
+    )
+
+    val popularMoviesPagingItems = popularMoviesViewModel.popularMoviesStream.collectAsLazyPagingItems()
+
+    val listState = rememberLazyGridState()
     var fabState by remember { mutableStateOf(FabState.EXPANDED) }
 
     // Lógica para observar a rolagem e determinar o estado do FAB
@@ -121,33 +131,29 @@ fun NetflixScreen(
         ) {
             MenuSection(onMyListClick = onMyListClick) // Passando o onMyListClick
 
-            when (val state = uiState) {
-                is UiState.Idle -> {}
-                is UiState.Loading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize().background(BLACK),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        LoadingIndicatorCustom(animationDelay = 1000)
-                    }
-                }
-                is UiState.Success -> {
-                    PopularMoviesSection(
-                        listFilme = state.data,
-                        onMovieClick = onMovieClick,
-                        lazyGridState = listState
+            PopularMoviesSection(
+                filmesPaginados = popularMoviesPagingItems,
+                onMovieClick = onMovieClick,
+                lazyGridState = listState
+            )
+
+            Box(
+                modifier = Modifier.fillMaxSize().background(BLACK)
+            ) {
+                if (popularMoviesPagingItems.loadState.refresh is LoadState.Loading) {
+                    LoadingIndicatorCustom(
+                        animationDelay = 1000,
+                        modifier = Modifier
+                            .align(Alignment.Center)
                     )
                 }
-                is UiState.Error -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = state.message,
-                            color = WHITE
-                        )
-                    }
+
+                if (popularMoviesPagingItems.loadState.refresh is LoadState.Error) {
+                    Text(
+                        text = "Falha ao carregar. Verifique sua conexão.",
+                        color = WHITE,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
                 }
             }
         }

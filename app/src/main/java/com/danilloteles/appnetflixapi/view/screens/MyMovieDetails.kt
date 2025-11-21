@@ -24,7 +24,6 @@ import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -36,7 +35,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SplitButtonDefaults
 import androidx.compose.material3.SplitButtonLayout
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
@@ -73,9 +71,9 @@ import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.GRAY_100
 import com.danilloteles.appnetflixapi.ui.theme.GRAY_900
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
-import com.danilloteles.appnetflixapi.datasource.MyListPreferencesRepository
+import com.danilloteles.appnetflixapi.datasource.datastore.MyListPreferencesRepository
 import com.danilloteles.appnetflixapi.utils.events.UiState
-import com.danilloteles.appnetflixapi.datasource.UserPreferencesRepository
+import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
 import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
 import com.danilloteles.appnetflixapi.viewmodel.MyMovieDetailsViewModel
 
@@ -102,7 +100,7 @@ fun MyMovieDetails(
                 modifier = Modifier.fillMaxSize().background(BLACK),
                 contentAlignment = Alignment.Center
             ) {
-                LoadingIndicatorCustom(animationDelay = 2000)
+                LoadingIndicatorCustom(animationDelay = 5000)
             }
         }
 

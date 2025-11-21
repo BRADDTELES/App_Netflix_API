@@ -43,7 +43,7 @@ import com.danilloteles.appnetflixapi.ui.theme.TRANSPARENT
 import com.danilloteles.appnetflixapi.ui.theme.VERMELHO
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
 import com.danilloteles.appnetflixapi.utils.events.UiState
-import com.danilloteles.appnetflixapi.datasource.UserPreferencesRepository
+import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
 import com.danilloteles.appnetflixapi.view.componentes.NetflixTopBar
 import com.danilloteles.appnetflixapi.view.componentes.OutlinedTextFieldCustom
 import com.danilloteles.appnetflixapi.viewmodel.ListFormViewModel

@@ -25,7 +25,9 @@ import retrofit2.http.Query
 interface FilmeAPI {
 
     @GET("movie/popular")
-    suspend fun recuperarFilmesPopulares(): Response<FilmeResposta>
+    suspend fun recuperarFilmesPopulares(
+        @Query("page") page: Int
+    ): Response<FilmeResposta>
 
     @GET("movie/{movie_id}")
     suspend fun recuperarDetalhesFilme(
@@ -33,10 +35,14 @@ interface FilmeAPI {
     ): Response<FilmeDetalhes>
 
     @GET("movie/top_rated")
-    suspend fun recuperarFilmesMelhorAvaliados(): Response<FilmeResposta>
+    suspend fun recuperarFilmesMelhorAvaliados(
+        @Query("page") page: Int
+    ): Response<FilmeResposta>
 
     @GET("movie/now_playing")
-    suspend fun recuperarFilmesTocandoAgora(): Response<FilmeResposta>
+    suspend fun recuperarFilmesTocandoAgora(
+        @Query("page") page: Int
+    ): Response<FilmeResposta>
 
     @GET("account/{account_id}/rated/movies")
     suspend fun recuperarFilmesClassificados(

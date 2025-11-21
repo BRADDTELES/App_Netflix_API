@@ -18,12 +18,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.paging.compose.LazyPagingItems
 import com.danilloteles.appnetflixapi.model.Filme
 import com.danilloteles.appnetflixapi.view.itemlista.MovieItem
 
 @Composable
 fun PopularMoviesSection(
-    listFilme: List<Filme>,
+    filmesPaginados: LazyPagingItems<Filme>,
     onMovieClick: (Filme) -> Unit,
     lazyGridState: LazyGridState
 ) {
@@ -48,23 +49,16 @@ fun PopularMoviesSection(
             horizontalArrangement = Arrangement.spacedBy(2.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
-            items(listFilme) { filme ->
-                MovieItem(
-                    filme = filme,
-                    onMovieClick = onMovieClick
-                )
+            items(filmesPaginados.itemCount) { index ->
+                val filme = filmesPaginados[index]
+                if (filme != null) {
+                    MovieItem(
+                        filme = filme,
+                        onMovieClick = onMovieClick
+                    )
+                }
             }
         }
 
     }
-}
-
-@Preview
-@Composable
-fun PopularMoviesSectionPreview() {
-    PopularMoviesSection(
-        listFilme = emptyList(),
-        onMovieClick = {},
-        lazyGridState = rememberLazyGridState()
-    )
 }

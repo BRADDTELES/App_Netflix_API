@@ -8,7 +8,7 @@ import com.danilloteles.appnetflixapi.model.CreateListRequest
 import com.danilloteles.appnetflixapi.model.CreateListResponse
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
 import com.danilloteles.appnetflixapi.utils.events.UiState
-import com.danilloteles.appnetflixapi.datasource.UserPreferencesRepository
+import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first

@@ -9,7 +9,7 @@ import com.danilloteles.appnetflixapi.model.CreateSessionRequest
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
 import com.danilloteles.appnetflixapi.utils.events.LoginEvent
 import com.danilloteles.appnetflixapi.utils.events.UiState
-import com.danilloteles.appnetflixapi.datasource.UserPreferencesRepository
+import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow

@@ -14,7 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.danilloteles.appnetflixapi.constantes.Navigation
-import com.danilloteles.appnetflixapi.datasource.UserPreferencesRepository
+import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
 import com.danilloteles.appnetflixapi.view.screens.ListForm
 import com.danilloteles.appnetflixapi.view.screens.LoginScreen
 import com.danilloteles.appnetflixapi.view.screens.MainActivity

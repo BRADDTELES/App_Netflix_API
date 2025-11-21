@@ -56,6 +56,10 @@ android {
 }
 
 dependencies {
+    // Paging 3 para o core (runtime)
+    implementation(libs.androidx.paging.runtime)
+    // Paging 3para integração com Jetpack Compose
+    implementation(libs.androidx.paging.compose)
     // Lifecycle Compose
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
