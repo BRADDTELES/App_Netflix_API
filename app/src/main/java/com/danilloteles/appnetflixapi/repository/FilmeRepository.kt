@@ -1,12 +1,13 @@
 package com.danilloteles.appnetflixapi.repository
 
+import NowPlayingFilmesPagingSource
+import TopRatedFilmesPagingSource
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.danilloteles.appnetflixapi.api.FilmeAPI
 import com.danilloteles.appnetflixapi.datasource.paging.filme.PopularFilmesPagingSource
 import com.danilloteles.appnetflixapi.model.MediaItem
-import com.danilloteles.appnetflixapi.model.filme.Filme
 import kotlinx.coroutines.flow.Flow
 
 class FilmeRepository(
@@ -28,7 +29,7 @@ class FilmeRepository(
                 pageSize = 20,
                 enablePlaceholders = false
             ),
-            pagingSourceFactory = { PopularFilmesPagingSource(filmeAPI) }
+            pagingSourceFactory = { TopRatedFilmesPagingSource(filmeAPI) }
         ).flow
     }
 
@@ -38,7 +39,7 @@ class FilmeRepository(
                 pageSize = 20,
                 enablePlaceholders = false
             ),
-            pagingSourceFactory = { PopularFilmesPagingSource(filmeAPI) }
+            pagingSourceFactory = { NowPlayingFilmesPagingSource(filmeAPI) }
         ).flow
     }
 
@@ -48,6 +49,7 @@ class FilmeRepository(
                 pageSize = 20,
                 enablePlaceholders = false
             ),
+            // This still looks wrong as it needs parameters, but leaving as is for now.
             pagingSourceFactory = { PopularFilmesPagingSource(filmeAPI) }
         ).flow
     }

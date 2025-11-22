@@ -39,6 +39,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import com.danilloteles.appnetflixapi.model.MediaItem
 import com.danilloteles.appnetflixapi.model.serie.Serie
 import com.danilloteles.appnetflixapi.repository.SerieRepository
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
@@ -53,7 +54,7 @@ import com.danilloteles.appnetflixapi.viewmodel.SerieViewModel
 
 @Composable
 fun SerieListScreen(
-    onSerieClick: (Serie) -> Unit,
+    onSerieClick: (MediaItem) -> Unit,
 ) {
 
     val context = LocalContext.current

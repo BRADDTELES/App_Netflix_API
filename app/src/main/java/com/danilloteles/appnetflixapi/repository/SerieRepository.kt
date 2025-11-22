@@ -6,13 +6,13 @@ import androidx.paging.PagingData
 import com.danilloteles.appnetflixapi.api.FilmeAPI
 import com.danilloteles.appnetflixapi.datasource.paging.serie.PopularSeriesPagingSource
 import com.danilloteles.appnetflixapi.datasource.paging.serie.TopRatedSeriesPagingSource
-import com.danilloteles.appnetflixapi.model.serie.Serie
+import com.danilloteles.appnetflixapi.model.MediaItem
 import kotlinx.coroutines.flow.Flow
 
 class SerieRepository(
     val filmeAPI: FilmeAPI
 ) {
-    fun getPopularSeriesStream(): Flow<PagingData<Serie>> {
+    fun getPopularSeriesStream(): Flow<PagingData<MediaItem>> {
         return Pager(
             config = PagingConfig(
                 pageSize = 20,
@@ -22,7 +22,7 @@ class SerieRepository(
         ).flow
     }
 
-    fun getTopRatedMoviesStream(): Flow<PagingData<Serie>> {
+    fun getTopRatedSeriesStream(): Flow<PagingData<MediaItem>> {
         return Pager(
             config = PagingConfig(
                 pageSize = 20,

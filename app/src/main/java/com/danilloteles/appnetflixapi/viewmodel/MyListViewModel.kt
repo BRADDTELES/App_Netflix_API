@@ -51,6 +51,9 @@ class MyListViewModel(
 
     fun applyFilter(filter: MovieListFilterState) {
         _currentFilter.value = filter
+        if (filter is MovieListFilterState.MyList) {
+            Log.d("TAG-MyListViewModel", "Aplicando filtro MyList. listId: ${filter.listId}")
+        }
     }
 
     private fun createPagerForFilter(filter: MovieListFilterState): Pager<Int, MediaItem> {

@@ -180,7 +180,8 @@ class MySerieDetailsViewModel(
                 }
 
                 val request = AddRemoveListItemRequest(media_id = serieId)
-                Log.d("TAG-MySerieDetailsViewModel", "Requisição API: $request para listId: $finalListToModifyId")
+                Log.d("TAG-MySerieDetailsViewModel", "Enviando requisição para adicionar/remover serie. ID da série: $serieId, List ID: $finalListToModifyId")
+                Log.d("TAG-MySerieDetailsViewModel", "Requisição API: ${request} para listId: $finalListToModifyId")
                 try {
                     val response = if (_isInMyList.value) {
                         Log.d("TAG-MySerieDetailsViewModel", "Tentando remover série (ID: $serieId) da lista (ID: $finalListToModifyId).")

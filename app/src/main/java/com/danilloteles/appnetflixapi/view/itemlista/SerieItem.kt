@@ -26,13 +26,13 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.danilloteles.appnetflixapi.R
 import com.danilloteles.appnetflixapi.constantes.Constantes
-import com.danilloteles.appnetflixapi.model.serie.Serie
+import com.danilloteles.appnetflixapi.model.MediaItem
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
 
 @Composable
 fun SerieItem(
-    serie: Serie,
-    onClick: () -> Unit
+    serie: MediaItem,
+    onClick: (MediaItem) -> Unit
 ) {
 
     val context = LocalContext.current
@@ -40,7 +40,7 @@ fun SerieItem(
     Column(
         modifier = Modifier
             .width(160.dp)
-            .clickable{ onClick() },
+            .clickable{ onClick(serie) },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         AsyncImage(
@@ -58,7 +58,7 @@ fun SerieItem(
             error = painterResource(id = R.drawable.capa)
         )
         Text(
-            text = serie.name,
+            text = serie.name ?: serie.title ?: "",
             color = WHITE,
             fontSize = 14.sp,
             modifier = Modifier.fillMaxWidth().padding(8.dp),
@@ -74,20 +74,24 @@ fun SerieItem(
 @Composable
 fun SerieItemPreview() {
     SerieItem(
-        serie = Serie(
+        serie = MediaItem(
             id = 1,
-            name = "Title of the Serie",
-            poster_path = "",
+            name = "Título da Série",
+            poster_path = "/t6HIqrRAFyUMC6bZqMfPSzPNw0s.jpg",
             backdrop_path = "",
-            original_name = "Serie",
-            overview = "Overview",
-            vote_average = 1.0,
-            vote_count = 1,
-            first_air_date = "2020-01-01",
-            origin_country = listOf("BR"),
-            original_language = "pt-BR",
-            genre_ids = listOf(1, 2, 3),
-            popularity = 1.0,
+            overview = "Esta é uma série de teste para preview.",
+            popularity = 100.0,
+            vote_average = 7.0,
+            vote_count = 100,
+            media_type = "tv",
+            first_air_date = "2025-11-16",
+            original_name = "Original Series Title",
+            origin_country = listOf("US"),
+            title = null,
+            original_title = null,
+            release_date = null,
+            adult = null,
+            video = null
         ),
         onClick = {}
     )

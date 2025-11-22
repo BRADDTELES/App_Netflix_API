@@ -24,10 +24,11 @@ import com.danilloteles.appnetflixapi.model.MediaItem
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.VERMELHO
 import com.danilloteles.appnetflixapi.view.itemlista.MovieItem
+import com.danilloteles.appnetflixapi.view.itemlista.SerieItem
 
 @Composable
 fun MyMoviesListSection(
-    listFilme: LazyPagingItems<MediaItem>,
+    items: LazyPagingItems<MediaItem>,
     onMovieClick: (MediaItem) -> Unit,
     lazyGridState: LazyGridState
 ) {
@@ -39,7 +40,7 @@ fun MyMoviesListSection(
     ) {
 
         Text(
-            text = "Lista de Filmes",
+            text = "Minha Lista",
             color = Color.White,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
@@ -52,17 +53,31 @@ fun MyMoviesListSection(
             horizontalArrangement = Arrangement.spacedBy(2.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
-            items(listFilme.itemCount, key = { index -> listFilme[index]?.id ?: index }) { index ->
-                val filme = listFilme[index]
-                if (filme != null) {
-                    MovieItem(
-                        filme = filme,
-                        onMovieClick = onMovieClick
-                    )
+            items(items.itemCount, key = { index -> items[index]?.id ?: index }) { index ->
+                val item = items[index]
+                if (item != null) {
+                    Log.d("TAG-MyMoviesListSection", "Item no índice $index: id=${item.id}, media_type=${item.media_type}, title=${item.title}, name=${item.name}")
+                    when (item.media_type) {
+                        "movie" -> {
+                            MovieItem(
+                                filme = item,
+                                onMovieClick = onMovieClick
+                            )
+                        }
+                        "tv" -> {
+                            SerieItem(
+                                serie = item,
+                                onClick = onMovieClick
+                            )
+                        }
+                        else -> {
+                            // Opcional: Um item para tipos desconhecidos ou erro
+                        }
+                    }
                 }
             }
 
-            listFilme.apply {
+            items.apply {
                 when {
                     loadState.append is LoadState.Loading -> {
                         item {
@@ -76,7 +91,7 @@ fun MyMoviesListSection(
                         val error = loadState.append as LoadState.Error
                         item {
                             Text(
-                                text = "Erro ao carregar mais filmes.",
+                                text = "Erro ao carregar mais itens.",
                                 color = VERMELHO,
                                 modifier = Modifier.padding(8.dp)
                             )

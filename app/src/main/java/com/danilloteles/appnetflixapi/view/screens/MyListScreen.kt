@@ -55,7 +55,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
-import com.danilloteles.appnetflixapi.model.filme.Filme
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.VERMELHO
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
@@ -311,19 +310,19 @@ fun MyListScreen(
                 } else if (moviesPagingItems.loadState.refresh is LoadState.Error) {
                     val error = moviesPagingItems.loadState.refresh as LoadState.Error
                     Text(
-                        text = "Erro ao carregar filmes.",
+                        text = "Erro ao carregar itens.",
                         color = WHITE
                     )
                     Log.e("TAG-MyListScreen","Erro ao carregar filmes: ${error.error.localizedMessage}")
                 } else if (moviesPagingItems.itemCount == 0){
                     Text(
-                        text = "Nenhum filme encontrado.",
+                        text = "Nenhum item encontrado.",
                         color = WHITE
                     )
                     Log.e("TAG-MyListScreen","Nenhum filme encontrado.")
                 } else {
                     MyMoviesListSection(
-                        listFilme = moviesPagingItems,
+                        items = moviesPagingItems,
                         onMovieClick = { mediaItem -> onMovieClick(mediaItem, selectedListId) },
                         lazyGridState = listState
                     )

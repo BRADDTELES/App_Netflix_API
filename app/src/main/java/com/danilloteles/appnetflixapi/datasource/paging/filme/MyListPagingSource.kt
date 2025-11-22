@@ -1,3 +1,5 @@
+
+
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.danilloteles.appnetflixapi.api.FilmeAPI
@@ -16,24 +18,30 @@ class MyListPagingSource(
             if (pagina > 1) {
                 return LoadResult.Page(emptyList(), prevKey = null, nextKey = null)
             }
-
             val sessionId = userPreferencesRepository.sessionId.first()
-
             if (sessionId == null || listId == null) {
                 return LoadResult.Page(emptyList(), prevKey = null, nextKey =  null)
             }
-
-            val response = filmeAPI.obterDetalhesDaLista(listId, sessionId)
-
-            if (response.isSuccessful) {
-                // Filtrar apenas filmes da lista de MediaItem
-                val filmes = response.body()?.items?.filter { it.media_type == "movie" } ?: emptyList()
-                LoadResult.Page(
-                    data = filmes,
-                    prevKey = null,
-                    nextKey = null
-                )
-            } else {
+                        val response = filmeAPI.obterDetalhesDaLista(listId, sessionId)
+            
+                        if (response.isSuccessful) {
+                            val items = response.body()?.items ?: emptyList()
+                            val correctedItems = items.map { item ->
+                                // Corrige a inconsistência da API onde séries em listas às vezes vêm como media_type "movie"
+                                if (item.name != null && item.media_type != "tv") {
+                                    item.copy(media_type = "tv")
+                                } else if (item.title != null && item.media_type != "movie") {
+                                    item.copy(media_type = "movie")
+                                } else {
+                                    item
+                                }
+                            }
+                            LoadResult.Page(
+                                data = correctedItems,
+                                prevKey = null,
+                                nextKey = null
+                            )
+                        } else {
                 LoadResult.Error(Exception("Falha ao carregar Minha Lista: ${response.code()}"))
             }
         } catch (e: Exception) {

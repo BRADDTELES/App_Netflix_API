@@ -10,7 +10,7 @@ import androidx.paging.cachedIn
 import com.danilloteles.appnetflixapi.api.FilmeAPI
 import com.danilloteles.appnetflixapi.datasource.paging.serie.PopularSeriesPagingSource
 import com.danilloteles.appnetflixapi.datasource.paging.serie.TopRatedSeriesPagingSource
-import com.danilloteles.appnetflixapi.model.serie.Serie
+import com.danilloteles.appnetflixapi.model.MediaItem
 import com.danilloteles.appnetflixapi.repository.SerieRepository
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
 import com.danilloteles.appnetflixapi.utils.events.SerieListFilterState
@@ -28,7 +28,7 @@ class SerieViewModel(
     private val _currentFilter = MutableStateFlow<SerieListFilterState>(SerieListFilterState.Popular)
     val currentFilter: StateFlow<SerieListFilterState> = _currentFilter
 
-    val seriesStream: Flow<PagingData<Serie>> = _currentFilter.flatMapLatest { filter ->
+    val seriesStream: Flow<PagingData<MediaItem>> = _currentFilter.flatMapLatest { filter ->
         createPagerForFilter(filter).flow
     }.cachedIn(viewModelScope)
 
@@ -36,7 +36,7 @@ class SerieViewModel(
         _currentFilter.value = filter
     }
 
-    private fun createPagerForFilter(filter: SerieListFilterState): Pager<Int, Serie> {
+    private fun createPagerForFilter(filter: SerieListFilterState): Pager<Int, MediaItem> {
         return Pager(
             config = PagingConfig(pageSize = 20, enablePlaceholders = false),
             pagingSourceFactory = {

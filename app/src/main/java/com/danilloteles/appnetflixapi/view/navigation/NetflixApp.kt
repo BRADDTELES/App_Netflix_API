@@ -214,10 +214,13 @@ fun NetflixApp(
             route = AppDestination.MY_LIST_SCREEN
         ) {
             MyListScreen(
-                onMovieClick = { filme, listId ->
-                    navController.navigate(
-                        route = "${AppDestination.MY_MOVIE_DETAILS}/${filme.id}?${AppDestination.LIST_ID_ARG}=$listId"
-                    )
+                onMovieClick = { mediaItem, listId ->
+                    val route = when (mediaItem.media_type) {
+                        "movie" -> "${AppDestination.MY_MOVIE_DETAILS}/${mediaItem.id}?${AppDestination.LIST_ID_ARG}=$listId"
+                        "tv" -> "${AppDestination.MY_SERIES_DETAILS}/${mediaItem.id}?${AppDestination.LIST_ID_ARG}=$listId"
+                        else -> null // Ou uma rota de erro/fallback
+                    }
+                    route?.let { navController.navigate(it) }
                 },
                 onNavigateBack = {
                     navController.popBackStack()
