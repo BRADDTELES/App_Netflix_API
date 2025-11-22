@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.danilloteles.appnetflixapi.api.FilmeAPI
-import com.danilloteles.appnetflixapi.model.CreateSessionRequest
+import com.danilloteles.appnetflixapi.model.filme.CreateSessionRequest
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
 import com.danilloteles.appnetflixapi.utils.events.LoginEvent
 import com.danilloteles.appnetflixapi.utils.events.UiState

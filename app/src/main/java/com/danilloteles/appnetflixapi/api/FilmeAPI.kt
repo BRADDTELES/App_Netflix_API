@@ -1,19 +1,20 @@
 package com.danilloteles.appnetflixapi.api
 
 // Imports para os novos modelos de dados
-import com.danilloteles.appnetflixapi.model.AccountDetailsResponse
-import com.danilloteles.appnetflixapi.model.AccountListsResponse
-import com.danilloteles.appnetflixapi.model.AddRemoveListItemRequest
-import com.danilloteles.appnetflixapi.model.CreateListRequest
-import com.danilloteles.appnetflixapi.model.CreateListResponse
-import com.danilloteles.appnetflixapi.model.CreateSessionRequest
-import com.danilloteles.appnetflixapi.model.FilmeClassificado
-import com.danilloteles.appnetflixapi.model.FilmeDetalhes
-import com.danilloteles.appnetflixapi.model.FilmeResposta
-import com.danilloteles.appnetflixapi.model.ListDetailsResponse
-import com.danilloteles.appnetflixapi.model.ListItemResponse
-import com.danilloteles.appnetflixapi.model.RequestTokenResponse
-import com.danilloteles.appnetflixapi.model.SessionIdResponse
+import com.danilloteles.appnetflixapi.model.filme.AccountDetailsResponse
+import com.danilloteles.appnetflixapi.model.filme.AccountListsResponse
+import com.danilloteles.appnetflixapi.model.filme.AddRemoveListItemRequest
+import com.danilloteles.appnetflixapi.model.filme.CreateListRequest
+import com.danilloteles.appnetflixapi.model.filme.CreateListResponse
+import com.danilloteles.appnetflixapi.model.filme.CreateSessionRequest
+import com.danilloteles.appnetflixapi.model.filme.FilmeClassificado
+import com.danilloteles.appnetflixapi.model.filme.FilmeDetalhes
+import com.danilloteles.appnetflixapi.model.filme.FilmeResposta
+import com.danilloteles.appnetflixapi.model.filme.ListDetailsResponse
+import com.danilloteles.appnetflixapi.model.filme.ListItemResponse
+import com.danilloteles.appnetflixapi.model.filme.RequestTokenResponse
+import com.danilloteles.appnetflixapi.model.filme.SessionIdResponse
+import com.danilloteles.appnetflixapi.model.serie.SerieResposta
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -49,6 +50,16 @@ interface FilmeAPI {
         @Path("account_id") accountId: Int,
         @Query("session_id") sessionId: String
     ): Response<FilmeClassificado>
+
+    @GET("tv/popular")
+    suspend fun recuperarSeriesPopulares(
+        @Query("page") page: Int
+    ): Response<SerieResposta>
+
+    @GET("tv/top_rated")
+    suspend fun recuperarSeriesMelhoresAvaliados(
+        @Query("page") page: Int
+    ): Response<SerieResposta>
 
     // --- Autenticação ---
 

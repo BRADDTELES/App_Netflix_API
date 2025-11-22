@@ -18,7 +18,7 @@ fun NetflixTopBar() {
             Text(
                 text = "NetFlix",
                 color = Color.White,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
                 style = MaterialTheme.typography.headlineMedium
             )
         },

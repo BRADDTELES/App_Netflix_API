@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.danilloteles.appnetflixapi.api.FilmeAPI
-import com.danilloteles.appnetflixapi.model.CreateListRequest
-import com.danilloteles.appnetflixapi.model.CreateListResponse
+import com.danilloteles.appnetflixapi.model.filme.CreateListRequest
+import com.danilloteles.appnetflixapi.model.filme.CreateListResponse
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
 import com.danilloteles.appnetflixapi.utils.events.UiState
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository

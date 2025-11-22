@@ -4,8 +4,8 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.danilloteles.appnetflixapi.api.FilmeAPI
-import com.danilloteles.appnetflixapi.datasource.paging.PopularFilmesPagingSource
-import com.danilloteles.appnetflixapi.model.Filme
+import com.danilloteles.appnetflixapi.datasource.paging.filme.PopularFilmesPagingSource
+import com.danilloteles.appnetflixapi.model.filme.Filme
 import kotlinx.coroutines.flow.Flow
 
 class FilmeRepository(

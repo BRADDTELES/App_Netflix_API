@@ -1,7 +1,7 @@
 package com.danilloteles.appnetflixapi.auxiliar
 
 import com.danilloteles.appnetflixapi.R
-import com.danilloteles.appnetflixapi.model.FilmeFicticio
+import com.danilloteles.appnetflixapi.model.filme.FilmeFicticio
 
 fun getPopularMovies(): List<FilmeFicticio> {
     return listOf(

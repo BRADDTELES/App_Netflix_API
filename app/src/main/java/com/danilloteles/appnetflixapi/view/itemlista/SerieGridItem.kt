@@ -7,12 +7,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -26,12 +26,13 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.danilloteles.appnetflixapi.R
 import com.danilloteles.appnetflixapi.constantes.Constantes
-import com.danilloteles.appnetflixapi.model.filme.Filme
+import com.danilloteles.appnetflixapi.model.serie.Serie
+import com.danilloteles.appnetflixapi.ui.theme.WHITE
 
 @Composable
-fun MovieItem(
-    filme: Filme,
-    onMovieClick: (Filme) -> Unit
+fun SerieGridItem(
+    serie: Serie,
+    onClick: () -> Unit
 ) {
 
     val context = LocalContext.current
@@ -39,58 +40,55 @@ fun MovieItem(
     Column(
         modifier = Modifier
             .width(160.dp)
-            .clickable{ onMovieClick(filme) },
+            .clickable{ onClick() },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         AsyncImage(
             model = ImageRequest.Builder(context)
-                .data(Constantes.IMAGE_BASE_URL + filme.poster_path)
+                .data(Constantes.IMAGE_BASE_URL + serie.poster_path)
                 .crossfade(true)
                 .build(),
-            contentDescription = filme.title,
+            contentDescription = serie.name,
             modifier = Modifier
                 .width(160.dp)
                 .height(200.dp)
                 .clip(RoundedCornerShape(2.dp)),
             contentScale = ContentScale.FillHeight,
-            placeholder = painterResource( R.drawable.ic_placeholder),
-            error = painterResource(R.drawable.capa)
+            placeholder = painterResource(id = R.drawable.capa),
+            error = painterResource(id = R.drawable.capa)
         )
-
         Text(
-            text = filme.title,
-            color = Color.White,
+            text = serie.name,
+            color = WHITE,
             fontSize = 14.sp,
-            modifier = Modifier.fillMaxWidth().padding(start = 20.dp, top = 8.dp),
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            style = MaterialTheme.typography.titleMedium,
             textAlign = TextAlign.Start,
-            maxLines = 2,
+            maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
-
     }
-
 }
 
 @Preview
 @Composable
-fun MovieItemPreview() {
-    MovieItem(
-        filme = Filme(
+fun SerieGridItemPreview() {
+    SerieGridItem(
+        serie = Serie(
             id = 1,
-            title = "Filme de Teste",
-            poster_path = "/t6HIqrRAFyUMC6bZqMfPSzPNw0s.jpg",
-            adult = false,
+            name = "Title of the Serie",
+            poster_path = "",
             backdrop_path = "",
-            original_language = "en-US",
-            original_title = "Test Movie",
-            overview = "This is a test movie for preview.",
-            popularity = 100.0,
-            release_date = "2025-11-16",
-            video = false,
-            vote_average = 7.0,
-            vote_count = 100,
-            genre_ids = emptyList(),
+            original_name = "Serie",
+            overview = "Overview",
+            vote_average = 1.0,
+            vote_count = 1,
+            first_air_date = "2020-01-01",
+            origin_country = listOf("BR"),
+            original_language = "pt-BR",
+            genre_ids = listOf(1, 2, 3),
+            popularity = 1.0,
         ),
-        onMovieClick = {}
+        onClick = {}
     )
 }
