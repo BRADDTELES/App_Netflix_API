@@ -1,18 +1,16 @@
-package com.danilloteles.appnetflixapi.datasource.paging.filme
-
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.danilloteles.appnetflixapi.api.FilmeAPI
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
-import com.danilloteles.appnetflixapi.model.filme.Filme
+import com.danilloteles.appnetflixapi.model.MediaItem
 import kotlinx.coroutines.flow.first
 
 class MyListPagingSource(
     private val filmeAPI: FilmeAPI,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val listId: String?
-) : PagingSource<Int, Filme>() {
-    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Filme> {
+) : PagingSource<Int, MediaItem>() { // Alterado para MediaItem
+    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, MediaItem> { // Alterado para MediaItem
         return try {
             val pagina = params.key ?: 1
             if (pagina > 1) {
@@ -28,7 +26,8 @@ class MyListPagingSource(
             val response = filmeAPI.obterDetalhesDaLista(listId, sessionId)
 
             if (response.isSuccessful) {
-                val filmes = response.body()?.items ?: emptyList()
+                // Filtrar apenas filmes da lista de MediaItem
+                val filmes = response.body()?.items?.filter { it.media_type == "movie" } ?: emptyList()
                 LoadResult.Page(
                     data = filmes,
                     prevKey = null,
@@ -42,7 +41,7 @@ class MyListPagingSource(
         }
     }
 
-    override fun getRefreshKey(state: PagingState<Int, Filme>): Int? {
+    override fun getRefreshKey(state: PagingState<Int, MediaItem>): Int? { // Alterado para MediaItem
         return state.anchorPosition?.let { anchorPosition ->
             state.closestPageToPosition(anchorPosition)?.prevKey?.plus(1)
                 ?: state.closestPageToPosition(anchorPosition)?.nextKey?.minus(1)

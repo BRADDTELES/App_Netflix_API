@@ -26,15 +26,16 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.danilloteles.appnetflixapi.R
 import com.danilloteles.appnetflixapi.constantes.Constantes
-import com.danilloteles.appnetflixapi.model.filme.Filme
+import com.danilloteles.appnetflixapi.model.MediaItem
 
 @Composable
 fun MovieItem(
-    filme: Filme,
-    onMovieClick: (Filme) -> Unit
+    filme: MediaItem,
+    onMovieClick: (MediaItem) -> Unit
 ) {
 
     val context = LocalContext.current
+    val title = filme.title ?: filme.name ?: ""
 
     Column(
         modifier = Modifier
@@ -47,18 +48,18 @@ fun MovieItem(
                 .data(Constantes.IMAGE_BASE_URL + filme.poster_path)
                 .crossfade(true)
                 .build(),
-            contentDescription = filme.title,
+            contentDescription = title,
             modifier = Modifier
                 .width(160.dp)
                 .height(200.dp)
                 .clip(RoundedCornerShape(2.dp)),
             contentScale = ContentScale.FillHeight,
-            placeholder = painterResource( R.drawable.ic_placeholder),
+            placeholder = painterResource( R.drawable.capa),
             error = painterResource(R.drawable.capa)
         )
 
         Text(
-            text = filme.title,
+            text = title,
             color = Color.White,
             fontSize = 14.sp,
             modifier = Modifier.fillMaxWidth().padding(start = 20.dp, top = 8.dp),
@@ -75,13 +76,12 @@ fun MovieItem(
 @Composable
 fun MovieItemPreview() {
     MovieItem(
-        filme = Filme(
+        filme = MediaItem(
             id = 1,
             title = "Filme de Teste",
             poster_path = "/t6HIqrRAFyUMC6bZqMfPSzPNw0s.jpg",
             adult = false,
             backdrop_path = "",
-            original_language = "en-US",
             original_title = "Test Movie",
             overview = "This is a test movie for preview.",
             popularity = 100.0,
@@ -89,7 +89,11 @@ fun MovieItemPreview() {
             video = false,
             vote_average = 7.0,
             vote_count = 100,
-            genre_ids = emptyList(),
+            media_type = "movie",
+            name = null,
+            original_name = null,
+            first_air_date = null,
+            origin_country = null
         ),
         onMovieClick = {}
     )

@@ -5,13 +5,14 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.danilloteles.appnetflixapi.api.FilmeAPI
 import com.danilloteles.appnetflixapi.datasource.paging.filme.PopularFilmesPagingSource
+import com.danilloteles.appnetflixapi.model.MediaItem
 import com.danilloteles.appnetflixapi.model.filme.Filme
 import kotlinx.coroutines.flow.Flow
 
 class FilmeRepository(
     val filmeAPI: FilmeAPI
 ) {
-    fun getPopularMoviesStream(): Flow<PagingData<Filme>> {
+    fun getPopularMoviesStream(): Flow<PagingData<MediaItem>> {
         return Pager(
             config = PagingConfig(
                 pageSize = 20,
@@ -21,7 +22,7 @@ class FilmeRepository(
         ).flow
     }
 
-    fun getTopRatedMoviesStream(): Flow<PagingData<Filme>> {
+    fun getTopRatedMoviesStream(): Flow<PagingData<MediaItem>> {
         return Pager(
             config = PagingConfig(
                 pageSize = 20,
@@ -31,7 +32,7 @@ class FilmeRepository(
         ).flow
     }
 
-    fun getNowPlayingMoviesStream(): Flow<PagingData<Filme>> {
+    fun getNowPlayingMoviesStream(): Flow<PagingData<MediaItem>> {
         return Pager(
             config = PagingConfig(
                 pageSize = 20,
@@ -41,7 +42,7 @@ class FilmeRepository(
         ).flow
     }
 
-    fun getMyListMoviesStream(): Flow<PagingData<Filme>> {
+    fun getMyListMoviesStream(): Flow<PagingData<MediaItem>> {
         return Pager(
             config = PagingConfig(
                 pageSize = 20,

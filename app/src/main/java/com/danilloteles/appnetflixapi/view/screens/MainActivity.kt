@@ -30,6 +30,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.danilloteles.appnetflixapi.enums.FabState
+import com.danilloteles.appnetflixapi.model.MediaItem
 import com.danilloteles.appnetflixapi.model.filme.Filme
 import com.danilloteles.appnetflixapi.repository.FilmeRepository
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
@@ -86,7 +87,7 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun NetflixScreen(
-    onMovieClick: (Filme) -> Unit,
+    onMovieClick: (MediaItem) -> Unit,
     onMyListClick: () -> Unit,
     onSeriesListClick: () -> Unit,
     onFilmesListClick: () -> Unit

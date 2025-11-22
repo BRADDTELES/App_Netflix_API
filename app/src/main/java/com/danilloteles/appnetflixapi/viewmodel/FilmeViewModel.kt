@@ -1,5 +1,6 @@
 package com.danilloteles.appnetflixapi.viewmodel
 
+import TopRatedFilmesPagingSource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -8,8 +9,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.danilloteles.appnetflixapi.datasource.paging.filme.PopularFilmesPagingSource
-import com.danilloteles.appnetflixapi.datasource.paging.filme.TopRatedFilmesPagingSource
-import com.danilloteles.appnetflixapi.model.filme.Filme
+import com.danilloteles.appnetflixapi.model.MediaItem
 import com.danilloteles.appnetflixapi.repository.FilmeRepository
 import com.danilloteles.appnetflixapi.utils.events.FilmeListFilterState
 import kotlinx.coroutines.flow.Flow
@@ -24,11 +24,11 @@ class FilmeViewModel(
     private val _currentFilter = MutableStateFlow<FilmeListFilterState>(FilmeListFilterState.Popular)
     val currentFilter: StateFlow<FilmeListFilterState> = _currentFilter
 
-    val filmesStream: Flow<PagingData<Filme>> = _currentFilter.flatMapLatest { filter ->
+    val filmesStream: Flow<PagingData<MediaItem>> = _currentFilter.flatMapLatest { filter ->
         createPagerForFilter(filter).flow
     }.cachedIn(viewModelScope)
 
-    private fun createPagerForFilter(filter: FilmeListFilterState): Pager<Int, Filme> {
+    private fun createPagerForFilter(filter: FilmeListFilterState): Pager<Int, MediaItem> {
         return Pager(
             config = PagingConfig(pageSize = 20, enablePlaceholders = false),
             pagingSourceFactory = {

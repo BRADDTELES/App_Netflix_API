@@ -62,6 +62,7 @@ import com.danilloteles.appnetflixapi.ui.theme.WHITE
 import com.danilloteles.appnetflixapi.datasource.datastore.MyListPreferencesRepository
 import com.danilloteles.appnetflixapi.utils.events.UiState
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
+import com.danilloteles.appnetflixapi.model.MediaItem
 import com.danilloteles.appnetflixapi.repository.FilmeRepository
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
 import com.danilloteles.appnetflixapi.utils.events.MovieListFilterState
@@ -73,7 +74,7 @@ import com.danilloteles.appnetflixapi.viewmodel.MyListViewModel
 
 @Composable
 fun MyListScreen(
-    onMovieClick: (Filme, String?) -> Unit,
+    onMovieClick: (MediaItem, String?) -> Unit,
     onNavigateBack: () -> Unit,
     onNavigateToListForm: () -> Unit
 ) {
@@ -323,7 +324,7 @@ fun MyListScreen(
                 } else {
                     MyMoviesListSection(
                         listFilme = moviesPagingItems,
-                        onMovieClick = { filme -> onMovieClick(filme, selectedListId) },
+                        onMovieClick = { mediaItem -> onMovieClick(mediaItem, selectedListId) },
                         lazyGridState = listState
                     )
                 }

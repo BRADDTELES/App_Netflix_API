@@ -1,5 +1,8 @@
 package com.danilloteles.appnetflixapi.viewmodel
 
+import MyListPagingSource
+import NowPlayingFilmesPagingSource
+import TopRatedFilmesPagingSource
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -10,15 +13,12 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.danilloteles.appnetflixapi.api.FilmeAPI
 import com.danilloteles.appnetflixapi.datasource.paging.filme.PopularFilmesPagingSource
-import com.danilloteles.appnetflixapi.model.filme.Filme
+import com.danilloteles.appnetflixapi.model.MediaItem
 import com.danilloteles.appnetflixapi.model.filme.TmdbList
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
 import com.danilloteles.appnetflixapi.datasource.datastore.MyListPreferencesRepository
 import com.danilloteles.appnetflixapi.utils.events.UiState
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
-import com.danilloteles.appnetflixapi.datasource.paging.filme.MyListPagingSource
-import com.danilloteles.appnetflixapi.datasource.paging.filme.NowPlayingFilmesPagingSource
-import com.danilloteles.appnetflixapi.datasource.paging.filme.TopRatedFilmesPagingSource
 import com.danilloteles.appnetflixapi.repository.FilmeRepository
 import com.danilloteles.appnetflixapi.utils.events.MovieListFilterState
 import kotlinx.coroutines.flow.Flow
@@ -45,7 +45,7 @@ class MyListViewModel(
     private var primaryListId: String? = null
     private var accountId: Int? = null
 
-    val moviesStream: Flow<PagingData<Filme>> = _currentFilter.flatMapLatest { filter ->
+    val moviesStream: Flow<PagingData<MediaItem>> = _currentFilter.flatMapLatest { filter ->
         createPagerForFilter(filter).flow
     }.cachedIn(viewModelScope)
 
@@ -53,7 +53,7 @@ class MyListViewModel(
         _currentFilter.value = filter
     }
 
-    private fun createPagerForFilter(filter: MovieListFilterState): Pager<Int, Filme> {
+    private fun createPagerForFilter(filter: MovieListFilterState): Pager<Int, MediaItem> {
         return Pager(
             config = PagingConfig(pageSize = 20, enablePlaceholders = false),
             pagingSourceFactory = {

@@ -38,6 +38,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import com.danilloteles.appnetflixapi.model.MediaItem
 import com.danilloteles.appnetflixapi.model.filme.Filme
 import com.danilloteles.appnetflixapi.repository.FilmeRepository
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
@@ -52,7 +53,7 @@ import com.danilloteles.appnetflixapi.viewmodel.FilmeViewModel
 
 @Composable
 fun FilmeListScreen(
-    onFilmeClick: (Filme) -> Unit
+    onFilmeClick: (MediaItem) -> Unit
 ) {
 
     val filmeRepository = remember {
@@ -153,11 +154,11 @@ fun FilmeListScreen(
                                         count = filmesPagingItems.itemCount,
                                         key = filmesPagingItems.itemKey { it.id }
                                     ) { index ->
-                                        val filme = filmesPagingItems[index]
-                                        if (filme != null) {
+                                        val mediaItem = filmesPagingItems[index]
+                                        if (mediaItem != null) {
                                             MovieItem(
-                                                filme = filme,
-                                                onMovieClick = { onFilmeClick(filme) }
+                                                filme = mediaItem,
+                                                onMovieClick = { onFilmeClick(mediaItem) }
                                             )
                                         }
                                     }

@@ -1,4 +1,3 @@
-
 package com.danilloteles.appnetflixapi.view.screens
 
 import androidx.compose.animation.core.animateFloatAsState
@@ -59,35 +58,32 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import com.danilloteles.appnetflixapi.constantes.Constantes
-import com.danilloteles.appnetflixapi.model.filme.FilmeDetalhes
+import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
+import com.danilloteles.appnetflixapi.model.serie.SerieDetalhes
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.GRAY_100
 import com.danilloteles.appnetflixapi.ui.theme.GRAY_900
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
-import com.danilloteles.appnetflixapi.datasource.datastore.MyListPreferencesRepository
 import com.danilloteles.appnetflixapi.utils.events.UiState
-import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
 import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
-import com.danilloteles.appnetflixapi.viewmodel.MyMovieDetailsViewModel
+import com.danilloteles.appnetflixapi.viewmodel.MySerieDetailsViewModel
 
 @Composable
-fun MyMovieDetails(
-    movieId: Int,
+fun MySerieDetails(
+    serieId: Int,
     listId: String?,
     onClick: (Int) -> Unit
 ) {
-    val viewModel: MyMovieDetailsViewModel = viewModel(
-        factory = MyMovieDetailsViewModel.Factory(
-            movieId,
+    val viewModel: MySerieDetailsViewModel = viewModel(
+        factory = MySerieDetailsViewModel.Factory(
+            serieId,
             UserPreferencesRepository(LocalContext.current),
-            MyListPreferencesRepository(LocalContext.current),
             listId
         )
     )
@@ -105,8 +101,8 @@ fun MyMovieDetails(
         }
 
         is UiState.Success -> {
-            ConteudoMyMovieDetails(
-                filme = state.data,
+            ConteudoMySerieDetails(
+                serie = state.data,
                 viewModel = viewModel,
                 onClick = onClick,
                 listId = listId
@@ -128,24 +124,23 @@ fun MyMovieDetails(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun ConteudoMyMovieDetails(
-    filme: FilmeDetalhes,
-    viewModel: MyMovieDetailsViewModel?,
+fun ConteudoMySerieDetails(
+    serie: SerieDetalhes,
+    viewModel: MySerieDetailsViewModel?,
     onClick: (Int) -> Unit,
-    listId: String? // listId passed from MyMovieDetails composable
+    listId: String?
 ) {
     val isInMyList by viewModel?.isInMyList?.collectAsStateWithLifecycle() ?: remember { mutableStateOf(false) }
     val myListActionUiState by viewModel?.myListActionUiState?.collectAsStateWithLifecycle() ?: remember { mutableStateOf(UiState.Idle) }
     val userListsUiState by viewModel?.userListsUiState?.collectAsStateWithLifecycle() ?: remember { mutableStateOf(UiState.Idle) }
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Estado para controlar a expansão do menu de seleção de lista
     var showListSelection by remember { mutableStateOf(false) }
 
     LaunchedEffect(myListActionUiState) {
         when (val state = myListActionUiState) {
             is UiState.Success -> {
-                val message = if (isInMyList) "Filme adicionado à lista!" else "Filme removido da lista."
+                val message = if (isInMyList) "Série adicionado à lista!" else "Série removido da lista."
                 snackbarHostState.showSnackbar(message)
                 viewModel?.resetMyListActionUiState()
             }
@@ -170,8 +165,8 @@ fun ConteudoMyMovieDetails(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     AsyncImage(
-                        model = Constantes.IMAGE_BASE_URL + filme.poster_path,
-                        contentDescription = "Capa do filme",
+                        model = Constantes.IMAGE_BASE_URL + serie.poster_path,
+                        contentDescription = "Capa da série",
                         modifier = Modifier
                             .fillMaxWidth()
                             .aspectRatio(2f / 3f),
@@ -187,7 +182,7 @@ fun ConteudoMyMovieDetails(
             sheetDragHandle = {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Spacer(Modifier.height(16.dp))
                     Box(
@@ -236,7 +231,7 @@ fun ConteudoMyMovieDetails(
                             SplitButtonLayout(
                                 leadingButton = {
                                     SplitButtonDefaults.TonalLeadingButton(
-                                        onClick = { /* Ação principal desativada */ },
+                                        onClick = {},
                                         colors = ButtonDefaults.buttonColors(
                                             containerColor = WHITE,
                                             contentColor = GRAY_900
@@ -245,7 +240,7 @@ fun ConteudoMyMovieDetails(
                                         Icon(
                                             Icons.Filled.Edit,
                                             modifier = Modifier.size(SplitButtonDefaults.LeadingIconSize),
-                                            contentDescription = "Ações do Filme",
+                                            contentDescription = "Ações da série",
                                         )
                                         Spacer(Modifier.size(ButtonDefaults.IconSpacing))
                                         Text("Opções")
@@ -255,7 +250,8 @@ fun ConteudoMyMovieDetails(
                                     val description = "Toggle Button"
                                     TooltipBox(
                                         positionProvider =
-                                            TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
+                                            TooltipDefaults.rememberTooltipPositionProvider(
+                                                TooltipAnchorPosition.Above),
                                         tooltip = { PlainTooltip { Text(description) } },
                                         state = rememberTooltipState(),
                                     ) {
@@ -300,7 +296,7 @@ fun ConteudoMyMovieDetails(
                                     DropdownMenuItem(
                                         text = { Text("Remover da Lista") },
                                         onClick = {
-                                            viewModel?.addOrRemoveMovie(listId)
+                                            viewModel?.addOrRemoveSerie(listId)
                                             splitButtonChecked = false
                                         },
                                         leadingIcon = {
@@ -311,7 +307,7 @@ fun ConteudoMyMovieDetails(
                                     // Exibe um título para o submenu
                                     DropdownMenuItem(
                                         text = { Text("Selecione uma lista", fontWeight = FontWeight.Bold) },
-                                        onClick = { /* Item não clicável, apenas um título */ },
+                                        onClick = {},
                                         enabled = false // Desativa o clique
                                     )
 
@@ -328,7 +324,7 @@ fun ConteudoMyMovieDetails(
                                                     DropdownMenuItem(
                                                         text = { Text(list.name) },
                                                         onClick = {
-                                                            viewModel?.addOrRemoveMovie(list.id.toString())
+                                                            viewModel?.addOrRemoveSerie(list.id.toString())
                                                             // Fecha tudo após a seleção
                                                             showListSelection = false
                                                             splitButtonChecked = false
@@ -345,7 +341,6 @@ fun ConteudoMyMovieDetails(
                                         }
                                         else -> {} // UiState.Idle
                                     }
-                                    // --- FIM DO CÓDIGO CORRIGIDO ---
                                 } else {
                                     // Botão inicial para "Adicionar à Lista"
                                     DropdownMenuItem(
@@ -365,7 +360,7 @@ fun ConteudoMyMovieDetails(
                 }
                 item {
                     Text(
-                        text = filme.title,
+                        text = serie.name,
                         color = WHITE,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
@@ -377,7 +372,7 @@ fun ConteudoMyMovieDetails(
                 }
                 item {
                     Text(
-                        text = filme.overview,
+                        text = serie.overview,
                         color = WHITE,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
@@ -387,41 +382,4 @@ fun ConteudoMyMovieDetails(
             }
         }
     }
-}
-
-@Preview
-@Composable
-private fun ConteudoMyMovieDetailsPreview() {
-    ConteudoMyMovieDetails(
-        filme = FilmeDetalhes(
-            adult = false,
-            backdrop_path = "",
-            belongs_to_collection = "",
-            budget = 0,
-            genres = emptyList(),
-            homepage = "",
-            id = 0,
-            imdb_id = "",
-            original_language = "",
-            original_title = "",
-            overview = "This is a test movie for preview.",
-            popularity = 0.0,
-            poster_path = "/t6HIqrRAFyUMC6bZqMfPSzPNw0s.jpg",
-            production_companies = emptyList(),
-            production_countries = emptyList(),
-            release_date = "",
-            revenue = 0,
-            runtime = 0,
-            spoken_languages = emptyList(),
-            status = "",
-            tagline = "",
-            title = "Movie title",
-            video = false,
-            vote_average = 0.0,
-            vote_count = 0
-        ),
-        viewModel = null,
-        onClick = {},
-        listId = null
-    )
 }

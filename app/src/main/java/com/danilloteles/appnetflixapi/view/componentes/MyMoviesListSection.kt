@@ -20,15 +20,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
-import com.danilloteles.appnetflixapi.model.filme.Filme
+import com.danilloteles.appnetflixapi.model.MediaItem
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.VERMELHO
 import com.danilloteles.appnetflixapi.view.itemlista.MovieItem
 
 @Composable
 fun MyMoviesListSection(
-    listFilme: LazyPagingItems<Filme>,
-    onMovieClick: (Filme) -> Unit,
+    listFilme: LazyPagingItems<MediaItem>,
+    onMovieClick: (MediaItem) -> Unit,
     lazyGridState: LazyGridState
 ) {
     Column(

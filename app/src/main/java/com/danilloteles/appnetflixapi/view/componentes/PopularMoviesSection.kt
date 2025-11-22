@@ -16,13 +16,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.paging.compose.LazyPagingItems
-import com.danilloteles.appnetflixapi.model.filme.Filme
+import com.danilloteles.appnetflixapi.model.MediaItem
 import com.danilloteles.appnetflixapi.view.itemlista.MovieItem
 
 @Composable
 fun PopularMoviesSection(
-    filmesPaginados: LazyPagingItems<Filme>,
-    onMovieClick: (Filme) -> Unit,
+    filmesPaginados: LazyPagingItems<MediaItem>,
+    onMovieClick: (MediaItem) -> Unit,
     lazyGridState: LazyGridState
 ) {
     Column(

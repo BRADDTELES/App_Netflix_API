@@ -22,6 +22,7 @@ import com.danilloteles.appnetflixapi.view.screens.MainActivity
 import com.danilloteles.appnetflixapi.view.screens.MovieDetails
 import com.danilloteles.appnetflixapi.view.screens.MyListScreen
 import com.danilloteles.appnetflixapi.view.screens.MyMovieDetails
+import com.danilloteles.appnetflixapi.view.screens.MySerieDetails
 import com.danilloteles.appnetflixapi.view.screens.NetflixScreen
 import com.danilloteles.appnetflixapi.view.screens.SerieListScreen
 import com.danilloteles.appnetflixapi.view.screens.SplashScreen
@@ -157,6 +158,32 @@ fun NetflixApp(
         }
 
         composable(
+            route = AppDestination.MY_SERIES_DETAILS_ROUTE,
+            arguments = listOf(
+                navArgument(name = AppDestination.SERIE_ID_ARG) {
+                    type = NavType.IntType
+                },
+                navArgument(name = AppDestination.LIST_ID_ARG) {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
+            val serieId = backStackEntry.arguments?.getInt(AppDestination.SERIE_ID_ARG)
+            val listId = backStackEntry.arguments?.getString(AppDestination.LIST_ID_ARG)
+            if (serieId != null) {
+                MySerieDetails(
+                    serieId = serieId,
+                    listId = listId,
+                    onClick = { /* TODO: Implement navigation from MySerieDetails if needed */ }
+                )
+            } else {
+                Toast.makeText(context, "Série não encontrada!", Toast.LENGTH_LONG).show()
+            }
+        }
+
+        composable(
             route = AppDestination.LIST_FORM_ROUTE
         ) {
             ListForm()
@@ -205,7 +232,7 @@ fun NetflixApp(
             SerieListScreen(
                 onSerieClick = { serie ->
                     navController.navigate(
-                        route = "${AppDestination.MY_MOVIE_DETAILS}/${serie.id}"
+                        route = "${AppDestination.MY_SERIES_DETAILS}/${serie.id}"
                     )
                 }
             )
