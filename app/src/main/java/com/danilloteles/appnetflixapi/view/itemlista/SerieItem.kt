@@ -30,7 +30,7 @@ import com.danilloteles.appnetflixapi.model.serie.Serie
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
 
 @Composable
-fun SerieGridItem(
+fun SerieItem(
     serie: Serie,
     onClick: () -> Unit
 ) {
@@ -72,8 +72,8 @@ fun SerieGridItem(
 
 @Preview
 @Composable
-fun SerieGridItemPreview() {
-    SerieGridItem(
+fun SerieItemPreview() {
+    SerieItem(
         serie = Serie(
             id = 1,
             name = "Title of the Serie",

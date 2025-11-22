@@ -87,8 +87,9 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun NetflixScreen(
     onMovieClick: (Filme) -> Unit,
-    onAddClick: () -> Unit,
-    onMyListClick: () -> Unit // Novo parâmetro
+    onMyListClick: () -> Unit,
+    onSeriesListClick: () -> Unit,
+    onFilmesListClick: () -> Unit
 ) {
     val filmeApi = RetrofitHelper.filmeAPI
     val filmeRepository = remember { FilmeRepository(filmeApi) }
@@ -127,7 +128,11 @@ fun NetflixScreen(
         Column(
             modifier = Modifier.padding(paddingValues)
         ) {
-            MenuSection(onMyListClick = onMyListClick) // Passando o onMyListClick
+            MenuSection(
+                onMyListClick = onMyListClick,
+                onSeriesListClick = onSeriesListClick,
+                onFilmesListClick = onFilmesListClick
+            )
 
             PopularMoviesSection(
                 filmesPaginados = popularMoviesPagingItems,
@@ -163,7 +168,8 @@ fun NetflixScreen(
 fun NetflixScreenPreview() {
     NetflixScreen(
         onMovieClick = {},
-        onAddClick = {},
-        onMyListClick = {} // Placeholder para o novo parâmetro
+        onMyListClick = {},
+        onSeriesListClick = {},
+        onFilmesListClick = {}
     )
 }

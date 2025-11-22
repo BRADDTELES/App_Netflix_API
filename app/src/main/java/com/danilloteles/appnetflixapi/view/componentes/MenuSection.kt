@@ -32,7 +32,9 @@ import com.danilloteles.appnetflixapi.R
 
 @Composable
 fun MenuSection(
-    onMyListClick: () -> Unit = {}
+    onMyListClick: () -> Unit = {},
+    onSeriesListClick: () -> Unit = {},
+    onFilmesListClick: () -> Unit = {}
 ) {
     Box(
         modifier = Modifier
@@ -56,7 +58,9 @@ fun MenuSection(
         ) {
 
             NetflixNavegacaoRow(
-                onMyListClick = onMyListClick
+                onMyListClick = onMyListClick,
+                onSeriesListClick = onSeriesListClick,
+                onFilmesListClick = onFilmesListClick
             )
 
             BotaoAssistir()
@@ -66,7 +70,9 @@ fun MenuSection(
 
 @Composable
 fun NetflixNavegacaoRow(
-    onMyListClick: () -> Unit = {}
+    onMyListClick: () -> Unit = {},
+    onSeriesListClick: () -> Unit = {},
+    onFilmesListClick: () -> Unit = {}
 ) {
 
     val imagemLogo = R.drawable.logo
@@ -86,14 +92,14 @@ fun NetflixNavegacaoRow(
         Spacer(modifier = Modifier.width(24.dp))
 
         TextButtonSample(
-            onClick = { /* TODO: Implementar navegação para séries */ },
+            onClick = onSeriesListClick,
             texto = "Séries"
         )
 
         Spacer(modifier = Modifier.width(16.dp))
 
         TextButtonSample(
-            onClick = { /* TODO: Implementar navegação para filmes */ },
+            onClick = onFilmesListClick,
             texto = "Filmes"
         )
 

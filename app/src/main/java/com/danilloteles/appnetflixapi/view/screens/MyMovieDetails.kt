@@ -308,7 +308,6 @@ fun ConteudoMyMovieDetails(
                                         },
                                     )
                                 } else if (showListSelection) {
-                                    // --- INÍCIO DO CÓDIGO CORRIGIDO ---
                                     // Exibe um título para o submenu
                                     DropdownMenuItem(
                                         text = { Text("Selecione uma lista", fontWeight = FontWeight.Bold) },

@@ -13,8 +13,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.danilloteles.appnetflixapi.constantes.Navigation
+import com.danilloteles.appnetflixapi.constantes.AppDestination
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
+import com.danilloteles.appnetflixapi.view.screens.FilmeListScreen
 import com.danilloteles.appnetflixapi.view.screens.ListForm
 import com.danilloteles.appnetflixapi.view.screens.LoginScreen
 import com.danilloteles.appnetflixapi.view.screens.MainActivity
@@ -22,6 +23,7 @@ import com.danilloteles.appnetflixapi.view.screens.MovieDetails
 import com.danilloteles.appnetflixapi.view.screens.MyListScreen
 import com.danilloteles.appnetflixapi.view.screens.MyMovieDetails
 import com.danilloteles.appnetflixapi.view.screens.NetflixScreen
+import com.danilloteles.appnetflixapi.view.screens.SerieListScreen
 import com.danilloteles.appnetflixapi.view.screens.SplashScreen
 import kotlinx.coroutines.flow.StateFlow
 
@@ -43,8 +45,8 @@ fun NetflixApp(
         requestTokenFromDeeplink?.let { token ->
             // Navega para a LoginScreen passando o token como argumento
             // Se já estiver na LoginScreen, evita navegar novamente, mas o LaunchedEffect na LoginScreen ainda vai reagir ao token
-            navController.navigate("${Navigation.LOGIN_SCREEN}/$token") {
-                popUpTo(Navigation.MAIN_SCREEN) { // Limpa a back stack até a MainScreen
+            navController.navigate("${AppDestination.LOGIN_SCREEN}/$token") {
+                popUpTo(AppDestination.MAIN_SCREEN) { // Limpa a back stack até a MainScreen
                     inclusive = false // Não remove a MainScreen
                 }
             }
@@ -56,59 +58,68 @@ fun NetflixApp(
 
     NavHost(
        navController = navController,
-        startDestination = Navigation.SPLASH_SCREEN
+        startDestination = AppDestination.SPLASH_SCREEN
     ) {
         composable(
-            route = Navigation.SPLASH_SCREEN
+            route = AppDestination.SPLASH_SCREEN
         ) {
             SplashScreen(
                 onTimeout = {
                     navController.navigate(
-                        route = Navigation.MAIN_SCREEN
+                        route = AppDestination.MAIN_SCREEN
                     ) {
-                        popUpTo(Navigation.SPLASH_SCREEN) { inclusive = true }
+                        popUpTo(AppDestination.SPLASH_SCREEN) { inclusive = true }
                     }
                 }
             )
         }
 
         composable(
-            route = Navigation.MAIN_SCREEN
+            route = AppDestination.MAIN_SCREEN
         ) {
             NetflixScreen(
                 onMovieClick = { filme ->
                     navController.navigate(
-                        route = "${Navigation.MOVIE_DETAILS_SCREEN}/${filme.id}"
-                    )
-                },
-                onAddClick = {
-                    navController.navigate(
-                        route = Navigation.LIST_FORM_ROUTE
+                        route = "${AppDestination.MOVIE_DETAILS_SCREEN}/${filme.id}"
                     )
                 },
                 onMyListClick = {
                     // Lógica para verificar a session_id se navega para o MyListScreen ou retorna para LoginScreen
                     if (  sessionId != null && sessionId!!.isNotEmpty()  ) {
-                        navController.navigate(Navigation.MY_LIST_SCREEN)
+                        navController.navigate(AppDestination.MY_LIST_SCREEN)
                     } else {
-                        navController.navigate(Navigation.LOGIN_SCREEN)
+                        navController.navigate(AppDestination.LOGIN_SCREEN)
+                    }
+                },
+                onSeriesListClick = {
+                    if (  sessionId != null && sessionId!!.isNotEmpty()  ) {
+                        navController.navigate(AppDestination.SERIES_LIST_SCREEN)
+                    } else {
+                        navController.navigate(AppDestination.LOGIN_SCREEN)
+                    }
+                },
+                onFilmesListClick = {
+                    if (  sessionId != null && sessionId!!.isNotEmpty()  ) {
+                        navController.navigate(AppDestination.FILMES_LIST_SCREEN)
+                    } else {
+                        navController.navigate(AppDestination.LOGIN_SCREEN)
                     }
                 }
             )
         }
 
         composable(
-            route = Navigation.MOVIE_DETAILS_ROUTE,
+            route = AppDestination.MOVIE_DETAILS_ROUTE,
             arguments = listOf(
                 navArgument(
-                    name = Navigation.MOVIE_ID_ARG
+                    name = AppDestination.MOVIE_ID_ARG
                 ) {
                     type = NavType.IntType
                 }
             )
         ) { backStackEntry ->
 
-            val movieId = backStackEntry.arguments?.getInt(Navigation.MOVIE_ID_ARG)
+            val movieId = backStackEntry.arguments?.getInt(AppDestination.MOVIE_ID_ARG)
 
             if (  movieId != null  ) {
                 MovieDetails(
@@ -120,20 +131,20 @@ fun NetflixApp(
         }
 
         composable(
-            route = Navigation.MY_MOVIE_DETAILS_ROUTE,
+            route = AppDestination.MY_MOVIE_DETAILS_ROUTE,
             arguments = listOf(
-                navArgument(Navigation.MOVIE_ID_ARG) {
+                navArgument(AppDestination.MOVIE_ID_ARG) {
                     type = NavType.IntType
                 },
-                navArgument(Navigation.LIST_ID_ARG) {
+                navArgument(AppDestination.LIST_ID_ARG) {
                     type = NavType.StringType
                     nullable = true
                     defaultValue = null
                 }
             )
         ) { backStackEntry ->
-            val movieId = backStackEntry.arguments?.getInt(Navigation.MOVIE_ID_ARG)
-            val listId = backStackEntry.arguments?.getString(Navigation.LIST_ID_ARG)
+            val movieId = backStackEntry.arguments?.getInt(AppDestination.MOVIE_ID_ARG)
+            val listId = backStackEntry.arguments?.getString(AppDestination.LIST_ID_ARG)
             if (movieId != null) {
                 MyMovieDetails(
                     movieId = movieId,
@@ -146,46 +157,69 @@ fun NetflixApp(
         }
 
         composable(
-            route = Navigation.LIST_FORM_ROUTE
+            route = AppDestination.LIST_FORM_ROUTE
         ) {
             ListForm()
         }
 
         // Rota atualizada para LoginScreen para aceitar o request_token
         composable(
-            route = "${Navigation.LOGIN_SCREEN}/{${Navigation.REQUEST_TOKEN_ARG}}",
-            arguments = listOf(navArgument(Navigation.REQUEST_TOKEN_ARG) {
+            route = "${AppDestination.LOGIN_SCREEN}/{${AppDestination.REQUEST_TOKEN_ARG}}",
+            arguments = listOf(navArgument(AppDestination.REQUEST_TOKEN_ARG) {
                 type = NavType.StringType
                 nullable = true // O argumento é opcional
                 defaultValue = null
             })
         ) { backStackEntry ->
-            val requestToken = backStackEntry.arguments?.getString(Navigation.REQUEST_TOKEN_ARG)
+            val requestToken = backStackEntry.arguments?.getString(AppDestination.REQUEST_TOKEN_ARG)
             Log.d("TAG-NetflixApp", "Request token extraído do nav argument para LoginScreen: $requestToken")
             LoginScreen(navController = navController, deepLinkRequestToken = requestToken)
         }
 
         // Rota para a LoginScreen sem o argumento (quando o usuário clica em "Minha Lista" pela primeira vez)
         composable(
-            route = Navigation.LOGIN_SCREEN
+            route = AppDestination.LOGIN_SCREEN
         ) {
             LoginScreen(navController = navController)
         }
 
         composable(
-            route = Navigation.MY_LIST_SCREEN
+            route = AppDestination.MY_LIST_SCREEN
         ) {
             MyListScreen(
                 onMovieClick = { filme, listId ->
                     navController.navigate(
-                        route = "${Navigation.MY_MOVIE_DETAILS}/${filme.id}?${Navigation.LIST_ID_ARG}=$listId"
+                        route = "${AppDestination.MY_MOVIE_DETAILS}/${filme.id}?${AppDestination.LIST_ID_ARG}=$listId"
                     )
                 },
                 onNavigateBack = {
-                    Log.d("TAG-NetflixApp", "onNavigateBack de MyListScreen chamado. Executando popBackStack().")
                     navController.popBackStack()
                 },
-                onNavigateToListForm = { navController.navigate(Navigation.LIST_FORM_ROUTE) }
+                onNavigateToListForm = { navController.navigate(AppDestination.LIST_FORM_ROUTE) }
+            )
+        }
+
+        composable(
+            route = AppDestination.SERIES_LIST_SCREEN
+        ) {
+            SerieListScreen(
+                onSerieClick = { serie ->
+                    navController.navigate(
+                        route = "${AppDestination.MY_MOVIE_DETAILS}/${serie.id}"
+                    )
+                }
+            )
+        }
+
+        composable(
+            route = AppDestination.FILMES_LIST_SCREEN
+        ) {
+            FilmeListScreen(
+                onFilmeClick = { filme ->
+                    navController.navigate(
+                        route = "${AppDestination.MY_MOVIE_DETAILS}/${filme.id}"
+                    )
+                }
             )
         }
     }

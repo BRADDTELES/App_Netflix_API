@@ -31,7 +31,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.danilloteles.appnetflixapi.R
-import com.danilloteles.appnetflixapi.constantes.Navigation
+import com.danilloteles.appnetflixapi.constantes.AppDestination
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.VERMELHO
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
@@ -68,8 +68,8 @@ fun LoginScreen(
                     customTabsIntent.launchUrl(context, event.url.toUri())
                 }
                 LoginEvent.LoginSuccess -> {
-                    navController.navigate(Navigation.MY_LIST_SCREEN) {
-                        popUpTo(Navigation.MAIN_SCREEN) { inclusive = false }
+                    navController.navigate(AppDestination.MY_LIST_SCREEN) {
+                        popUpTo(AppDestination.MAIN_SCREEN) { inclusive = false }
                     }
                     // Resetar o token no ViewModel para evitar processamento duplicado
                     MainActivity.deeplinkRequestToken.value = null
