@@ -3,107 +3,82 @@
 Este documento descreve o plano de desenvolvimento para implementar as funcionalidades de usuário no aplicativo, utilizando a API do The Movie Database (TMDB).
 
 ### Princípio Fundamental
-O TMDB é a fonte única da verdade para todos os dados de filmes (títulos, pôsteres, descrições, etc.). Nosso aplicativo atua como um cliente que gerencia **listas de referências (IDs)** a esses filmes. **Nós nunca criamos, editamos ou armazenamos os detalhes dos filmes**, apenas os buscamos da API para exibição.
+O TMDB é a fonte única da verdade para todos os dados de filmes e séries. Nosso aplicativo atua como um cliente que gerencia **listas de referências (IDs)** a esses itens. **Nós nunca criamos, editamos ou armazenamos os detalhes dos itens**, apenas os buscamos da API para exibição. Devido a limitações e bugs na API v3, a funcionalidade de gerenciamento de listas será migrada para a API v4.
 
 ---
 
-### **Prioridade 1: Autenticação do Usuário (Obter `session_id`) - CONCLUÍDA**
-**Objetivo:** Permitir que o usuário autorize nosso aplicativo a realizar ações em sua conta TMDB. Esta é a base para todas as funcionalidades personalizadas.
+### **Prioridade 1: Autenticação de Usuário (API v4 - Obter `access_token`) - PENDENTE**
+**Objetivo:** Permitir que o usuário autorize nosso aplicativo a realizar ações em sua conta TMDB usando o fluxo de autenticação moderno e seguro da API v4.
 
 **Plano de Ação:**
 1.  **Ponto de Entrada:**
-    *   No menu da `MainActivity`, no `onClick` de "Minha Lista", verificar se uma `session_id` está salva localmente (`DataStore` para o Compose).
-    *   Se **sim**, navegar para `MyListScreen`.
-    *   Se **não**, navegar para uma nova tela: `LoginScreen.kt`.
-    *   **STATUS**: Implementado. A navegação condicional foi adicionada em `NetflixApp.kt`, utilizando `UserPreferencesRepository` para verificar a `session_id`.
+    *   Verificar se um `access_token` da v4 está salvo localmente no `DataStore`.
+    *   Se **sim**, o usuário está logado.
+    *   Se **não**, navegar para `LoginScreen.kt`.
 
-2.  **Tela de Login (`LoginScreen.kt`):**
-    *   Criar uma nova tela com uma UI simples: um logo e um botão "Entrar com TMDB".
-    *   **STATUS**: Implementado. `LoginScreen.kt` foi criada com UI básica e interação com `LoginViewModel`.
-
-3.  **ViewModel de Login (`LoginViewModel.kt`):**
-    *   Esta será a central de toda a lógica de autenticação.
+2.  **ViewModel de Login (`LoginViewModel.kt`):**
+    *   Refatorar a lógica de autenticação para seguir o fluxo OAuth 2.0 da v4.
     *   Ao clicar no botão "Entrar com TMDB":
-        a. Fazer a chamada `GET` para `/authentication/token/new` para obter um `request_token`.
-        b. Abrir uma **WebView** ou **Chrome Custom Tab** apontando para `https://www.themoviedb.org/authenticate/{REQUEST_TOKEN_OBTIDO}`.
-        c. Monitorar a URL da WebView para detectar o redirecionamento de volta ao app, que indica que o usuário completou a autorização.
-        d. Com o `request_token` agora aprovado, fazer a chamada `POST` para `/authentication/session/new` para obter a `session_id` final.
-    *   **STATUS**: Implementado. `LoginViewModel.kt` contém a lógica para obter `request_token`, expor URL para `CustomTabsIntent`, e criar `session_id`.
+        a. Fazer a chamada `POST` para `/4/auth/request_token` para obter um `request_token` da v4.
+        b. Abrir uma **Chrome Custom Tab** apontando para `https://www.themoviedb.org/auth/access?request_token={REQUEST_TOKEN_V4}`.
+        c. Após a autorização do usuário, o TMDB redirecionará para o `redirect_to` configurado no site (nosso deep link do app).
+        d. Com o `request_token` aprovado, fazer a chamada `POST` para `/4/auth/access_token` para obter o `access_token` e `account_id` finais.
 
-4.  **Armazenamento Seguro:**
-    *   Salvar a `session_id` recebida de forma segura no dispositivo usando **Jetpack DataStore** (preferencial).
-    *   **STATUS**: Implementado. `UserPreferencesRepository.kt` gerencia `session_id`, `account_id` e `primary_list_id` via `DataStore`.
+3.  **Armazenamento Seguro:**
+    *   Salvar o `access_token` e `account_id` recebidos de forma segura no `UserPreferencesRepository` (DataStore). O `session_id` da v3 será descontinuado.
 
-**Endpoints a serem usados:**
-*   `GET /authentication/token/new`
-*   `POST /authentication/session/new`
-*   **STATUS**: Adicionados a `FilmeAPI.kt`.
-
-**Lógica de Deep Link para Retorno da Custom Tab**:
-*   **STATUS**: Implementado. `AndroidManifest.xml` configurado. `MainActivity.kt` captura `request_token` e o expõe via `deeplinkRequestToken`. `NetflixApp.kt` observa este token e navega para `LoginScreen`, que então usa o token para chamar `createSession()` no `LoginViewModel`.
+**Endpoints a serem usados (API v4):**
+*   `POST /4/auth/request_token`
+*   `POST /4/auth/access_token`
 
 ---
 
-### **Prioridade 2: Gerenciamento da "Minha Lista" (Lógica Unificada) - CONCLUÍDA**
-**Objetivo:** Centralizar toda a lógica de interação com a "Minha Lista" na tela `MyMovieDetails`, que se tornará a tela de detalhes padrão para qualquer filme no aplicativo.
+### **Prioridade 2: Gerenciamento de Listas (API v4) - PENDENTE**
+**Objetivo:** Utilizar a API v4, que é mais robusta e explícita, para adicionar e remover filmes E séries de listas de forma confiável, resolvendo o bug "Entry not found" da API v3.
 
 **Plano de Ação:**
-1.  **Criação do `MyMovieDetailsViewModel.kt`:**
-    *   Este ViewModel será o cérebro da tela. Ao ser inicializado, ele receberá o `movie_id` do filme.
-    *   Sua primeira tarefa é verificar (usando a `session_id` e o `list_id` da lista principal) se este `movie_id` **já existe** na "Minha Lista" do usuário. O resultado dessa verificação controlará o estado do botão no `SplitButtonLayout`.
-    *   **STATUS**: Implementado. `MyMovieDetailsViewModel.kt` foi criado com lógica para carregar detalhes do filme, verificar/adicionar/remover da lista, e gerenciar `list_id` e `account_id`.
-    *   **Modelos de Dados Complementares**: `AddRemoveListItemRequest`, `TmdbList`, `AccountListsResponse`, `ListDetailsResponse`, `CreateListRequest`, `CreateListResponse`, `ListItemResponse` foram criados.
-    *   **API Endpoints Complementares**: `FilmeAPI.kt` atualizado com endpoints para `getAccountDetails`, `getAccountLists`, `createList`, `getListDetails`, `addMovieToList`, `removeMovieFromList`.
+1.  **Atualizar `FilmeAPI.kt`:**
+    *   Adicionar novos métodos para os endpoints da v4.
+    *   Esses métodos exigirão um cabeçalho de autorização diferente: `Authorization: Bearer {ACCESS_TOKEN}`.
 
-2.  **Lógica do `SplitButtonLayout` em `MyMovieDetails.kt`:**
-    *   **Cenário 1: Filme NÃO está na lista.**
-        *   Dentro do `DropdownMenu`, a opção "Adicionar à Lista" será exibida.
-        *   O `onClick` acionará a função de **adicionar** no ViewModel.
-    *   **Cenário 2: Filme JÁ ESTÁ na lista.**
-        *   Dentro do `DropdownMenu`, a opção "Remover da Lista" será exibida.
-        *   O `onClick` acionará a função de **remover** no ViewModel.
-    *   **STATUS**: Concluído. A UI em `MyMovieDetails.kt` foi integrada com o ViewModel, e o `DropdownMenu` agora permite adicionar/remover o filme da lista dinamicamente.
+2.  **Refatorar `MyMovieDetailsViewModel` e `MySerieDetailsViewModel`:**
+    *   Modificar as funções `addOrRemove...` para chamar os novos endpoints da v4.
+    *   A requisição para **adicionar** um item agora enviará um corpo JSON especificando o `media_type` e o `media_id`, o que garante que o item correto seja adicionado. Ex: `{"items": [{"media_type": "tv", "media_id": 44217}]}`.
+    *   A requisição para **remover** itens seguirá o mesmo padrão.
 
-**Endpoints a serem usados:**
-*   `POST /list` (para criar a lista na primeira vez)
-*   `POST /list/{list_id}/add_item`
-*   `POST /list/{list_id}/remove_item`
-*   `GET /list/{list_id}` (para verificar o conteúdo da lista e determinar o estado inicial do botão)
-*   `GET /account/{account_id}/lists` (para buscar o `list_id` se ele for perdido)
-*   **STATUS**: Adicionados a `FilmeAPI.kt`.
+**Endpoints a serem usados (API v4):**
+*   `POST /4/list/{list_id}/items` (para adicionar itens)
+*   `DELETE /4/list/{list_id}/items` (para remover itens)
+*   `GET /4/list/{list_id}` (para verificar o conteúdo da lista, agora com dados corretos e paginação)
 
 ---
 
-### **Prioridade 3: Exibição da "Minha Lista" - CONCLUÍDA**
-**Objetivo:** Mostrar ao usuário os filmes que ele adicionou à sua lista.
+### **Prioridade 3: Exibição da "Minha Lista" (Estratégia de Contorno) - CONCLUÍDA**
+**Objetivo:** Mostrar ao usuário os itens que ele adicionou à sua lista, contornando um bug da API v3 que corrompe os dados de séries.
 
 **Plano de Ação:**
-1.  **ViewModel (`MyListViewModel.kt`):**
-    *   Quando a `MyListScreen` for iniciada, o `ViewModel` deve usar a `session_id` e o `list_id` salvos.
-    *   Fazer a chamada `GET /list/{list_id}` para buscar todos os filmes contidos na lista.
-    *   **STATUS**: Concluído. A lógica para obter/criar o `list_id` primário e carregar os filmes reais da lista do usuário foi implementada. A funcionalidade de filtro (Padrão, Melhor Avaliados, A-Z) também foi adicionada.
+1.  **ViewModel (`MyListViewModel.kt`) e PagingSource (`MyListPagingSource.kt`):**
+    *   A `MyListPagingSource` implementa uma estratégia de **busca em duas etapas** para garantir a precisão dos dados.
+    *   **Etapa A:** Faz a chamada `GET /list/{list_id}` (API v3) para obter a lista de IDs dos itens. Os detalhes retornados por esta chamada são ignorados por não serem confiáveis.
+    *   **Etapa B:** Para cada ID obtido, uma nova chamada de API é feita ao seu endpoint canônico (`/movie/{id}` ou `/tv/{id}`) para buscar os detalhes corretos. Isso contorna o bug da API v3 e garante que "Vikings" seja exibido como "Vikings", e não como "Jasmine Women".
+    *   **STATUS**: Implementado. Esta é a nossa solução atual e funcional.
 
-2.  **Tela (`MyListScreen.kt`):**
-    *   A tela deve observar o estado do `ViewModel`.
-    *   Exibir uma `LazyColumn` ou `LazyVerticalGrid` com os filmes retornados pela API.
-    *   Mostrar um estado de "Carregando..." enquanto a chamada está em progresso e uma mensagem de "Sua lista está vazia" se a API não retornar filmes.
-    *   **STATUS**: `MyListScreen.kt` foi atualizada para usar `MyListViewModel` e `loadMyListMovies()`. A exibição da lista está usando `PopularMoviesSection`. A lógica de filtragem foi conectada aos botões na UI.
-    *   **Integração com `NetflixApp.kt`**: `MyListScreen` foi integrada ao `NavHost` em `NetflixApp.kt`.
-
-3.  **Navegação:**
-    *   O clique em cada item da grade deve navegar para `MyMovieDetails.kt`, passando o `movie_id` correspondente.
-    *   **STATUS**: Implementado.
-
-**Endpoints a serem usados:**
-*   `GET /list/{list_id}`
-*   **STATUS**: Adicionados a `FilmeAPI.kt`.
+2.  **Migração Futura (Opcional):**
+    *   Após a conclusão da Prioridade 2 (Gerenciamento de Listas com API v4), a exibição também poderá ser migrada para usar o endpoint `GET /4/list/{list_id}`. Este endpoint da v4 é paginado e retorna dados corretos, o que tornaria a nossa estratégia de "busca em duas etapas" desnecessária, simplificando o código e melhorando a performance.
 
 ---
 
-### **Prioridade 4: Melhorias e Funcionalidades Futuras - PENDENTE**
+### **Prioridade 4: Autenticação Legada (API v3) - CONCLUÍDA (Manter até a migração)**
+**Objetivo:** Manter o fluxo de login atual funcional até que a migração para a v4 esteja completa.
+
+*   **Lógica de Deep Link para Retorno da Custom Tab**:
+    *   **STATUS**: Implementado. `AndroidManifest.xml` configurado. `MainActivity.kt` captura `request_token` v3 e o `LoginViewModel` o utiliza para criar uma `session_id`.
+
+---
+
+### **Prioridade 5: Melhorias e Funcionalidades Futuras - PENDENTE**
 **Objetivo:** Refinar a experiência do usuário e adicionar funcionalidades secundárias.
 
-*   **Feedback Visual:** Adicionar indicadores de carregamento (`CircularProgressIndicator`) em todas as telas durante as chamadas de API e usar `Snackbar` para mensagens de sucesso/erro (ex: "Filme adicionado à lista!").
-*   **Gerenciamento de Múltiplas Listas:** Transformar a `MovieForm.kt` em `ListForm.kt` para permitir que usuários avançados criem e gerenciem múltiplas listas personalizadas.
-*   **Estado Offline ("Minha Lista"):** Implementar cache offline para a "Minha Lista" utilizando `DataStore Preferences` (via `Gson`).
-    *   **Nota:** O `session_id`, `account_id` e `primary_list_id` já são gerenciados com `DataStore Preferences` via `UserPreferencesRepository.kt`.
+*   **Feedback Visual:** Adicionar indicadores de carregamento (`CircularProgressIndicator`) e `Snackbar` para mensagens de sucesso/erro.
+*   **Gerenciamento de Múltiplas Listas:** Permitir que usuários criem e gerenciem múltiplas listas personalizadas.
+*   **Cache Offline:** Implementar cache para a "Minha Lista" para visualização offline.

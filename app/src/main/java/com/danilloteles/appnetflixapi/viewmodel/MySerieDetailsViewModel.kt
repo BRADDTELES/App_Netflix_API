@@ -199,8 +199,8 @@ class MySerieDetailsViewModel(
                         checkIfSerieInMyList(finalListToModifyId)
                         Log.d("TAG-MySerieDetailsViewModel", "Cache da lista atualizado. Série ID: $serieId, _isInMyList: ${_isInMyList.value}")
                     } else {
-                        val errorMessage = response.body()?.status_message ?: "Falha desconhecida."
-                        _myListActionUiState.value = UiState.Error(errorMessage)
+                        val errorMessage = response.errorBody()?.string() ?: "Erro desconhecido"
+                        _myListActionUiState.value = UiState.Error("Erro ao adicionar/remover série.")
                         Log.e("TAG-MySerieDetailsViewModel", "Falha ao adicionar/remover série: ${response.code()} - $errorMessage")
                     }
                 } catch (e: Exception) {
