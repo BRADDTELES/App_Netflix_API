@@ -84,6 +84,7 @@ dependencies {
     implementation(libs.androidx.browser)
     // Room
     implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.compose.adaptive.navigation)
     // Add the KSP plugin to your project
     ksp(libs.androidx.room.compiler)
     // Kotlin Extensions and Coroutines support for Room

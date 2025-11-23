@@ -65,7 +65,7 @@ import com.danilloteles.appnetflixapi.model.MediaItem
 import com.danilloteles.appnetflixapi.repository.FilmeRepository
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
 import com.danilloteles.appnetflixapi.utils.events.MovieListFilterState
-import com.danilloteles.appnetflixapi.utils.material3expressive.ConnectedButtonGroupComposableCustom
+import com.danilloteles.appnetflixapi.utils.custom.ConnectedButtonGroupComposableCustom
 import com.danilloteles.appnetflixapi.utils.material3expressive.FabMenuColorScheme
 import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
 import com.danilloteles.appnetflixapi.view.componentes.MyMoviesListSection

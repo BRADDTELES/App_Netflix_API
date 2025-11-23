@@ -39,14 +39,13 @@ import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.danilloteles.appnetflixapi.model.MediaItem
-import com.danilloteles.appnetflixapi.model.filme.Filme
 import com.danilloteles.appnetflixapi.repository.FilmeRepository
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.VERMELHO
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
 import com.danilloteles.appnetflixapi.utils.events.FilmeListFilterState
-import com.danilloteles.appnetflixapi.utils.material3expressive.ConnectedButtonGroupComposableSerieCustom
+import com.danilloteles.appnetflixapi.utils.custom.ConnectedButtonGroupComposableSerieCustom
 import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
 import com.danilloteles.appnetflixapi.view.itemlista.MovieItem
 import com.danilloteles.appnetflixapi.viewmodel.FilmeViewModel
