@@ -201,8 +201,8 @@ class MyMovieDetailsViewModel(
                         checkIfMovieInMyList(finalListToModifyId)
                         Log.d("TAG-MyMovieDetailsViewModel", "Cache da lista atualizado. Filme ID: $movieId, _isInMyList: ${_isInMyList.value}")
                     } else {
-                        val errorMessage = response.body()?.status_message ?: "Falha desconhecida."
-                        _myListActionUiState.value = UiState.Error(errorMessage)
+                        val errorMessage = response.errorBody()?.string() ?: "Erro desconhecido"
+                        _myListActionUiState.value = UiState.Error("Erro ao adicionar/remover filme.")
                         Log.e("TAG-MyMovieDetailsViewModel", "Falha ao adicionar/remover filme: ${response.code()} - $errorMessage")
                     }
                 } catch (e: Exception) {
