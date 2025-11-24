@@ -1,7 +1,6 @@
 package com.danilloteles.appnetflixapi.api
 
 import com.danilloteles.appnetflixapi.model.ListDetailsResponse
-import com.danilloteles.appnetflixapi.model.MediaItem
 import com.danilloteles.appnetflixapi.model.filme.AccountDetailsResponse
 import com.danilloteles.appnetflixapi.model.filme.AccountListsResponse
 import com.danilloteles.appnetflixapi.model.filme.AddRemoveListItemRequest
@@ -12,12 +11,14 @@ import com.danilloteles.appnetflixapi.model.filme.FilmeClassificado
 import com.danilloteles.appnetflixapi.model.filme.FilmeDetalhes
 import com.danilloteles.appnetflixapi.model.filme.FilmeResposta
 import com.danilloteles.appnetflixapi.model.filme.ListItemResponse
+import com.danilloteles.appnetflixapi.model.filme.ListaResposta
 import com.danilloteles.appnetflixapi.model.filme.RequestTokenResponse
 import com.danilloteles.appnetflixapi.model.filme.SessionIdResponse
 import com.danilloteles.appnetflixapi.model.serie.SerieDetalhes
 import com.danilloteles.appnetflixapi.model.serie.SerieResposta
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
@@ -84,17 +85,17 @@ interface FilmeAPI {
         @Query("session_id") sessionId: String
     ): Response<AccountDetailsResponse>
 
-    @GET("account/{account_id}/lists")
-    suspend fun obterListasDeContas(
-        @Path("account_id") accountId: Int,
-        @Query("session_id") sessionId: String
-    ): Response<AccountListsResponse>
-
     @POST("list")
     suspend fun criarLista(
         @Query("session_id") sessionId: String,
         @Body request: CreateListRequest
     ): Response<CreateListResponse>
+
+    @GET("account/{account_id}/lists")
+    suspend fun obterListasDaConta(
+        @Path("account_id") accountId: Int,
+        @Query("session_id") sessionId: String
+    ): Response<AccountListsResponse>
 
     @GET("list/{list_id}")
     suspend fun obterDetalhesDaLista(
@@ -115,4 +116,10 @@ interface FilmeAPI {
         @Query("session_id") sessionId: String,
         @Body request: AddRemoveListItemRequest
     ): Response<ListItemResponse>
+
+    @DELETE("list/{list_id}")
+    suspend fun removerLista(
+        @Path("list_id") listId: String,
+        @Query("session_id") sessionId: String
+    ): Response<ListaResposta>
 }

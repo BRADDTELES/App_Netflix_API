@@ -68,7 +68,7 @@ fun LoginScreen(
                     customTabsIntent.launchUrl(context, event.url.toUri())
                 }
                 LoginEvent.LoginSuccess -> {
-                    navController.navigate(AppDestination.MY_LIST_SCREEN) {
+                    navController.navigate(AppDestination.MINHA_LISTA_SCREEN) {
                         popUpTo(AppDestination.MAIN_SCREEN) { inclusive = false }
                     }
                     // Resetar o token no ViewModel para evitar processamento duplicado

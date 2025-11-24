@@ -15,10 +15,12 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.danilloteles.appnetflixapi.constantes.AppDestination
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
+import com.danilloteles.appnetflixapi.view.screens.ConteudoScreen
 import com.danilloteles.appnetflixapi.view.screens.FilmeScreen
 import com.danilloteles.appnetflixapi.view.screens.FormularioScreen
 import com.danilloteles.appnetflixapi.view.screens.LoginScreen
 import com.danilloteles.appnetflixapi.view.screens.MainActivity
+import com.danilloteles.appnetflixapi.view.screens.MinhaListaScreen
 import com.danilloteles.appnetflixapi.view.screens.PopularFilmeDetalhesScreen
 import com.danilloteles.appnetflixapi.view.screens.MyListScreen
 import com.danilloteles.appnetflixapi.view.screens.MyMovieDetails
@@ -87,7 +89,7 @@ fun NetflixApp(
                 onMyListClick = {
                     // Lógica para verificar a session_id se navega para o MyListScreen ou retorna para LoginScreen
                     if (  sessionId != null && sessionId!!.isNotEmpty()  ) {
-                        navController.navigate(AppDestination.MY_LIST_SCREEN)
+                        navController.navigate(AppDestination.MINHA_LISTA_SCREEN)
                     } else {
                         navController.navigate(AppDestination.LOGIN_SCREEN)
                     }
@@ -186,7 +188,9 @@ fun NetflixApp(
         composable(
             route = AppDestination.LIST_FORM_ROUTE
         ) {
-            FormularioScreen()
+            FormularioScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
 
         // Rota atualizada para LoginScreen para aceitar o request_token
@@ -211,22 +215,37 @@ fun NetflixApp(
         }
 
         composable(
-            route = AppDestination.MY_LIST_SCREEN
+            route = AppDestination.MINHA_LISTA_SCREEN
         ) {
-            MyListScreen(
-                onMovieClick = { mediaItem, listId ->
-                    val route = when (mediaItem.media_type) {
-                        "movie" -> "${AppDestination.MY_MOVIE_DETAILS}/${mediaItem.id}?${AppDestination.LIST_ID_ARG}=$listId"
-                        "tv" -> "${AppDestination.MY_SERIES_DETAILS}/${mediaItem.id}?${AppDestination.LIST_ID_ARG}=$listId"
-                        else -> null // Ou uma rota de erro/fallback
-                    }
-                    route?.let { navController.navigate(it) }
+            MinhaListaScreen(
+                onNavigateToConteudo = { listId, listName ->
+                    navController.navigate(
+                        route = "${AppDestination.CONTEUDO_SCREEN}/$listId/$listName"
+                    )
                 },
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-                onNavigateToListForm = { navController.navigate(AppDestination.LIST_FORM_ROUTE) }
+                onNavigateToFormulario = { navController.navigate(AppDestination.LIST_FORM_ROUTE) }
             )
+        }
+
+        composable(
+            route = AppDestination.CONTEUDO_ROUTE,
+            arguments = listOf(
+                navArgument(AppDestination.LIST_ID_ARG) { type = NavType.StringType },
+                navArgument(AppDestination.MOVIE_TITLE_ARG) { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val listId = backStackEntry.arguments?.getString(AppDestination.LIST_ID_ARG)
+            val movieTitle = backStackEntry.arguments?.getString(AppDestination.MOVIE_TITLE_ARG)
+
+            if (listId != null && movieTitle != null) {
+                ConteudoScreen(
+                    listId = listId,
+                    movieTitle = movieTitle,
+                    onBackClick = { navController.popBackStack() }
+                )
+            } else {
+                Toast.makeText(context, "Detalhes da lista não encontrados!", Toast.LENGTH_LONG).show()
+            }
         }
 
         composable(

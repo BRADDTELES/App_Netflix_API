@@ -4,15 +4,9 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.danilloteles.appnetflixapi.api.FilmeAPI
-import com.danilloteles.appnetflixapi.datasource.paging.filme.NowPlayingFilmesPagingSource
-import com.danilloteles.appnetflixapi.datasource.paging.filme.PopularFilmesPagingSource
-import com.danilloteles.appnetflixapi.datasource.paging.filme.TopRatedFilmesPagingSource
-import com.danilloteles.appnetflixapi.datasource.paging.minhalista.MyListPagingSource
 import com.danilloteles.appnetflixapi.model.MediaItem
 import com.danilloteles.appnetflixapi.model.filme.TmdbList
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
@@ -79,7 +73,7 @@ class MyListViewModel(
                 if (currentAccountId != null) {
                     Log.d("TAG-MyListViewModel", "AccountId obtido para loadUserLists: $currentAccountId")
                     try {
-                        val response = filmeAPI.obterListasDeContas(currentAccountId, sessionId)
+                        val response = filmeAPI.obterListasDaConta(currentAccountId, sessionId)
                         if (response.isSuccessful) {
                             response.body()?.let { accountListsResponse ->
                                 Log.d("TAG-MyListViewModel", "API getAccountLists retornou ${accountListsResponse.results.size} listas.")

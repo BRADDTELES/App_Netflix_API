@@ -26,6 +26,7 @@ import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -72,12 +73,12 @@ fun MinhaListaScreen(
             minhaListaRepository = MinhaListaRepository(
                 filmeAPI = RetrofitHelper.filmeAPI,
                 userPreferencesRepository = UserPreferencesRepository(context)
-            ),
-            filmeAPI = RetrofitHelper.filmeAPI
+            )
         )
     )
 
     val uiState by viewModel.minhasListasState.collectAsStateWithLifecycle()
+    val removeState by viewModel.listaRemovidaState.collectAsStateWithLifecycle()
 
     val isRefreshing = uiState is UiState.Loading
 
@@ -94,6 +95,23 @@ fun MinhaListaScreen(
     val fabVisible by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
     BackHandler(fabMenuExpanded) { fabMenuExpanded = false }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(removeState) {
+        when (val state = removeState) {
+            is UiState.Success -> {
+                snackbarHostState.showSnackbar("Lista removida com sucesso!")
+                viewModel.buscarMinhasListas()
+                viewModel.resetRemoveState()
+            }
+            is UiState.Error -> {
+                snackbarHostState.showSnackbar("Erro ao remover lista.")
+                viewModel.resetRemoveState()
+            }
+            else -> {}
+        }
+    }
+
     ListDetailPaneScaffold(
         directive = scaffoldNavigator.scaffoldDirective,
         scaffoldState = scaffoldNavigator.scaffoldState,
@@ -101,6 +119,7 @@ fun MinhaListaScreen(
             AnimatedPane {
                 Scaffold(
                     containerColor = BLACK,
+                    snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
                     topBar = {
                         TopAppBar(
                             title = {
@@ -237,7 +256,7 @@ fun MinhaListaScreen(
                                                 coroutineScope.launch {
                                                     scaffoldNavigator.navigateTo(
                                                         pane = ListDetailPaneScaffoldRole.Detail,
-                                                        contentKey = MovieNavItemData(clickedItem.id, clickedItem.name)
+                                                        contentKey = MovieNavItemData(clickedItem.id.toString(), clickedItem.name)
                                                     )
                                                 }
                                             }
@@ -257,6 +276,7 @@ fun MinhaListaScreen(
             AnimatedPane {
                 selectedItem?.let {
                     ConteudoScreen(
+                        listId = it.listId,
                         movieTitle = it.movieTitle,
                         onBackClick = { coroutineScope.launch { scaffoldNavigator.navigateBack() } }
                     )
@@ -269,8 +289,7 @@ fun MinhaListaScreen(
         ConfirmationAlertDialog(
             itemName = itemToDelete!!.name,
             onConfirm = {
-                // TODO: Aqui entraria a lógica para deletar a lista via ViewModel
-                // viewModel.deleteList(itemToDelete!!.id)
+                itemToDelete?.let { viewModel.removerLista(it.id) }
                 showDeleteConfirmation = false
                 itemToDelete = null
             },
@@ -348,11 +367,11 @@ private fun ConfirmationAlertDialog(
     )
 }
 
-data class MovieNavItemData(val index: Int, val movieTitle: String) : Parcelable {
-    constructor(parcel: Parcel) : this(parcel.readInt(), parcel.readString()!!)
+data class MovieNavItemData(val listId: String, val movieTitle: String) : Parcelable {
+    constructor(parcel: Parcel) : this(parcel.readString()!!, parcel.readString()!!)
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeInt(index)
+        parcel.writeString(listId)
         parcel.writeString(movieTitle)
     }
 

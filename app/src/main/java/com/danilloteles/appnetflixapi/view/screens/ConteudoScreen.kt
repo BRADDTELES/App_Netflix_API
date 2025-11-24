@@ -3,10 +3,10 @@ package com.danilloteles.appnetflixapi.view.screens
 
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -43,16 +44,14 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
@@ -63,34 +62,42 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil3.compose.AsyncImage
 import com.danilloteles.appnetflixapi.R
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.danilloteles.appnetflixapi.constantes.Constantes
+import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
+import com.danilloteles.appnetflixapi.model.MediaItem
+import com.danilloteles.appnetflixapi.repository.MinhaListaRepository
+import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
+import com.danilloteles.appnetflixapi.utils.events.UiState
+import com.danilloteles.appnetflixapi.viewmodel.ConteudoViewModel
 
 @Composable
 fun ConteudoScreen(
+    listId: String,
     movieTitle: String,
     onBackClick: () -> Unit
 ) {
-    val coroutineScope = rememberCoroutineScope()
-    var isRefreshing by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val viewModel: ConteudoViewModel = viewModel(
+        factory = ConteudoViewModel.ConteudoViewModelFactory(
+            listId = listId,
+            minhaListaRepository = MinhaListaRepository(
+                filmeAPI = RetrofitHelper.filmeAPI,
+                userPreferencesRepository = UserPreferencesRepository(context)
+            ),
+            userPreferencesRepository = UserPreferencesRepository(context)
+        )
+    )
 
-    val initialVideoItems = rememberVideoItems()
-    val currentVideoItems = remember { mutableStateListOf(*initialVideoItems.toTypedArray()) }
-
-    val onRefresh: () -> Unit = {
-        isRefreshing = true
-        coroutineScope.launch {
-            delay(2000) // Simula atraso da rede
-            currentVideoItems.clear()
-            currentVideoItems.addAll(initialVideoItems.shuffled()) // Reordena para simular novos dados
-            isRefreshing = false
-        }
-    }
+    val uiState by viewModel.conteudoState.collectAsStateWithLifecycle()
+    val isRefreshing = uiState is UiState.Loading
 
     Scaffold(
         topBar = {
-            TopAppBar( // Alterado para SmallTopAppBar para um tamanho menor
+            TopAppBar(
                 title = {
                     Text(
                         text = movieTitle,
@@ -100,20 +107,20 @@ fun ConteudoScreen(
                         color = Color.White
                     )
                 },
-                colors = TopAppBarDefaults.topAppBarColors( // Usando colors para SmallTopAppBar
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Red,
                     actionIconContentColor = Color.White,
                     titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White // Adicionado cor para o ícone de navegação
+                    navigationIconContentColor = Color.White
                 ),
-                navigationIcon = { // Botão de retorno
+                navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = Color.White)
                     }
                 },
                 actions = {
-                    IconButton(onClick = onRefresh) {
-                        Icon(Icons.Filled.Refresh, "Trigger Refresh", tint = Color.White)
+                    IconButton(onClick = { viewModel.buscarConteudo() }) {
+                        Icon(Icons.Filled.Refresh, "Atualizar", tint = Color.White)
                     }
                 }
             )
@@ -128,18 +135,41 @@ fun ConteudoScreen(
             ConnectedButtonGroupComposable()
             PullToRefreshBox(
                 isRefreshing = isRefreshing,
-                onRefresh = onRefresh,
+                onRefresh = { viewModel.buscarConteudo() },
                 modifier = Modifier.fillMaxSize()
             ) {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(24.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(currentVideoItems) { item ->
-                        VideoItem(item = item)
+                when (val state = uiState) {
+                    is UiState.Loading -> {
+                        if (!isRefreshing) {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator()
+                            }
+                        }
+                    }
+                    is UiState.Error -> {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(
+                                text = "Erro: ${state.message}\nPuxe para tentar novamente.",
+                                color = Color.White,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                    is UiState.Success -> {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(24.dp),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(items = state.data.items, key = { it.id }) { item ->
+                                VideoItem(item = item)
+                            }
+                        }
+                    }
+                    is UiState.Idle -> {
+                        Box(modifier = Modifier.fillMaxSize()) {}
                     }
                 }
             }
@@ -148,7 +178,7 @@ fun ConteudoScreen(
 }
 
 @Composable
-fun VideoItem(item: VideoData) {
+fun VideoItem(item: MediaItem) {
     Column(
         modifier = Modifier
             .width(160.dp)
@@ -156,9 +186,11 @@ fun VideoItem(item: VideoData) {
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
-        Image(
-            painter = painterResource(id = item.imageRes),
+        AsyncImage(
+            model = "${Constantes.IMAGE_BASE_URL}${item.poster_path}",
             contentDescription = item.title,
+            placeholder = painterResource(id = R.drawable.ic_placeholder),
+            error = painterResource(id = R.drawable.ic_error),
             modifier = Modifier
                 .width(160.dp)
                 .height(200.dp)
@@ -166,7 +198,7 @@ fun VideoItem(item: VideoData) {
             contentScale = ContentScale.FillHeight,
         )
         Text(
-            text = item.title,
+            text = item.title ?: item.name ?: "",
             color = Color.White,
             fontSize = 14.sp,
             modifier = Modifier.fillMaxWidth().padding(start = 4.dp, top = 8.dp),
@@ -224,31 +256,13 @@ fun ConnectedButtonGroupComposable() {
     }
 }
 
-data class VideoData(
-    val title: String,
-    val imageRes: Int
-)
-
-@Composable
-fun rememberVideoItems(): List<VideoData> {
-    return listOf(
-        VideoData("Item 1", R.drawable.movie_show_vizinha),
-        VideoData("Item 2", R.drawable.movie_star_war),
-        VideoData("Item 3", R.drawable.movie_senhor_dos_aneis),
-        VideoData("Item 4", R.drawable.movie_interstellar),
-        VideoData("Item 5", R.drawable.movie_matrix),
-        VideoData("Item 6", R.drawable.movie_fight_club),
-        VideoData("Item 7", R.drawable.movie_dark_knight),
-        VideoData("Item 8", R.drawable.movie_liga_da_justica),
-        VideoData("Item 9", R.drawable.movie_pulp_fiction),
-        VideoData("Item 10", R.drawable.movie_todo_mundo_panico),
-    )
-}
-
 @Preview
 @Composable
 private fun ConteudoScreenPreview(){
+    // Preview pode não funcionar como esperado pois agora depende de ViewModel e dados reais.
+    // Para um preview funcional, seria necessário criar um ViewModel de mock.
     ConteudoScreen(
+        listId = "1",
         movieTitle = "Lista de videos",
         onBackClick = {}
     )

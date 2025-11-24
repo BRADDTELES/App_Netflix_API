@@ -43,13 +43,21 @@ import com.danilloteles.appnetflixapi.ui.theme.TRANSPARENT
 import com.danilloteles.appnetflixapi.ui.theme.VERMELHO
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
 import com.danilloteles.appnetflixapi.utils.events.UiState
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
-import com.danilloteles.appnetflixapi.view.componentes.NetflixTopBar
 import com.danilloteles.appnetflixapi.view.componentes.OutlinedTextFieldCustom
 import com.danilloteles.appnetflixapi.viewmodel.FormularioViewModel
+import kotlinx.coroutines.delay
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FormularioScreen() {
+fun FormularioScreen(
+    onNavigateBack: () -> Unit
+) {
     val context = LocalContext.current
     val viewModel: FormularioViewModel = viewModel(
         factory = FormularioViewModel.Factory(UserPreferencesRepository(context))
@@ -64,6 +72,8 @@ fun FormularioScreen() {
         when (val state = uiState) {
             is UiState.Success -> {
                 snackbarHostState.showSnackbar("Lista criada com sucesso!")
+                delay(500) // Dá tempo para o usuário ver o snackbar
+                onNavigateBack()
             }
             is UiState.Error -> {
                 snackbarHostState.showSnackbar(state.message)
@@ -74,7 +84,23 @@ fun FormularioScreen() {
 
     Scaffold(
         topBar = {
-             NetflixTopBar()
+            TopAppBar(
+                title = { Text("Nova Lista", color = WHITE) },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Voltar",
+                            tint = WHITE
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = BLACK,
+                    titleContentColor = WHITE,
+                    navigationIconContentColor = WHITE
+                )
+            )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
@@ -168,5 +194,5 @@ fun FormularioScreen() {
 @Preview
 @Composable
 private fun FormularioScreenPreview() {
-    FormularioScreen()
+    FormularioScreen(onNavigateBack = {})
 }

@@ -83,7 +83,7 @@ class MyMovieDetailsViewModel(
                 val currentAccountId = getOrCreateAccountId(sessionId)
                 if (currentAccountId != null) {
                     try {
-                        val response = filmeAPI.obterListasDeContas(currentAccountId, sessionId)
+                        val response = filmeAPI.obterListasDaConta(currentAccountId, sessionId)
                         if (response.isSuccessful) {
                             response.body()?.let { accountListsResponse ->
                                 _userListsUiState.value = UiState.Success(accountListsResponse.results)
