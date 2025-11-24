@@ -63,6 +63,7 @@ import com.danilloteles.appnetflixapi.utils.events.UiState
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
 import com.danilloteles.appnetflixapi.model.MediaItem
 import com.danilloteles.appnetflixapi.repository.FilmeRepository
+import com.danilloteles.appnetflixapi.repository.MinhaListaRepository
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
 import com.danilloteles.appnetflixapi.utils.events.MovieListFilterState
 import com.danilloteles.appnetflixapi.utils.custom.ConnectedButtonGroupComposableCustom
@@ -82,12 +83,16 @@ fun MyListScreen(
     val filmeRepository = remember {
         FilmeRepository(RetrofitHelper.filmeAPI)
     }
+    val minhaListaRepository = remember {
+        MinhaListaRepository(RetrofitHelper.filmeAPI, UserPreferencesRepository(context))
+    }
 
     val myListViewModel: MyListViewModel = viewModel( // Instância alterada
         factory = MyListViewModel.MyListViewModelFactory(
             UserPreferencesRepository(context),
             MyListPreferencesRepository(context),
-            filmeRepository = filmeRepository
+            filmeRepository = filmeRepository,
+            minhaListaRepository = minhaListaRepository
         )
     )
 

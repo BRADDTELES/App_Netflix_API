@@ -1,6 +1,5 @@
 package com.danilloteles.appnetflixapi.viewmodel
 
-import TopRatedFilmesPagingSource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -9,6 +8,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.danilloteles.appnetflixapi.datasource.paging.filme.PopularFilmesPagingSource
+import com.danilloteles.appnetflixapi.datasource.paging.filme.TopRatedFilmesPagingSource
 import com.danilloteles.appnetflixapi.model.MediaItem
 import com.danilloteles.appnetflixapi.repository.FilmeRepository
 import com.danilloteles.appnetflixapi.utils.events.FilmeListFilterState

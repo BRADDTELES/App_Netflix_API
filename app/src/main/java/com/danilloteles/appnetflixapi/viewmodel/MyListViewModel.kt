@@ -1,8 +1,5 @@
 package com.danilloteles.appnetflixapi.viewmodel
 
-import MyListPagingSource
-import NowPlayingFilmesPagingSource
-import TopRatedFilmesPagingSource
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -12,7 +9,10 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.danilloteles.appnetflixapi.api.FilmeAPI
+import com.danilloteles.appnetflixapi.datasource.paging.filme.NowPlayingFilmesPagingSource
 import com.danilloteles.appnetflixapi.datasource.paging.filme.PopularFilmesPagingSource
+import com.danilloteles.appnetflixapi.datasource.paging.filme.TopRatedFilmesPagingSource
+import com.danilloteles.appnetflixapi.datasource.paging.minhalista.MyListPagingSource
 import com.danilloteles.appnetflixapi.model.MediaItem
 import com.danilloteles.appnetflixapi.model.filme.TmdbList
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
@@ -20,6 +20,7 @@ import com.danilloteles.appnetflixapi.datasource.datastore.MyListPreferencesRepo
 import com.danilloteles.appnetflixapi.utils.events.UiState
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
 import com.danilloteles.appnetflixapi.repository.FilmeRepository
+import com.danilloteles.appnetflixapi.repository.MinhaListaRepository
 import com.danilloteles.appnetflixapi.utils.events.MovieListFilterState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,22 +32,27 @@ import kotlinx.coroutines.launch
 class MyListViewModel(
     private val userPreferencesRepository: UserPreferencesRepository,
     private val myListPreferencesRepository: MyListPreferencesRepository,
-    private val filmeRepository: FilmeRepository
+    private val filmeRepository: FilmeRepository,
+    private val minhaListaRepository: MinhaListaRepository
 ) : ViewModel() {
 
+    private var primaryListId: String? = null
+    private var accountId: Int? = null
     private val filmeAPI: FilmeAPI = RetrofitHelper.filmeAPI
 
     private val _userListsUiState = MutableStateFlow<UiState<List<TmdbList>>>(UiState.Idle)
     val userListsUiState: StateFlow<UiState<List<TmdbList>>> = _userListsUiState
 
-    private val _currentFilter = MutableStateFlow<MovieListFilterState>(MovieListFilterState.Popular)
+    private val _currentFilter = MutableStateFlow<MovieListFilterState>(MovieListFilterState.MyList(primaryListId))
     val currentFilter: StateFlow<MovieListFilterState> = _currentFilter
 
-    private var primaryListId: String? = null
-    private var accountId: Int? = null
-
     val moviesStream: Flow<PagingData<MediaItem>> = _currentFilter.flatMapLatest { filter ->
-        createPagerForFilter(filter).flow
+        when (filter) {
+            MovieListFilterState.Popular -> filmeRepository.getPopularMoviesStream()
+            MovieListFilterState.TopRated -> filmeRepository.getTopRatedMoviesStream()
+            MovieListFilterState.NowPlaying -> filmeRepository.getNowPlayingMoviesStream()
+            is MovieListFilterState.MyList -> minhaListaRepository.getMyListMoviesStream(filter.listId)
+        }
     }.cachedIn(viewModelScope)
 
     fun applyFilter(filter: MovieListFilterState) {
@@ -56,29 +62,11 @@ class MyListViewModel(
         }
     }
 
-    private fun createPagerForFilter(filter: MovieListFilterState): Pager<Int, MediaItem> {
-        return Pager(
-            config = PagingConfig(pageSize = 20, enablePlaceholders = false),
-            pagingSourceFactory = {
-                when (filter) {
-                    MovieListFilterState.Popular -> PopularFilmesPagingSource(filmeRepository.filmeAPI)
-                    MovieListFilterState.TopRated -> TopRatedFilmesPagingSource(filmeRepository.filmeAPI)
-                    MovieListFilterState.NowPlaying -> NowPlayingFilmesPagingSource(filmeRepository.filmeAPI)
-                    is MovieListFilterState.MyList -> MyListPagingSource(
-                        filmeAPI = filmeRepository.filmeAPI,
-                        userPreferencesRepository = userPreferencesRepository,
-                        listId = filter.listId
-                    )
-                }
-            }
-        )
-    }
-
     init {
         loadUserLists()
-        viewModelScope.launch {
+        /*viewModelScope.launch {
             primaryListId = userPreferencesRepository.primaryListId.first()
-        }
+        }*/
     }
 
     fun loadUserLists() {
@@ -162,12 +150,13 @@ class MyListViewModel(
     class MyListViewModelFactory(
         private val userPreferencesRepository: UserPreferencesRepository,
         private val myListPreferencesRepository: MyListPreferencesRepository,
-        private val filmeRepository: FilmeRepository
+        private val filmeRepository: FilmeRepository,
+        private val minhaListaRepository: MinhaListaRepository
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(MyListViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
-                return MyListViewModel(userPreferencesRepository, myListPreferencesRepository, filmeRepository) as T
+                return MyListViewModel(userPreferencesRepository, myListPreferencesRepository, filmeRepository, minhaListaRepository) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

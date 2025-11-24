@@ -1,4 +1,4 @@
-
+package com.danilloteles.appnetflixapi.datasource.paging.minhalista
 
 import android.util.Log
 import androidx.paging.PagingSource
@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.first
 class MyListPagingSource(
     private val filmeAPI: FilmeAPI,
     private val userPreferencesRepository: UserPreferencesRepository,
-    private val listId: String?
+    private val listId: String
 ) : PagingSource<Int, MediaItem>() { // Alterado para MediaItem
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, MediaItem> {
         return try {
@@ -24,6 +24,8 @@ class MyListPagingSource(
             }
 
             val sessionId = userPreferencesRepository.sessionId.first()
+            val listId = userPreferencesRepository.primaryListId.first()
+
             if (sessionId == null || listId == null) {
                 return LoadResult.Page(emptyList(), prevKey = null, nextKey = null)
             }

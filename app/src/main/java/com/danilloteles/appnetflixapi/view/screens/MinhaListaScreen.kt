@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -38,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.isTraversalGroup
@@ -45,49 +46,48 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
+import com.danilloteles.appnetflixapi.model.filme.TmdbList
+import com.danilloteles.appnetflixapi.repository.MinhaListaRepository
+import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
+import com.danilloteles.appnetflixapi.ui.theme.BLACK
+import com.danilloteles.appnetflixapi.utils.events.UiState
+import com.danilloteles.appnetflixapi.viewmodel.MinhaListaViewModel
 import kotlinx.coroutines.launch
 
 @Composable
-fun MinhaListaScreen() {
-    val coroutineScope = rememberCoroutineScope()
-
-    val scaffoldNavigator = rememberListDetailPaneScaffoldNavigator<MovieNavItemData>()
-    val selectedMovie = scaffoldNavigator.currentDestination?.contentKey
-
-    // State for the list of items
-    val initialItems = listOf(
-        "Lista de filmes da infância 30",
-        "Minhas séries favoritas",
-        "Listagem de filmes",
-        "Séries marcantes",
-        "Stranger Things",
-        "The Witcher",
-        "The Crown",
-        "Bridgerton",
-        "Money Heist",
-        "Ozark",
-        "Cobra Kai",
-        "The Queen's Gambit",
-        "Breaking Bad",
-        "Game of Thrones",
-        "Chernobyl",
-        "Black Mirror",
-        "La Casa de Papel",
-        "Grey's Anatomy",
-        "The Big Bang Theory",
-        "Dexter",
-        "Hannibal",
-        "Homeland",
-        "Narcos",
-        "Crazy Ex-Girlfriend",
+fun MinhaListaScreen(
+    onNavigateToConteudo: (listId: String, listName: String) -> Unit,
+    onNavigateToFormulario: () -> Unit
+) {
+    val context = LocalContext.current
+    val viewModel: MinhaListaViewModel = viewModel(
+        factory = MinhaListaViewModel.MinhaListaViewModelFactory(
+            userPreferencesRepository = UserPreferencesRepository(context),
+            minhaListaRepository = MinhaListaRepository(
+                filmeAPI = RetrofitHelper.filmeAPI,
+                userPreferencesRepository = UserPreferencesRepository(context)
+            ),
+            filmeAPI = RetrofitHelper.filmeAPI
+        )
     )
-    val movieList = remember { mutableStateListOf(*initialItems.toTypedArray()) }
 
-    // State for the confirmation dialog
+    val uiState by viewModel.minhasListasState.collectAsStateWithLifecycle()
+
+    val isRefreshing = uiState is UiState.Loading
+
+    val coroutineScope = rememberCoroutineScope()
+    val scaffoldNavigator = rememberListDetailPaneScaffoldNavigator<MovieNavItemData>()
+
+    val selectedItem = scaffoldNavigator.currentDestination?.contentKey
+
     var showDeleteConfirmation by remember { mutableStateOf(false) }
-    var itemToDelete by remember { mutableStateOf<String?>(null) }
+    var itemToDelete by remember { mutableStateOf<TmdbList?>(null) }
 
     var fabMenuExpanded by rememberSaveable { mutableStateOf(false) }
     val listState = rememberLazyListState()
@@ -100,11 +100,13 @@ fun MinhaListaScreen() {
         listPane = {
             AnimatedPane {
                 Scaffold(
+                    containerColor = BLACK,
                     topBar = {
                         TopAppBar(
                             title = {
                                 Text(
-                                    text = "Netflix",
+                                    text = "Minha Lista",
+                                    fontSize = 22.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     style = MaterialTheme.typography.headlineMedium
                                 )
@@ -116,8 +118,7 @@ fun MinhaListaScreen() {
                             ),
                             actions = {
                                 IconButton(onClick = {
-                                    movieList.clear()
-                                    movieList.addAll(initialItems.shuffled())
+                                    viewModel.buscarMinhasListas()
                                 }) {
                                     Icon(Icons.Filled.Refresh, "Atualizar", tint = Color.White)
                                 }
@@ -182,7 +183,9 @@ fun MinhaListaScreen() {
                                                 }
                                             },
                                         onClick = {
-                                            if (item.second == "Criar Nova Lista") {}
+                                            if (item.second == "Criar Nova Lista") {
+                                                onNavigateToFormulario()
+                                            }
                                             fabMenuExpanded = false
                                         },
                                         icon = { Icon(item.first, contentDescription = null) },
@@ -193,33 +196,57 @@ fun MinhaListaScreen() {
                         }
                     },
                 ) { paddingValues ->
-                    PullToRefreshBox( // Mantendo o PullToRefreshBox para a lista principal
+                    PullToRefreshBox(
                         modifier = Modifier.padding(paddingValues),
-                        isRefreshing = false, // Não é mais gerenciado aqui, mas o componente exige
-                        onRefresh = { /* No-op, pois o refresh agora está no botão da TopAppBar */ },
+                        isRefreshing = isRefreshing,
+                        onRefresh = { viewModel.buscarMinhasListas() },
                     ) {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            itemsIndexed(
-                                items = movieList,
-                                key = { _, item -> item }
-                            ) { index, item ->
-                                DeletableListItem(
-                                    item = item,
-                                    onDeleteRequest = {
-                                        itemToDelete = it
-                                        showDeleteConfirmation = true
-                                    },
-                                    onItemClick = { clickedItem ->
-                                        coroutineScope.launch {
-                                            scaffoldNavigator.navigateTo(
-                                                pane = ListDetailPaneScaffoldRole.Detail,
-                                                contentKey = MovieNavItemData(index, clickedItem)
-                                            )
-                                        }
+                        when (val state = uiState) {
+                            is UiState.Loading -> {
+                                if (!isRefreshing) {
+                                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                        CircularProgressIndicator()
                                     }
-                                )
+                                }
+                            }
+                            is UiState.Error -> {
+                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                    Text(
+                                        text = "Erro: ${state.message}\nPuxe para tentar novamente.",
+                                        color = Color.White,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
+                            is UiState.Success -> {
+                                LazyColumn(
+                                    state = listState,
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    items(
+                                        items = state.data,
+                                        key = { tmdbList -> tmdbList.id }
+                                    ) { tmdbList ->
+                                        DeletableListItem(
+                                            item = tmdbList,
+                                            onDeleteRequest = {
+                                                itemToDelete = it
+                                                showDeleteConfirmation = true
+                                            },
+                                            onItemClick = { clickedItem ->
+                                                coroutineScope.launch {
+                                                    scaffoldNavigator.navigateTo(
+                                                        pane = ListDetailPaneScaffoldRole.Detail,
+                                                        contentKey = MovieNavItemData(clickedItem.id, clickedItem.name)
+                                                    )
+                                                }
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                            is UiState.Idle -> {
+                                Box(modifier = Modifier.fillMaxSize()) {}
                             }
                         }
                     }
@@ -228,7 +255,7 @@ fun MinhaListaScreen() {
         },
         detailPane = {
             AnimatedPane {
-                selectedMovie?.let {
+                selectedItem?.let {
                     ConteudoScreen(
                         movieTitle = it.movieTitle,
                         onBackClick = { coroutineScope.launch { scaffoldNavigator.navigateBack() } }
@@ -240,9 +267,10 @@ fun MinhaListaScreen() {
 
     if (showDeleteConfirmation && itemToDelete != null) {
         ConfirmationAlertDialog(
-            itemName = itemToDelete!!,
+            itemName = itemToDelete!!.name,
             onConfirm = {
-                movieList.remove(itemToDelete)
+                // TODO: Aqui entraria a lógica para deletar a lista via ViewModel
+                // viewModel.deleteList(itemToDelete!!.id)
                 showDeleteConfirmation = false
                 itemToDelete = null
             },
@@ -256,9 +284,9 @@ fun MinhaListaScreen() {
 
 @Composable
 private fun DeletableListItem(
-    item: String,
-    onDeleteRequest: (String) -> Unit,
-    onItemClick: (String) -> Unit
+    item: TmdbList,
+    onDeleteRequest: (TmdbList) -> Unit,
+    onItemClick: (TmdbList) -> Unit
 ) {
     val dismissState = rememberSwipeToDismissBoxState()
     val scope = rememberCoroutineScope()
@@ -269,7 +297,7 @@ private fun DeletableListItem(
             val color by animateColorAsState(
                 when (dismissState.targetValue) {
                     SwipeToDismissBoxValue.Settled -> Color.LightGray
-                    SwipeToDismissBoxValue.StartToEnd -> Color.Transparent // No action on this side
+                    SwipeToDismissBoxValue.StartToEnd -> Color.Transparent
                     SwipeToDismissBoxValue.EndToStart -> Color.Red
                 }, label = "background color"
             )
@@ -279,21 +307,20 @@ private fun DeletableListItem(
             if (direction == SwipeToDismissBoxValue.EndToStart) {
                 onDeleteRequest(item)
             }
-            // Always reset the state to show the item again, dialog handles the action
             scope.launch {
                 dismissState.reset()
             }
         },
     ) {
         ListItem(
-            headlineContent = { Text(item) },
-            supportingContent = { Text(text = "Deslize a esquerda para remover.", fontSize = 12.sp) },
+            headlineContent = { Text(item.name) },
+            supportingContent = { Text(text = "${item.item_count} conteúdos. Deslize para a esquerda para remover.", fontSize = 12.sp) },
             colors = ListItemDefaults.colors(
                 containerColor = Color.Black,
                 headlineColor = Color.White,
                 supportingColor = Color.White
             ),
-            modifier = Modifier.clickable { onItemClick(item) } // Adicionado o clickable aqui
+            modifier = Modifier.clickable { onItemClick(item) }
         )
     }
 }
@@ -367,5 +394,8 @@ fun fabMenuColorScheme(): ColorScheme {
 @Preview
 @Composable
 private fun MinhaListaScreenPreview(){
-    MinhaListaScreen()
+    MinhaListaScreen(
+        onNavigateToConteudo = { _, _ -> },
+        onNavigateToFormulario = {}
+    )
 }
