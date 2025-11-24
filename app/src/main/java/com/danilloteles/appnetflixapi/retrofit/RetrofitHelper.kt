@@ -2,6 +2,7 @@ package com.danilloteles.appnetflixapi.retrofit
 
 import com.danilloteles.appnetflixapi.BuildConfig
 import com.danilloteles.appnetflixapi.api.FilmeAPI
+import com.danilloteles.appnetflixapi.constantes.Constantes
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -25,7 +26,7 @@ class RetrofitHelper {
             .build()
 
         val filmeAPI: FilmeAPI = Retrofit.Builder()
-            .baseUrl("https://api.themoviedb.org/3/")
+            .baseUrl(Constantes.BASE_URL_V3)
             .addConverterFactory(GsonConverterFactory.create() )
             .client(okHttpClient)
             .build()
