@@ -84,6 +84,7 @@ fun ConteudoScreen(
 ) {
     val context = LocalContext.current
     val viewModel: ConteudoViewModel = viewModel(
+        key = listId,
         factory = ConteudoViewModel.ConteudoViewModelFactory(
             listId = listId,
             minhaListaRepository = MinhaListaRepository(
