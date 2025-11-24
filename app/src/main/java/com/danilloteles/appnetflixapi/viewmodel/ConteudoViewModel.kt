@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.danilloteles.appnetflixapi.model.ListDetailsResponse
+import com.danilloteles.appnetflixapi.model.ListaDetalhesResposta
 import com.danilloteles.appnetflixapi.repository.MinhaListaRepository
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
 import com.danilloteles.appnetflixapi.utils.events.UiState
@@ -19,8 +19,8 @@ class ConteudoViewModel(
     private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
 
-    private val _conteudoState = MutableStateFlow<UiState<ListDetailsResponse>>(UiState.Idle)
-    val conteudoState: StateFlow<UiState<ListDetailsResponse>> = _conteudoState
+    private val _conteudoState = MutableStateFlow<UiState<ListaDetalhesResposta>>(UiState.Idle)
+    val conteudoState: StateFlow<UiState<ListaDetalhesResposta>> = _conteudoState
 
     init {
         buscarConteudo()

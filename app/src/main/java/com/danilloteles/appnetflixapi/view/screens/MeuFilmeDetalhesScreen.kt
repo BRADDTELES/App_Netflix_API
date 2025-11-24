@@ -75,16 +75,16 @@ import com.danilloteles.appnetflixapi.datasource.datastore.MyListPreferencesRepo
 import com.danilloteles.appnetflixapi.utils.events.UiState
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
 import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
-import com.danilloteles.appnetflixapi.viewmodel.MyMovieDetailsViewModel
+import com.danilloteles.appnetflixapi.viewmodel.MeuFilmeDetalhesViewModel
 
 @Composable
-fun MyMovieDetails(
+fun MeuFilmeDetalhesScreen(
     movieId: Int,
     listId: String?,
     onClick: (Int) -> Unit
 ) {
-    val viewModel: MyMovieDetailsViewModel = viewModel(
-        factory = MyMovieDetailsViewModel.Factory(
+    val viewModel: MeuFilmeDetalhesViewModel = viewModel(
+        factory = MeuFilmeDetalhesViewModel.Factory(
             movieId,
             UserPreferencesRepository(LocalContext.current),
             MyListPreferencesRepository(LocalContext.current),
@@ -105,7 +105,7 @@ fun MyMovieDetails(
         }
 
         is UiState.Success -> {
-            ConteudoMyMovieDetails(
+            MeuConteudoFilmeDetalhes(
                 filme = state.data,
                 viewModel = viewModel,
                 onClick = onClick,
@@ -128,11 +128,11 @@ fun MyMovieDetails(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun ConteudoMyMovieDetails(
+fun MeuConteudoFilmeDetalhes(
     filme: FilmeDetalhes,
-    viewModel: MyMovieDetailsViewModel?,
+    viewModel: MeuFilmeDetalhesViewModel?,
     onClick: (Int) -> Unit,
-    listId: String? // listId passed from MyMovieDetails composable
+    listId: String?
 ) {
     val isInMyList by viewModel?.isInMyList?.collectAsStateWithLifecycle() ?: remember { mutableStateOf(false) }
     val myListActionUiState by viewModel?.myListActionUiState?.collectAsStateWithLifecycle() ?: remember { mutableStateOf(UiState.Idle) }
@@ -187,7 +187,7 @@ fun ConteudoMyMovieDetails(
             sheetDragHandle = {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Spacer(Modifier.height(16.dp))
                     Box(
@@ -345,9 +345,7 @@ fun ConteudoMyMovieDetails(
                                         }
                                         else -> {} // UiState.Idle
                                     }
-                                    // --- FIM DO CÓDIGO CORRIGIDO ---
                                 } else {
-                                    // Botão inicial para "Adicionar à Lista"
                                     DropdownMenuItem(
                                         text = { Text("Adicionar à Lista") },
                                         onClick = { showListSelection = true }, // Ativa o modo de seleção de lista
@@ -391,37 +389,10 @@ fun ConteudoMyMovieDetails(
 
 @Preview
 @Composable
-private fun ConteudoMyMovieDetailsPreview() {
-    ConteudoMyMovieDetails(
-        filme = FilmeDetalhes(
-            adult = false,
-            backdrop_path = "",
-            belongs_to_collection = "",
-            budget = 0,
-            genres = emptyList(),
-            homepage = "",
-            id = 0,
-            imdb_id = "",
-            original_language = "",
-            original_title = "",
-            overview = "This is a test movie for preview.",
-            popularity = 0.0,
-            poster_path = "/t6HIqrRAFyUMC6bZqMfPSzPNw0s.jpg",
-            production_companies = emptyList(),
-            production_countries = emptyList(),
-            release_date = "",
-            revenue = 0,
-            runtime = 0,
-            spoken_languages = emptyList(),
-            status = "",
-            tagline = "",
-            title = "Movie title",
-            video = false,
-            vote_average = 0.0,
-            vote_count = 0
-        ),
-        viewModel = null,
-        onClick = {},
-        listId = null
+private fun MeuFilmeDetalhesScreenPreview() {
+    MeuFilmeDetalhesScreen(
+        movieId = 1,
+        listId = null,
+        onClick = {}
     )
 }

@@ -22,9 +22,8 @@ import com.danilloteles.appnetflixapi.view.screens.LoginScreen
 import com.danilloteles.appnetflixapi.view.screens.MainActivity
 import com.danilloteles.appnetflixapi.view.screens.MinhaListaScreen
 import com.danilloteles.appnetflixapi.view.screens.PopularFilmeDetalhesScreen
-import com.danilloteles.appnetflixapi.view.screens.MyListScreen
-import com.danilloteles.appnetflixapi.view.screens.MyMovieDetails
-import com.danilloteles.appnetflixapi.view.screens.MySerieDetails
+import com.danilloteles.appnetflixapi.view.screens.MeuFilmeDetalhesScreen
+import com.danilloteles.appnetflixapi.view.screens.MinhaSerieDetalhesScreen
 import com.danilloteles.appnetflixapi.view.screens.NetflixScreen
 import com.danilloteles.appnetflixapi.view.screens.SerieScreen
 import com.danilloteles.appnetflixapi.view.screens.SplashScreen
@@ -149,7 +148,7 @@ fun NetflixApp(
             val movieId = backStackEntry.arguments?.getInt(AppDestination.MOVIE_ID_ARG)
             val listId = backStackEntry.arguments?.getString(AppDestination.LIST_ID_ARG)
             if (movieId != null) {
-                MyMovieDetails(
+                MeuFilmeDetalhesScreen(
                     movieId = movieId,
                     listId = listId,
                     onClick = { /* TODO: Implement navigation from MyMovieDetails if needed */ }
@@ -175,7 +174,7 @@ fun NetflixApp(
             val serieId = backStackEntry.arguments?.getInt(AppDestination.SERIE_ID_ARG)
             val listId = backStackEntry.arguments?.getString(AppDestination.LIST_ID_ARG)
             if (serieId != null) {
-                MySerieDetails(
+                MinhaSerieDetalhesScreen(
                     serieId = serieId,
                     listId = listId,
                     onClick = { /* TODO: Implement navigation from MySerieDetails if needed */ }
@@ -241,7 +240,17 @@ fun NetflixApp(
                 ConteudoScreen(
                     listId = listId,
                     movieTitle = movieTitle,
-                    onBackClick = { navController.popBackStack() }
+                    onBackClick = { navController.popBackStack() },
+                    onMovieClick = { movieId, listIdArg ->
+                        navController.navigate(
+                            route = "${AppDestination.MY_MOVIE_DETAILS}/$movieId?${AppDestination.LIST_ID_ARG}=$listIdArg"
+                        )
+                    },
+                    onSerieClick = { serieId, listIdArg ->
+                        navController.navigate(
+                            route = "${AppDestination.MY_SERIES_DETAILS}/$serieId?${AppDestination.LIST_ID_ARG}=$listIdArg"
+                        )
+                    }
                 )
             } else {
                 Toast.makeText(context, "Detalhes da lista não encontrados!", Toast.LENGTH_LONG).show()

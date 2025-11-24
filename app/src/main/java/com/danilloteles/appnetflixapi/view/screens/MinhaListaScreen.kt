@@ -274,12 +274,46 @@ fun MinhaListaScreen(
         },
         detailPane = {
             AnimatedPane {
-                selectedItem?.let {
-                    ConteudoScreen(
-                        listId = it.listId,
-                        movieTitle = it.movieTitle,
-                        onBackClick = { coroutineScope.launch { scaffoldNavigator.navigateBack() } }
-                    )
+                selectedItem?.let { navItem ->
+                    when {
+                        navItem.mediaType == "movie" && navItem.itemId != null -> {
+                            MeuFilmeDetalhesScreen(
+                                movieId = navItem.itemId.toInt(),
+                                listId = navItem.listId,
+                                onClick = { /* No-op, navigation is handled by scaffoldNavigator */ }
+                            )
+                        }
+                        navItem.mediaType == "tv" && navItem.itemId != null -> {
+                            MinhaSerieDetalhesScreen(
+                                serieId = navItem.itemId.toInt(),
+                                listId = navItem.listId,
+                                onClick = { /* No-op, navigation is handled by scaffoldNavigator */ }
+                            )
+                        }
+                        else -> {
+                            ConteudoScreen(
+                                listId = navItem.listId,
+                                movieTitle = navItem.movieTitle,
+                                onBackClick = { coroutineScope.launch { scaffoldNavigator.navigateBack() } },
+                                onMovieClick = { movieId, listId ->
+                                    coroutineScope.launch {
+                                        scaffoldNavigator.navigateTo(
+                                            pane = ListDetailPaneScaffoldRole.Detail,
+                                            contentKey = MovieNavItemData(listId ?: navItem.listId, "", "movie", movieId.toString())
+                                        )
+                                    }
+                                },
+                                onSerieClick = { serieId, listId ->
+                                    coroutineScope.launch {
+                                        scaffoldNavigator.navigateTo(
+                                            pane = ListDetailPaneScaffoldRole.Detail,
+                                            contentKey = MovieNavItemData(listId ?: navItem.listId, "", "tv", serieId.toString())
+                                        )
+                                    }
+                                }
+                            )
+                        }
+                    }
                 }
             }
         },
@@ -367,12 +401,24 @@ private fun ConfirmationAlertDialog(
     )
 }
 
-data class MovieNavItemData(val listId: String, val movieTitle: String) : Parcelable {
-    constructor(parcel: Parcel) : this(parcel.readString()!!, parcel.readString()!!)
+data class MovieNavItemData(
+    val listId: String,
+    val movieTitle: String,
+    val mediaType: String? = null,
+    val itemId: String? = null
+) : Parcelable {
+    constructor(parcel: Parcel) : this(
+        parcel.readString()!!,
+        parcel.readString()!!,
+        parcel.readString(),
+        parcel.readString()
+    )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(listId)
         parcel.writeString(movieTitle)
+        parcel.writeString(mediaType)
+        parcel.writeString(itemId)
     }
 
     override fun describeContents(): Int {
@@ -381,7 +427,7 @@ data class MovieNavItemData(val listId: String, val movieTitle: String) : Parcel
 
     companion object CREATOR : Parcelable.Creator<MovieNavItemData> {
         override fun createFromParcel(parcel: Parcel): MovieNavItemData {
-            return MovieNavItemData(parcel)
+            return MovieNavItemData(parcel.readString()!!, parcel.readString()!!, parcel.readString(), parcel.readString())
         }
 
         override fun newArray(size: Int): Array<MovieNavItemData?> {

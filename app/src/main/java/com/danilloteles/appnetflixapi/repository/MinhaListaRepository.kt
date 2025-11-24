@@ -6,10 +6,9 @@ import androidx.paging.PagingData
 import com.danilloteles.appnetflixapi.api.FilmeAPI
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
 import com.danilloteles.appnetflixapi.datasource.paging.minhalista.MyListPagingSource
-import com.danilloteles.appnetflixapi.model.ListDetailsResponse
+import com.danilloteles.appnetflixapi.model.ListaDetalhesResposta
 import com.danilloteles.appnetflixapi.model.MediaItem
 import com.danilloteles.appnetflixapi.model.filme.AccountListsResponse
-import com.danilloteles.appnetflixapi.model.filme.ListItemResponse
 import com.danilloteles.appnetflixapi.model.filme.ListaResposta
 import kotlinx.coroutines.flow.Flow
 import retrofit2.Response
@@ -28,7 +27,7 @@ class MinhaListaRepository(
         ).flow
     }
 
-    suspend fun obterDetalhesDaLista(listId: String, sessionId: String): Response<ListDetailsResponse> {
+    suspend fun obterDetalhesDaLista(listId: String, sessionId: String): Response<ListaDetalhesResposta> {
         return filmeAPI.obterDetalhesDaLista(listId, sessionId)
     }
 

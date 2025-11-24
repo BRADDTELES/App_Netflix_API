@@ -24,16 +24,3 @@ data class MediaItem(
     val first_air_date: String?, // de Série
     val origin_country: List<String>? // de Série
 )
-
-// Resposta unificada para detalhes da lista
-data class ListDetailsResponse(
-    val created_by: String,
-    val description: String,
-    val favorite_count: Int,
-    val id: String,
-    val item_count: Int,
-    val iso_639_1: String,
-    val name: String,
-    val poster_path: String?,
-    val items: List<MediaItem> // Usa a lista de MediaItem
-)

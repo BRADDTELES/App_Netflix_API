@@ -78,7 +78,9 @@ import com.danilloteles.appnetflixapi.viewmodel.ConteudoViewModel
 fun ConteudoScreen(
     listId: String,
     movieTitle: String,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onMovieClick: (Int, String?) -> Unit,
+    onSerieClick: (Int, String?) -> Unit
 ) {
     val context = LocalContext.current
     val viewModel: ConteudoViewModel = viewModel(
@@ -164,7 +166,12 @@ fun ConteudoScreen(
                             modifier = Modifier.fillMaxSize()
                         ) {
                             items(items = state.data.items, key = { it.id }) { item ->
-                                VideoItem(item = item)
+                                VideoItem(
+                                    item = item,
+                                    listId = listId,
+                                    onMovieClick = onMovieClick,
+                                    onSerieClick = onSerieClick
+                                )
                             }
                         }
                     }
@@ -178,11 +185,21 @@ fun ConteudoScreen(
 }
 
 @Composable
-fun VideoItem(item: MediaItem) {
+fun VideoItem(
+    item: MediaItem,
+    listId: String,
+    onMovieClick: (Int, String?) -> Unit,
+    onSerieClick: (Int, String?) -> Unit
+) {
     Column(
         modifier = Modifier
             .width(160.dp)
-            .clickable{  },
+            .clickable {
+                when (item.media_type) {
+                    "movie" -> onMovieClick(item.id, listId)
+                    "tv" -> onSerieClick(item.id, listId)
+                }
+            },
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
@@ -264,6 +281,8 @@ private fun ConteudoScreenPreview(){
     ConteudoScreen(
         listId = "1",
         movieTitle = "Lista de videos",
-        onBackClick = {}
+        onBackClick = {},
+        onMovieClick = { _, _ -> },
+        onSerieClick = { _, _ -> }
     )
 }

@@ -73,16 +73,16 @@ import com.danilloteles.appnetflixapi.ui.theme.GRAY_900
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
 import com.danilloteles.appnetflixapi.utils.events.UiState
 import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
-import com.danilloteles.appnetflixapi.viewmodel.MySerieDetailsViewModel
+import com.danilloteles.appnetflixapi.viewmodel.MinhaSerieDetalhesViewModel
 
 @Composable
-fun MySerieDetails(
+fun MinhaSerieDetalhesScreen(
     serieId: Int,
     listId: String?,
     onClick: (Int) -> Unit
 ) {
-    val viewModel: MySerieDetailsViewModel = viewModel(
-        factory = MySerieDetailsViewModel.Factory(
+    val viewModel: MinhaSerieDetalhesViewModel = viewModel(
+        factory = MinhaSerieDetalhesViewModel.Factory(
             serieId,
             UserPreferencesRepository(LocalContext.current),
             listId
@@ -102,7 +102,7 @@ fun MySerieDetails(
         }
 
         is UiState.Success -> {
-            ConteudoMySerieDetails(
+            MeuConteudoSerieDetalhes(
                 serie = state.data,
                 viewModel = viewModel,
                 onClick = onClick,
@@ -125,9 +125,9 @@ fun MySerieDetails(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun ConteudoMySerieDetails(
+fun MeuConteudoSerieDetalhes(
     serie: SerieDetalhes,
-    viewModel: MySerieDetailsViewModel?,
+    viewModel: MinhaSerieDetalhesViewModel?,
     onClick: (Int) -> Unit,
     listId: String?
 ) {
@@ -387,8 +387,8 @@ fun ConteudoMySerieDetails(
 
 @Preview
 @Composable
-private fun MySerieDetailsPreview(){
-    MySerieDetails(
+private fun MinhaSerieDetalhesScreenPreview(){
+    MinhaSerieDetalhesScreen(
         serieId = 1,
         listId = null,
         onClick = {}

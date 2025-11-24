@@ -1,6 +1,6 @@
 package com.danilloteles.appnetflixapi.api
 
-import com.danilloteles.appnetflixapi.model.ListDetailsResponse
+import com.danilloteles.appnetflixapi.model.ListaDetalhesResposta
 import com.danilloteles.appnetflixapi.model.filme.AccountDetailsResponse
 import com.danilloteles.appnetflixapi.model.filme.AccountListsResponse
 import com.danilloteles.appnetflixapi.model.filme.AddRemoveListItemRequest
@@ -10,7 +10,7 @@ import com.danilloteles.appnetflixapi.model.filme.CreateSessionRequest
 import com.danilloteles.appnetflixapi.model.filme.FilmeClassificado
 import com.danilloteles.appnetflixapi.model.filme.FilmeDetalhes
 import com.danilloteles.appnetflixapi.model.filme.FilmeResposta
-import com.danilloteles.appnetflixapi.model.filme.ListItemResponse
+import com.danilloteles.appnetflixapi.model.filme.ListaItemResposta
 import com.danilloteles.appnetflixapi.model.filme.ListaResposta
 import com.danilloteles.appnetflixapi.model.filme.RequestTokenResponse
 import com.danilloteles.appnetflixapi.model.filme.SessionIdResponse
@@ -101,21 +101,21 @@ interface FilmeAPI {
     suspend fun obterDetalhesDaLista(
         @Path("list_id") listId: String,
         @Query("session_id") sessionId: String
-    ): Response<ListDetailsResponse>
+    ): Response<ListaDetalhesResposta>
 
     @POST("list/{list_id}/add_item")
     suspend fun adicionarItemALista(
         @Path("list_id") listId: String,
         @Query("session_id") sessionId: String,
         @Body request: AddRemoveListItemRequest
-    ): Response<ListItemResponse>
+    ): Response<ListaItemResposta>
 
     @POST("list/{list_id}/remove_item")
     suspend fun removerItemDaLista(
         @Path("list_id") listId: String,
         @Query("session_id") sessionId: String,
         @Body request: AddRemoveListItemRequest
-    ): Response<ListItemResponse>
+    ): Response<ListaItemResposta>
 
     @DELETE("list/{list_id}")
     suspend fun removerLista(
