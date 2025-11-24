@@ -29,7 +29,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -40,44 +39,42 @@ import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.danilloteles.appnetflixapi.model.MediaItem
-import com.danilloteles.appnetflixapi.repository.SerieRepository
+import com.danilloteles.appnetflixapi.repository.FilmeRepository
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.VERMELHO
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
-import com.danilloteles.appnetflixapi.utils.events.SerieListFilterState
+import com.danilloteles.appnetflixapi.utils.events.FilmeListFilterState
 import com.danilloteles.appnetflixapi.utils.custom.ConnectedButtonGroupComposableSerieCustom
 import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
-import com.danilloteles.appnetflixapi.view.itemlista.SerieItem
-import com.danilloteles.appnetflixapi.viewmodel.SerieViewModel
+import com.danilloteles.appnetflixapi.view.itemlista.MovieItem
+import com.danilloteles.appnetflixapi.viewmodel.FilmeViewModel
 
 @Composable
-fun SerieListScreen(
-    onSerieClick: (MediaItem) -> Unit,
+fun FilmeScreen(
+    onFilmeClick: (MediaItem) -> Unit
 ) {
 
-    val context = LocalContext.current
-
-    val serieRepository = remember {
-        SerieRepository(RetrofitHelper.filmeAPI)
+    val filmeRepository = remember {
+        FilmeRepository(RetrofitHelper.filmeAPI)
     }
 
-    val serieViewModel: SerieViewModel = viewModel(
-        factory = SerieViewModel.SerieListModelFactory(
-            serieRepository = serieRepository
+    val filmeViewModel: FilmeViewModel = viewModel(
+        factory = FilmeViewModel.FilmeListModelFactory(
+            filmeRepository = filmeRepository
         )
     )
 
-    val seriesPagingItems = serieViewModel.seriesStream.collectAsLazyPagingItems()
-    val currentFilter by serieViewModel.currentFilter.collectAsStateWithLifecycle()
-    val isRefreshing = seriesPagingItems.loadState.refresh is LoadState.Loading
+    val filmesPagingItems = filmeViewModel.filmesStream.collectAsLazyPagingItems()
+    val currentFilter by filmeViewModel.currentFilter.collectAsStateWithLifecycle()
+    val isRefreshing = filmesPagingItems.loadState.refresh is LoadState.Loading
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = "Séries",
+                        text = "Filmes",
                         fontWeight = FontWeight.SemiBold,
                         style = MaterialTheme.typography.headlineMedium
                     )
@@ -88,13 +85,13 @@ fun SerieListScreen(
                     titleContentColor = WHITE
                 ),
                 actions = {
-                    IconButton(onClick = { seriesPagingItems.refresh() }) {
+                    IconButton(onClick = { filmesPagingItems.refresh() }) {
                         Icon(Icons.Filled.Refresh, contentDescription = "Atualizar", tint = WHITE)
                     }
                 }
             )
         }
-    ) { paddingValues ->
+    ){ paddingValues ->
 
         Column(
             modifier = Modifier
@@ -104,47 +101,47 @@ fun SerieListScreen(
         ) {
             ConnectedButtonGroupComposableSerieCustom(
                 selectedIndex = when (currentFilter) {
-                    is SerieListFilterState.Popular -> 0
-                    is SerieListFilterState.TopRated -> 1
+                    is FilmeListFilterState.Popular -> 0
+                    is FilmeListFilterState.TopRated -> 1
                 },
                 onIndexChange = { newIndex ->
                     val newFilter = when (newIndex) {
-                        0 -> SerieListFilterState.Popular
-                        1 -> SerieListFilterState.TopRated
-                        else -> SerieListFilterState.Popular
+                        0 -> FilmeListFilterState.Popular
+                        1 -> FilmeListFilterState.TopRated
+                        else -> FilmeListFilterState.Popular
                     }
-                    serieViewModel.applyFilter(newFilter)
+                    filmeViewModel.applyFilter(newFilter)
                 }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
             PullToRefreshBox(
                 isRefreshing = isRefreshing,
-                onRefresh = { seriesPagingItems.refresh() },
+                onRefresh = { filmesPagingItems.refresh() },
                 modifier = Modifier.fillMaxSize()
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    when (seriesPagingItems.loadState.refresh) {
+                    when (filmesPagingItems.loadState.refresh) {
                         is LoadState.Loading -> {
                             LoadingIndicatorCustom(animationDelay = 2000)
                         }
                         is LoadState.Error -> {
-                            val error = seriesPagingItems.loadState.refresh as LoadState.Error
+                            val error = filmesPagingItems.loadState.refresh as LoadState.Error
                             Text(
-                                text = "Erro ao carregar séries.",
+                                text = "Erro ao carregar filmes.",
                                 color = WHITE,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.padding(16.dp)
                             )
-                            Log.e("TAG-SerieListScreen","Erro ao carregar séries: ${error.error.localizedMessage}")
-                            Log.e("TAG-SerieListScreen","Erro: ${error.error}")
+                            Log.e("TAG-FilmeListScreen","Erro ao carregar filmes: ${error.error.localizedMessage}")
+                            Log.e("TAG-FilmeListScreen","Erro: ${error.error}")
                         }
                         else -> {
-                            if (seriesPagingItems.itemCount == 0) {
-                                Text(text = "Nenhuma série encontrada.", color = WHITE)
+                            if (filmesPagingItems.itemCount == 0) {
+                                Text(text = "Nenhuma filme encontrada.", color = WHITE)
                             } else {
                                 LazyVerticalGrid(
                                     columns = GridCells.Fixed(2),
@@ -153,14 +150,14 @@ fun SerieListScreen(
                                     modifier = Modifier.padding(horizontal = 8.dp)
                                 ) {
                                     items(
-                                        count = seriesPagingItems.itemCount,
-                                        key = seriesPagingItems.itemKey { it.id }
+                                        count = filmesPagingItems.itemCount,
+                                        key = filmesPagingItems.itemKey { it.id }
                                     ) { index ->
-                                        val serie = seriesPagingItems[index]
-                                        if (serie != null) {
-                                            SerieItem(
-                                                serie = serie,
-                                                onClick = { onSerieClick(serie) }
+                                        val mediaItem = filmesPagingItems[index]
+                                        if (mediaItem != null) {
+                                            MovieItem(
+                                                filme = mediaItem,
+                                                onMovieClick = { onFilmeClick(mediaItem) }
                                             )
                                         }
                                     }
@@ -176,8 +173,8 @@ fun SerieListScreen(
 
 @Preview
 @Composable
-fun SerieListScreenPreview() {
-    SerieListScreen(
-        onSerieClick = {},
+fun FilmeScreenPreview() {
+    FilmeScreen(
+        onFilmeClick = {},
     )
 }

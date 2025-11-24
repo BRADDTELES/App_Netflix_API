@@ -46,13 +46,13 @@ import com.danilloteles.appnetflixapi.utils.events.UiState
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
 import com.danilloteles.appnetflixapi.view.componentes.NetflixTopBar
 import com.danilloteles.appnetflixapi.view.componentes.OutlinedTextFieldCustom
-import com.danilloteles.appnetflixapi.viewmodel.ListFormViewModel
+import com.danilloteles.appnetflixapi.viewmodel.FormularioViewModel
 
 @Composable
-fun ListForm() {
+fun FormularioScreen() {
     val context = LocalContext.current
-    val viewModel: ListFormViewModel = viewModel(
-        factory = ListFormViewModel.Factory(UserPreferencesRepository(context))
+    val viewModel: FormularioViewModel = viewModel(
+        factory = FormularioViewModel.Factory(UserPreferencesRepository(context))
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -167,6 +167,6 @@ fun ListForm() {
 
 @Preview
 @Composable
-private fun ListFormPreview() {
-    ListForm()
+private fun FormularioScreenPreview() {
+    FormularioScreen()
 }

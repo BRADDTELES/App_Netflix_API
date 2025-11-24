@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class MovieDetailsViewModel(
+class FilmeDetalhesViewModel(
     private val movieId: Int
 ) : ViewModel() {
 
@@ -53,9 +53,9 @@ class MovieDetailsViewModel(
         private val movieId: Int
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(MovieDetailsViewModel::class.java)) {
+            if (modelClass.isAssignableFrom(FilmeDetalhesViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
-                return MovieDetailsViewModel(movieId) as T
+                return FilmeDetalhesViewModel(movieId) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

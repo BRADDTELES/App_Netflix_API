@@ -15,16 +15,16 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.danilloteles.appnetflixapi.constantes.AppDestination
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
-import com.danilloteles.appnetflixapi.view.screens.FilmeListScreen
-import com.danilloteles.appnetflixapi.view.screens.ListForm
+import com.danilloteles.appnetflixapi.view.screens.FilmeScreen
+import com.danilloteles.appnetflixapi.view.screens.FormularioScreen
 import com.danilloteles.appnetflixapi.view.screens.LoginScreen
 import com.danilloteles.appnetflixapi.view.screens.MainActivity
-import com.danilloteles.appnetflixapi.view.screens.MovieDetails
+import com.danilloteles.appnetflixapi.view.screens.PopularFilmeDetalhesScreen
 import com.danilloteles.appnetflixapi.view.screens.MyListScreen
 import com.danilloteles.appnetflixapi.view.screens.MyMovieDetails
 import com.danilloteles.appnetflixapi.view.screens.MySerieDetails
 import com.danilloteles.appnetflixapi.view.screens.NetflixScreen
-import com.danilloteles.appnetflixapi.view.screens.SerieListScreen
+import com.danilloteles.appnetflixapi.view.screens.SerieScreen
 import com.danilloteles.appnetflixapi.view.screens.SplashScreen
 import kotlinx.coroutines.flow.StateFlow
 
@@ -123,7 +123,7 @@ fun NetflixApp(
             val movieId = backStackEntry.arguments?.getInt(AppDestination.MOVIE_ID_ARG)
 
             if (  movieId != null  ) {
-                MovieDetails(
+                PopularFilmeDetalhesScreen(
                     movieId = movieId
                 )
             } else {
@@ -186,7 +186,7 @@ fun NetflixApp(
         composable(
             route = AppDestination.LIST_FORM_ROUTE
         ) {
-            ListForm()
+            FormularioScreen()
         }
 
         // Rota atualizada para LoginScreen para aceitar o request_token
@@ -232,7 +232,7 @@ fun NetflixApp(
         composable(
             route = AppDestination.SERIES_LIST_SCREEN
         ) {
-            SerieListScreen(
+            SerieScreen(
                 onSerieClick = { serie ->
                     navController.navigate(
                         route = "${AppDestination.MY_SERIES_DETAILS}/${serie.id}"
@@ -244,7 +244,7 @@ fun NetflixApp(
         composable(
             route = AppDestination.FILMES_LIST_SCREEN
         ) {
-            FilmeListScreen(
+            FilmeScreen(
                 onFilmeClick = { filme ->
                     navController.navigate(
                         route = "${AppDestination.MY_MOVIE_DETAILS}/${filme.id}"

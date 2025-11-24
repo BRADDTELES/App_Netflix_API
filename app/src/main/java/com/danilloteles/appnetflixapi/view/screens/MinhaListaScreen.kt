@@ -1,7 +1,7 @@
 @file:OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3AdaptiveApi::class)
+package com.danilloteles.appnetflixapi.view.screens
 
-package com.danilloteles.appnetflixapi.utils.custom
-
+import androidx.compose.runtime.Composable
 import android.os.Parcel
 import android.os.Parcelable
 import androidx.activity.compose.BackHandler
@@ -26,8 +26,14 @@ import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.runtime.*
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,8 +50,7 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 
 @Composable
-fun MyListScreenExample() {
-
+fun MinhaListaScreen() {
     val coroutineScope = rememberCoroutineScope()
 
     val scaffoldNavigator = rememberListDetailPaneScaffoldNavigator<MovieNavItemData>()
@@ -120,7 +125,7 @@ fun MyListScreenExample() {
                         )
                     },
                     floatingActionButton = {
-                        MaterialTheme(colorScheme = FabMenuColorScheme()) {
+                        MaterialTheme(colorScheme = fabMenuColorScheme()) {
                             val items =
                                 listOf(
                                     Icons.Default.Add to "Criar Nova Lista"
@@ -224,9 +229,8 @@ fun MyListScreenExample() {
         detailPane = {
             AnimatedPane {
                 selectedMovie?.let {
-                    MyVideosScreenExample(
+                    ConteudoScreen(
                         movieTitle = it.movieTitle,
-                        onRefreshRequest = { /* A lógica de refresh já está interna ao MyVideosScreen */ },
                         onBackClick = { coroutineScope.launch { scaffoldNavigator.navigateBack() } }
                     )
                 }
@@ -341,7 +345,7 @@ data class MovieNavItemData(val index: Int, val movieTitle: String) : Parcelable
 }
 
 @Composable
-fun FabMenuColorScheme(): ColorScheme {
+fun fabMenuColorScheme(): ColorScheme {
     // Copia o tema atual e sobrescreve apenas as cores desejadas
     return MaterialTheme.colorScheme.copy(
 
@@ -362,6 +366,6 @@ fun FabMenuColorScheme(): ColorScheme {
 
 @Preview
 @Composable
-fun MyListScreenExamplePreview() {
-    MyListScreenExample()
+private fun MinhaListaScreenPreview(){
+    MinhaListaScreen()
 }

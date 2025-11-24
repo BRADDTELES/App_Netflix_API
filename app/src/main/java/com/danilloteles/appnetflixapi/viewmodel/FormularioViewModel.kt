@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-class ListFormViewModel(
+class FormularioViewModel(
     private val userPreferencesRepository: UserPreferencesRepository,
     private val filmeAPI: FilmeAPI
 ) : ViewModel() {
@@ -53,9 +53,9 @@ class ListFormViewModel(
         private val userPreferencesRepository: UserPreferencesRepository
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(ListFormViewModel::class.java)) {
+            if (modelClass.isAssignableFrom(FormularioViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
-                return ListFormViewModel(
+                return FormularioViewModel(
                     userPreferencesRepository,
                     RetrofitHelper.filmeAPI
                 ) as T

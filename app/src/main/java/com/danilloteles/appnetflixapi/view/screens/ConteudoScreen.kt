@@ -1,7 +1,8 @@
 @file:OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
+package com.danilloteles.appnetflixapi.view.screens
 
-package com.danilloteles.appnetflixapi.utils.custom
-
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,8 +30,6 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material3.ButtonGroupDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -69,10 +68,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
-fun MyVideosScreenExample(
+fun ConteudoScreen(
     movieTitle: String,
-    onRefreshRequest: () -> Unit,
-    onBackClick: () -> Unit // Novo parâmetro
+    onBackClick: () -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
     var isRefreshing by remember { mutableStateOf(false) }
@@ -249,10 +247,9 @@ fun rememberVideoItems(): List<VideoData> {
 
 @Preview
 @Composable
-fun MyVideosScreenExamplePreview() {
-    MyVideosScreenExample(
+private fun ConteudoScreenPreview(){
+    ConteudoScreen(
         movieTitle = "Lista de videos",
-        onRefreshRequest = {},
-        onBackClick = {} // Passando um lambda vazio para o preview
+        onBackClick = {}
     )
 }

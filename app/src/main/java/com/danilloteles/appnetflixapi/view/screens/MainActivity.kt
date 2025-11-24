@@ -31,7 +31,6 @@ import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.danilloteles.appnetflixapi.enums.FabState
 import com.danilloteles.appnetflixapi.model.MediaItem
-import com.danilloteles.appnetflixapi.model.filme.Filme
 import com.danilloteles.appnetflixapi.repository.FilmeRepository
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
@@ -41,8 +40,7 @@ import com.danilloteles.appnetflixapi.view.componentes.MenuSection
 import com.danilloteles.appnetflixapi.view.componentes.NetflixTopBar
 import com.danilloteles.appnetflixapi.view.componentes.PopularMoviesSection
 import com.danilloteles.appnetflixapi.view.navigation.NetflixApp
-import com.danilloteles.appnetflixapi.viewmodel.PopularMoviesViewModel
-import com.danilloteles.appnetflixapi.viewmodel.PopularMoviesViewModelFactory
+import com.danilloteles.appnetflixapi.viewmodel.PopularFilmeViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 
@@ -95,11 +93,11 @@ fun NetflixScreen(
     val filmeApi = RetrofitHelper.filmeAPI
     val filmeRepository = remember { FilmeRepository(filmeApi) }
 
-    val popularMoviesViewModel: PopularMoviesViewModel = viewModel(
-        factory = PopularMoviesViewModelFactory(filmeRepository)
+    val popularFilmeViewModel: PopularFilmeViewModel = viewModel(
+        factory = PopularFilmeViewModel.PopularMoviesViewModelFactory(filmeRepository)
     )
 
-    val popularMoviesPagingItems = popularMoviesViewModel.popularMoviesStream.collectAsLazyPagingItems()
+    val popularMoviesPagingItems = popularFilmeViewModel.popularMoviesStream.collectAsLazyPagingItems()
 
     val listState = rememberLazyGridState()
     var fabState by remember { mutableStateOf(FabState.EXPANDED) }

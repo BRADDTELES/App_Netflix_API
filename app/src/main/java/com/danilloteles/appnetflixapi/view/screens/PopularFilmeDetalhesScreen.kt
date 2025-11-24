@@ -39,14 +39,14 @@ import com.danilloteles.appnetflixapi.ui.theme.WHITE
 import com.danilloteles.appnetflixapi.utils.events.UiState
 import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
 import com.danilloteles.appnetflixapi.view.componentes.NetflixTopBar
-import com.danilloteles.appnetflixapi.viewmodel.MovieDetailsViewModel
+import com.danilloteles.appnetflixapi.viewmodel.FilmeDetalhesViewModel
 
 @Composable
-fun MovieDetails(
+fun PopularFilmeDetalhesScreen(
     movieId: Int
 ) {
-    val viewModel: MovieDetailsViewModel = viewModel(
-        factory = MovieDetailsViewModel.Factory(movieId)
+    val viewModel: FilmeDetalhesViewModel = viewModel(
+        factory = FilmeDetalhesViewModel.Factory(movieId)
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
