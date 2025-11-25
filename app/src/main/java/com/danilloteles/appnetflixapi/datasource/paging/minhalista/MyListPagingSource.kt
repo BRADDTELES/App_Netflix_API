@@ -30,40 +30,56 @@ class MyListPagingSource(
                 return LoadResult.Page(emptyList(), prevKey = null, nextKey = null)
             }
 
-            // 1. Obter a lista inicial com IDs (e dados potencialmente corrompidos)
+            Log.d("PagingSource", "[INICIO] Tentando carregar itens para a lista: $listId")
+
+            if (sessionId == null) {
+                Log.e("PagingSource", "Session ID nulo. Abortando.")
+                return LoadResult.Page(emptyList(), prevKey = null, nextKey = null)
+            }
+
+            // 1. Obter a lista inicial com IDs
             val initialResponse = filmeAPI.obterDetalhesDaLista(listId, sessionId)
             if (!initialResponse.isSuccessful) {
+                Log.e("PagingSource", "Falha ao carregar a lista inicial: ${initialResponse.code()}")
                 return LoadResult.Error(Exception("Falha ao carregar a lista inicial: ${initialResponse.code()}"))
             }
 
             val itemsFromList = initialResponse.body()?.items ?: emptyList()
+            Log.d("PagingSource", "Lista inicial recebida com ${itemsFromList.size} itens.")
             if (itemsFromList.isEmpty()) {
                 return LoadResult.Page(emptyList(), prevKey = null, nextKey = null)
             }
 
             val correctItems = mutableListOf<MediaItem>()
 
-            // 2. Para cada item, buscar os detalhes corretos para contornar o bug da API
+            // 2. Para cada item, buscar os detalhes corretos
             for (item in itemsFromList) {
+                Log.d("PagingSource", "Processando item com ID: ${item.id} e media_type reportado: ${item.media_type}")
                 try {
                     // Tenta buscar como FILME primeiro
+                    Log.d("PagingSource", "-> Tentando buscar ID ${item.id} como FILME...")
                     val filmeResponse = filmeAPI.recuperarDetalhesFilme(item.id)
                     if (filmeResponse.isSuccessful && filmeResponse.body() != null) {
                         correctItems.add(filmeResponse.body()!!.toMediaItem())
+                        Log.d("PagingSource", "   ... SUCESSO como FILME: '${filmeResponse.body()!!.title}'")
                     } else {
+                        Log.d("PagingSource", "   ... FALHA como FILME (Code: ${filmeResponse.code()}).")
                         // Se falhar, tenta buscar como SÉRIE
+                        Log.d("PagingSource", "-> Tentando buscar ID ${item.id} como SÉRIE...")
                         val serieResponse = filmeAPI.recuperarDetalhesSerie(item.id)
                         if (serieResponse.isSuccessful && serieResponse.body() != null) {
                             correctItems.add(serieResponse.body()!!.toMediaItem())
+                            Log.d("PagingSource", "   ... SUCESSO como SÉRIE: '${serieResponse.body()!!.name}'")
                         } else {
-                            Log.w("TAG-MyListPagingSource", "Falha ao buscar detalhes para o ID ${item.id} como filme ou série.")
+                            Log.w("PagingSource", "   ... FALHA como SÉRIE (Code: ${serieResponse.code()}). Desistindo do ID ${item.id}")
                         }
                     }
                 } catch (e: Exception) {
-                    Log.e("TAG-MyListPagingSource", "Exceção ao buscar detalhes para o ID ${item.id}: ${e.message}", e)
+                    Log.e("PagingSource", "Exceção ao buscar detalhes para o ID ${item.id}: ${e.message}", e)
                 }
             }
 
+            Log.d("PagingSource", "[FIM] Processamento concluído. Retornando ${correctItems.size} itens corrigidos.")
             // 3. Retornar a página com os itens corrigidos
             LoadResult.Page(
                 data = correctItems,

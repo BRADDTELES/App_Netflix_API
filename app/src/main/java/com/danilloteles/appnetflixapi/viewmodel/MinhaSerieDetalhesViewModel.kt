@@ -59,6 +59,7 @@ class MinhaSerieDetalhesViewModel(
                 if (response.isSuccessful) {
                     response.body()?.let { details ->
                         _uiState.value = UiState.Success(details)
+                        Log.d("TAG-MySerieDetailsViewModel", "Série carregada: ID=${details.id}, Nome=${details.name}, Original=${details.original_name}, Overview=${details.overview?.take(50)}...")
                     } ?: run {
                         _uiState.value = UiState.Error("Detalhes da série não encontrados.")
                     }
@@ -185,8 +186,12 @@ class MinhaSerieDetalhesViewModel(
                 }
 
                 val request = AddRemoveListItemRequest(media_id = serieId)
-                Log.d("TAG-MySerieDetailsViewModel", "Enviando requisição para adicionar/remover serie. ID da série: $serieId, List ID: $finalListToModifyId")
-                Log.d("TAG-MySerieDetailsViewModel", "Requisição API: ${request} para listId: $finalListToModifyId")
+                val serieDetails = (_uiState.value as? UiState.Success)?.data // Obtém os detalhes da série carregada
+                val serieName = serieDetails?.name ?: "Nome desconhecido"
+
+                Log.d("TAG-MySerieDetailsViewModel", "Ação na série: '$serieName' (ID: $serieId), na lista ID: $finalListToModifyId")
+                Log.d("TAG-MySerieDetailsViewModel", "Tipo de ação: ${if (_isInMyList.value) "REMOVER" else "ADICIONAR"}")
+                Log.d("TAG-MySerieDetailsViewModel", "Requisição API: AddRemoveListItemRequest(media_id=$serieId) para listId: $finalListToModifyId")
                 try {
                     val response = if (_isInMyList.value) {
                         Log.d("TAG-MySerieDetailsViewModel", "Tentando remover série (ID: $serieId) da lista (ID: $finalListToModifyId).")
