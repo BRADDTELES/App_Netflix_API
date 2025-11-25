@@ -46,28 +46,18 @@ class MyListPagingSource(
             // 2. Para cada item, buscar os detalhes corretos para contornar o bug da API
             for (item in itemsFromList) {
                 try {
-                    var added = false
-
-                    // Tentar buscar como série se o media_type for 'tv' ou não for especificado
-                    if (item.media_type == "tv" || item.media_type == null) {
+                    // Tenta buscar como FILME primeiro
+                    val filmeResponse = filmeAPI.recuperarDetalhesFilme(item.id)
+                    if (filmeResponse.isSuccessful && filmeResponse.body() != null) {
+                        correctItems.add(filmeResponse.body()!!.toMediaItem())
+                    } else {
+                        // Se falhar, tenta buscar como SÉRIE
                         val serieResponse = filmeAPI.recuperarDetalhesSerie(item.id)
-                        if (serieResponse.isSuccessful && serieResponse.body() != null && serieResponse.body()!!.id == item.id) {
+                        if (serieResponse.isSuccessful && serieResponse.body() != null) {
                             correctItems.add(serieResponse.body()!!.toMediaItem())
-                            added = true
+                        } else {
+                            Log.w("TAG-MyListPagingSource", "Falha ao buscar detalhes para o ID ${item.id} como filme ou série.")
                         }
-                    }
-
-                    // Se não foi adicionado como série ou se o media_type for 'movie'
-                    if (!added && (item.media_type == "movie" || item.media_type == null)) {
-                        val filmeResponse = filmeAPI.recuperarDetalhesFilme(item.id)
-                        if (filmeResponse.isSuccessful && filmeResponse.body() != null && filmeResponse.body()!!.id == item.id) {
-                            correctItems.add(filmeResponse.body()!!.toMediaItem())
-                            added = true
-                        }
-                    }
-
-                    if (!added) {
-                        Log.e("TAG-MyListPagingSource", "Falha ao buscar detalhes para o ID ${item.id} como série ou filme, ou ID de retorno não corresponde.")
                     }
                 } catch (e: Exception) {
                     Log.e("TAG-MyListPagingSource", "Exceção ao buscar detalhes para o ID ${item.id}: ${e.message}", e)

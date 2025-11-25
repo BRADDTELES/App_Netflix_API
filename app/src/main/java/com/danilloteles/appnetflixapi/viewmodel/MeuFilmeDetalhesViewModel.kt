@@ -145,7 +145,12 @@ class MeuFilmeDetalhesViewModel(
                         val response = filmeAPI.obterDetalhesDaLista(id, sessionId)
                         if (response.isSuccessful) {
                             val listDetails = response.body()
-                            val containsMovie = listDetails?.items?.any { it.id == movieId && it.media_type == "movie" } ?: false
+                            Log.d("TAG-MyMovieDetailsViewModel", "Detalhes da lista recebidos para listId: $id")
+                            listDetails?.items?.forEachIndexed { index, mediaItem ->
+                                Log.d("TAG-MyMovieDetailsViewModel", "Item $index: ID=${mediaItem.id}, Type=${mediaItem.media_type}, Title=${mediaItem.title}, Name=${mediaItem.name}, Poster=${mediaItem.poster_path}")
+                            } ?: Log.d("TAG-MyMovieDetailsViewModel", "listDetails ou items é nulo para listId: $id")
+
+                            val containsMovie = listDetails?.items?.any { it.id == movieId } ?: false
                             _isInMyList.value = containsMovie
                             Log.d("TAG-MyMovieDetailsViewModel", "API obterDetalhesDaLista para listId $id retornou ${listDetails?.items?.size ?: 0} itens. Contém movie $movieId: $containsMovie. _isInMyList atualizado para: ${_isInMyList.value}")
                         } else {
