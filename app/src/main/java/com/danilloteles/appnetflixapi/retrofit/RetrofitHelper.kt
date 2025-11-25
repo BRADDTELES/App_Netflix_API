@@ -6,6 +6,7 @@ import com.danilloteles.appnetflixapi.constantes.Constantes
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
 class RetrofitHelper {
     companion object {
@@ -13,6 +14,9 @@ class RetrofitHelper {
         private const val API_KEY_PARAM = "api_key"
 
         private val okHttpClient = OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
             .addInterceptor { chain ->
                 val request = chain.request()
                 val url = request.url.newBuilder()

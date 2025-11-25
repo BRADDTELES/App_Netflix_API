@@ -39,6 +39,7 @@ class LoginViewModel(
                     response.body()?.let { tokenResponse ->
                         if (tokenResponse.success) {
                             requestToken = tokenResponse.request_token
+                            Log.d("TAG-LoginViewModel","requestToken: ${requestToken}")
                             val authUrl = "https://www.themoviedb.org/authenticate/$requestToken?redirect_to=netflixapp://auth"
                             _loginEvent.emit(LoginEvent.OpenWebView(authUrl))
                             _uiState.value = UiState.Success(Unit)
@@ -69,30 +70,31 @@ class LoginViewModel(
             _uiState.value = UiState.Loading
             requestToken?.let { token ->
                 try {
-                    val response =
-                        filmeAPI.criarIDdaSessão(CreateSessionRequest(request_token = token))
-                    if (response.isSuccessful) {
-                        response.body()?.let { sessionIdResponse ->
-                            if (sessionIdResponse.success) {
-                                Log.d("TAG-LoginViewModel", "Session ID criado com sucesso: ${sessionIdResponse.session_id}")
-                                userPreferencesRepository.saveSessionId(sessionIdResponse.session_id)
-                                _loginEvent.emit(LoginEvent.LoginSuccess)
-                                Log.d("TAG-LoginViewModel", "LoginEvent.LoginSuccess emitido.")
-                                _uiState.value = UiState.Success(Unit)
-                            } else {
-                                _uiState.value = UiState.Error("Falha ao criar session id.")
-                                Log.e(
-                                    "TAG-LoginViewModel",
-                                    "Falha ao criar sessão: ${sessionIdResponse.success}"
-                                )
-                            }
-                        } ?: run {
-                            _uiState.value = UiState.Error("Resposta vazia ao criar session id.")
-                            Log.e("TAG-LoginViewModel", "Resposta vazia ao criar session id.")
+                    val sessionResponse = filmeAPI.criarIDdaSessão(CreateSessionRequest(request_token = token))
+                    if (sessionResponse.isSuccessful && sessionResponse.body()?.success == true) {
+                        val sessionId = sessionResponse.body()!!.session_id
+                        Log.d("TAG-LoginViewModel", "Session ID criado com sucesso: $sessionId")
+
+                        // Agora, obter detalhes da conta para pegar o accountId
+                        val accountResponse = filmeAPI.obterDetalhesDaConta(sessionId)
+                        if (accountResponse.isSuccessful && accountResponse.body() != null) {
+                            val accountId = accountResponse.body()!!.id.toString()
+                            Log.d("TAG-LoginViewModel", "Account ID obtido com sucesso: $accountId")
+
+                            // Salvar ambos os IDs
+                            userPreferencesRepository.saveSessionId(sessionId)
+                            userPreferencesRepository.saveAccountId(accountId)
+
+                            _loginEvent.emit(LoginEvent.LoginSuccess)
+                            Log.d("TAG-LoginViewModel", "LoginEvent.LoginSuccess emitido.")
+                            _uiState.value = UiState.Success(Unit)
+                        } else {
+                            _uiState.value = UiState.Error("Falha ao obter detalhes da conta.")
+                            Log.e("TAG-LoginViewModel", "Falha ao obter detalhes da conta: ${accountResponse.code()}")
                         }
                     } else {
-                        _uiState.value = UiState.Error("Erro HTTP ao criar session id.")
-                        Log.e("TAG-LoginViewModel", "Erro HTTP ao criar session id: ${response.code()}")
+                        _uiState.value = UiState.Error("Falha ao criar session id.")
+                        Log.e("TAG-LoginViewModel", "Falha ao criar sessão: ${sessionResponse.message()}")
                     }
                 } catch (e: Exception) {
                     _uiState.value = UiState.Error("Erro de conexão ao criar session id")
