@@ -1,8 +1,13 @@
 package com.danilloteles.appnetflixapi.utils.events
 
+enum class SortOrder {
+    DEFAULT,
+    TITLE_ASC // A-Z
+}
+
 sealed class MovieListFilterState {
-    object Popular : MovieListFilterState()
-    object TopRated : MovieListFilterState()
-    object NowPlaying : MovieListFilterState()
-    data class MyList(val listId: String?) : MovieListFilterState()
+    data class MyList(
+        val listId: String?,
+        val sortOrder: SortOrder = SortOrder.DEFAULT
+    ) : MovieListFilterState()
 }

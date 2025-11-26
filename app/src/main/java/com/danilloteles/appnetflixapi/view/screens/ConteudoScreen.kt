@@ -1,8 +1,7 @@
 @file:OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
+
 package com.danilloteles.appnetflixapi.view.screens
 
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -31,6 +30,8 @@ import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -62,8 +63,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
 import com.danilloteles.appnetflixapi.R
 import com.danilloteles.appnetflixapi.constantes.Constantes
@@ -71,7 +74,7 @@ import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesReposi
 import com.danilloteles.appnetflixapi.model.MediaItem
 import com.danilloteles.appnetflixapi.repository.MinhaListaRepository
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
-import com.danilloteles.appnetflixapi.utils.events.UiState
+import com.danilloteles.appnetflixapi.utils.events.SortOrder
 import com.danilloteles.appnetflixapi.viewmodel.ConteudoViewModel
 
 @Composable
@@ -95,8 +98,8 @@ fun ConteudoScreen(
         )
     )
 
-    val uiState by viewModel.conteudoState.collectAsStateWithLifecycle()
-    val isRefreshing = uiState is UiState.Loading
+    val lazyPagingItems: LazyPagingItems<MediaItem> = viewModel.conteudoPaginado.collectAsLazyPagingItems()
+    val isRefreshing = lazyPagingItems.loadState.refresh is LoadState.Loading
 
     Scaffold(
         topBar = {
@@ -122,62 +125,74 @@ fun ConteudoScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { viewModel.buscarConteudo() }) {
+                    IconButton(onClick = { lazyPagingItems.refresh() }) {
                         Icon(Icons.Filled.Refresh, "Atualizar", tint = Color.White)
                     }
                 }
             )
         }
-    ) { paddingValues ->
+    ) {
+paddingValues ->
         Column(
             modifier = Modifier
                 .padding(paddingValues)
                 .fillMaxSize()
                 .background(Color.Black)
         ) {
-            ConnectedButtonGroupComposable()
+            ConnectedButtonGroupComposable(
+                onSortChange = { newSortOrder -> viewModel.setSortOrder(newSortOrder) }
+            )
             PullToRefreshBox(
                 isRefreshing = isRefreshing,
-                onRefresh = { viewModel.buscarConteudo() },
+                onRefresh = { lazyPagingItems.refresh() },
                 modifier = Modifier.fillMaxSize()
             ) {
-                when (val state = uiState) {
-                    is UiState.Loading -> {
+                when (val state = lazyPagingItems.loadState.refresh) {
+                    is LoadState.Loading -> {
                         if (!isRefreshing) {
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                 CircularProgressIndicator()
                             }
                         }
                     }
-                    is UiState.Error -> {
+                    is LoadState.Error -> {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Text(
-                                text = "Erro: ${state.message}\nPuxe para tentar novamente.",
+                                text = "Erro: ${state.error.message}\nPuxe para tentar novamente.",
                                 color = Color.White,
                                 textAlign = TextAlign.Center
                             )
                         }
                     }
-                    is UiState.Success -> {
-                        LazyVerticalGrid(
-                            columns = GridCells.Fixed(2),
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(24.dp),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            items(items = state.data.items, key = { it.id }) { item ->
-                                VideoItem(
-                                    item = item,
-                                    listId = listId,
-                                    onMovieClick = onMovieClick,
-                                    onSerieClick = onSerieClick
-                                )
+                    is LoadState.NotLoading -> {
+                        if (lazyPagingItems.itemCount == 0) {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Text("Esta lista está vazia.", color = Color.White)
+                            }
+                        } else {
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(2),
+                                contentPadding = PaddingValues(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(24.dp),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                items(
+                                    count = lazyPagingItems.itemCount,
+                                    key = { index -> lazyPagingItems.peek(index)?.id ?: index }
+                                ) { index ->
+                                    val item = lazyPagingItems[index]
+                                    if (item != null) {
+                                        VideoItem(
+                                            item = item,
+                                            listId = listId,
+                                            onMovieClick = onMovieClick,
+                                            onSerieClick = onSerieClick
+                                        )
+                                    }
+                                }
                             }
                         }
-                    }
-                    is UiState.Idle -> {
-                        Box(modifier = Modifier.fillMaxSize()) {}
                     }
                 }
             }
@@ -219,7 +234,9 @@ fun VideoItem(
             text = item.title ?: item.name ?: "",
             color = Color.White,
             fontSize = 14.sp,
-            modifier = Modifier.fillMaxWidth().padding(start = 4.dp, top = 8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 4.dp, top = 8.dp),
             textAlign = TextAlign.Start,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -228,11 +245,11 @@ fun VideoItem(
 }
 
 @Composable
-fun ConnectedButtonGroupComposable() {
-    val options = listOf("Favoritos", "Curtido", "A-Z")
+fun ConnectedButtonGroupComposable(onSortChange: (SortOrder) -> Unit) {
+    val options = listOf("Padrão", "A-Z")
     val unCheckedIcons =
-        listOf(Icons.Filled.FavoriteBorder, Icons.Outlined.ThumbUp, Icons.Default.Abc)
-    val checkedIcons = listOf(Icons.Filled.Favorite, Icons.Filled.ThumbUp, Icons.Filled.Abc)
+        listOf(Icons.Filled.FavoriteBorder, Icons.Default.Abc)
+    val checkedIcons = listOf(Icons.Filled.Favorite, Icons.Filled.Abc)
     var selectedIndex by remember { mutableIntStateOf(0) }
 
     Row(
@@ -240,22 +257,29 @@ fun ConnectedButtonGroupComposable() {
         horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
     ) {
         val modifiers = listOf(
-            Modifier.weight(1.1f),
-            Modifier.weight(1.1f),
+            Modifier.weight(1f),
             Modifier.weight(1f),
         )
 
         options.forEachIndexed { index, label ->
             ToggleButton(
                 checked = selectedIndex == index,
-                onCheckedChange = { selectedIndex = index },
+                onCheckedChange = {
+                    selectedIndex = index
+                    val newSortOrder = when (index) {
+                        0 -> SortOrder.DEFAULT
+                        1 -> SortOrder.TITLE_ASC
+                        else -> SortOrder.DEFAULT // Fallback, embora não deva ser alcançado
+                    }
+                    onSortChange(newSortOrder)
+                },
                 modifier = modifiers[index].semantics { role = Role.RadioButton },
                 shapes =
-                    when (index) {
-                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                        options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                    },
+                when (index) {
+                    0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                    options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                    else -> ButtonGroupDefaults.connectedMiddleButtonShapes() // Não deve ser alcançado com 2 botões
+                },
                 colors = ToggleButtonDefaults.toggleButtonColors(
                     checkedContainerColor = Color.Red,
                     checkedContentColor = Color.White,
@@ -265,7 +289,7 @@ fun ConnectedButtonGroupComposable() {
             ) {
                 Icon(
                     if (selectedIndex == index) checkedIcons[index] else unCheckedIcons[index],
-                    contentDescription = "Localized description",
+                    contentDescription = label,
                 )
                 Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
                 Text(label)
@@ -276,12 +300,13 @@ fun ConnectedButtonGroupComposable() {
 
 @Preview
 @Composable
-private fun ConteudoScreenPreview(){
-    // Preview pode não funcionar como esperado pois agora depende de ViewModel e dados reais.
-    // Para um preview funcional, seria necessário criar um ViewModel de mock.
+private fun ConteudoScreenPreview() {
+    // O Preview depende de um ViewModel funcional e dados reais.
+    // Para um preview útil, seria necessário injetar uma implementação falsa
+    // que retorna PagingData estático.
     ConteudoScreen(
         listId = "1",
-        movieTitle = "Lista de videos",
+        movieTitle = "Minha Lista de Exemplo",
         onBackClick = {},
         onMovieClick = { _, _ -> },
         onSerieClick = { _, _ -> }
