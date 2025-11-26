@@ -19,7 +19,19 @@ class UserPreferencesRepository(
         val SESSION_ID_KEY = stringPreferencesKey("session_id")
         val ACCOUNT_ID_KEY = stringPreferencesKey("account_id") // Nova chave
         val PRIMARY_LIST_ID_KEY = stringPreferencesKey("primary_list_id") // Nova chave para o ID da lista principal
+        val ACCESS_TOKEN_V4_KEY = stringPreferencesKey("access_token_v4") // chave do accessTokenV4
     }
+
+    suspend fun saveAccessTokenV4(token: String) {
+        context.dataStore.edit { preferences ->
+            preferences[ACCESS_TOKEN_V4_KEY] = token
+        }
+    }
+
+    val accessTokenV4: Flow<String?> = context.dataStore.data
+        .map { preferences ->
+            preferences[ACCESS_TOKEN_V4_KEY]
+        }
 
     suspend fun saveSessionId(sessionId: String) {
         context.dataStore.edit { preferences ->

@@ -13,6 +13,7 @@ object RetrofitHelperV4 {
             val newRequest = chain.request().newBuilder()
                 .addHeader("Authorization", "Bearer ${BuildConfig.API_READ_ACCESS_TOKEN}")
                 .addHeader("Content-Type", "application/json;charset=utf-8")
+                .addHeader("Accept","application/json")
                 .build()
 
             chain.proceed(newRequest)
