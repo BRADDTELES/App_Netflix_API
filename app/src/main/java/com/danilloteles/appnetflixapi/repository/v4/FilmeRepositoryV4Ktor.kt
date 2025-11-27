@@ -47,7 +47,7 @@ class FilmeRepositoryV4Ktor {
 
     suspend fun createAccessToken(requestToken: String): Result<AccessTokenResponse> =
         safeApiCall {
-            authClient.post("auth/access_token") {
+            publicClient.post("auth/access_token") {
                 setBody(AccessTokenRequest(request_token = requestToken))
             }.body()
         }

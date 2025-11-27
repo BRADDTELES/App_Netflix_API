@@ -41,11 +41,8 @@ class TesteAPIV4Activity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        // Conteúdo do onCreate será adicionado aqui
         setContent {
-            var pastedToken by remember { mutableStateOf("") }
-
-            // Usando o MaterialTheme corretamente (Material 3)
             MaterialTheme(colorScheme = darkColorScheme()) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     when (val state = currentUiState) {
@@ -68,28 +65,19 @@ class TesteAPIV4Activity : ComponentActivity() {
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Text(
-                                    text = "Após aprovar, copie o 'Token de Requisição' da página do TMDB e cole no campo abaixo.",
+                                    text = "Após aprovar, o aplicativo será aberto automaticamente.",
                                     textAlign = TextAlign.Center
                                 )
                                 Spacer(modifier = Modifier.height(24.dp))
-                                OutlinedTextField(
-                                    value = pastedToken,
-                                    onValueChange = { pastedToken = it },
-                                    label = { Text("Cole o token aqui") },
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                                Spacer(modifier = Modifier.height(16.dp))
                                 Button(
                                     onClick = {
-                                        if (pastedToken.isNotBlank()) {
-                                            lifecycleScope.launch {
-                                                verificarTokenColado(pastedToken)
-                                            }
+                                        lifecycleScope.launch {
+                                            // Reabrir o navegador, caso o usuário tenha fechado
+                                            iniciarFluxoAutenticacao()
                                         }
-                                    },
-                                    enabled = pastedToken.isNotBlank()
+                                    }
                                 ) {
-                                    Text("Verificar Token")
+                                    Text("Reabrir Navegador")
                                 }
                             }
                         }
@@ -115,23 +103,58 @@ class TesteAPIV4Activity : ComponentActivity() {
         lifecycleScope.launch {
             val savedToken = userPreferencesRepository.accessTokenV4.first()
             if (savedToken.isNullOrBlank()) {
-                iniciarFluxoAutenticacao()
+                // Se a activity for lançada por um deep link, não inicia o fluxo de novo.
+                // O onNewIntent ou o processIntent no onCreate/onResume lidará com isso.
+                if (intent?.data == null) {
+                    iniciarFluxoAutenticacao()
+                }
             } else {
                 currentUiState = UiState.Success("Já autenticado. Iniciando testes de API.")
                 testarChamadasComToken(savedToken)
+            }
+        }
+        
+        // Processa o intent inicial caso o app seja aberto por um deep link
+        processIntent(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent) // Atualiza o intent da activity
+        processIntent(intent)
+    }
+
+    private fun processIntent(intent: Intent?) {
+        intent?.data?.let { uri ->
+            Log.d("TMDB_V4", "Deep link recebido: $uri")
+            if (uri.scheme == "netflixapp" && uri.host == "callback") {
+                val requestToken = uri.getQueryParameter("request_token")
+                val approved = uri.getQueryParameter("approved")?.toBooleanStrictOrNull() ?: false
+
+                if (!requestToken.isNullOrBlank() && approved) {
+                    Log.d("TMDB_V4", "Request token aprovado recebido via deep link: $requestToken")
+                    lifecycleScope.launch {
+                        trocarRequestPorAccessToken(requestToken)
+                    }
+                } else if (!approved) {
+                    currentUiState = UiState.Error("Usuário não aprovou o acesso ou request token inválido.")
+                } else {
+                    currentUiState = UiState.Error("Deep link incompleto: falta request_token ou status de aprovação.")
+                }
             }
         }
     }
 
     private suspend fun iniciarFluxoAutenticacao() {
         currentUiState = UiState.Loading
-        Log.d("TMDB_V4", "Criando request token (sem redirect_to)...")
-        when (val req = repositoryV4Ktor.createRequestToken(null)) {
+        Log.d("TMDB_V4", "Criando request token com redirect_to...")
+        val redirectTo = "netflixapp://callback" // Mantemos o deep link customizado
+        when (val req = repositoryV4Ktor.createRequestToken(redirectTo)) {
             is Result.Sucesso -> {
                 val requestToken = req.data.request_token
                 Log.d("TMDB_V4", "Request token recebido: $requestToken")
                 if (!requestToken.isNullOrBlank()) {
-                    val url = "https://www.themoviedb.org/auth/access?request_token=$requestToken"
+                    val url = "https://www.themoviedb.org/auth/access?request_token=$requestToken&redirect_to=$redirectTo"
                     Log.d("TMDB_V4", "Abrindo navegador externo com URL: $url")
                     startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
                     currentUiState = UiState.AwaitingUserInput
@@ -143,11 +166,6 @@ class TesteAPIV4Activity : ComponentActivity() {
             is Result.NetworkError -> currentUiState = UiState.Error("Erro de rede ao obter request token.")
             is Result.UnknownError -> currentUiState = UiState.Error("Erro inesperado ao obter request token: ${req.mensagem}")
         }
-    }
-
-    private suspend fun verificarTokenColado(requestToken: String) {
-        Log.d("TMDB_V4", "Verificando token colado pelo usuário: $requestToken")
-        trocarRequestPorAccessToken(requestToken)
     }
 
     private suspend fun trocarRequestPorAccessToken(requestToken: String) {
@@ -186,23 +204,24 @@ class TesteAPIV4Activity : ComponentActivity() {
                 Log.d("TMDB_V4", "ADICIONAR FILME -> Adicionando filme com ID 550 à lista $listId")
                 when (val adicionar = repositoryV4Ktor.addMovie(accessToken, listId, movieId = 550)) {
                     is Result.Sucesso -> Log.d("TMDB_V4", "ADICIONAR FILME -> SUCESSO: ${adicionar.data}")
-                    is Result.HttpError -> Log.d("TMDB_V4", "ADICIONAR FILME -> ERRO HTTP: ${adicionar.mensagem}")
-                    is Result.NetworkError -> Log.d("TMDB_V4", "ADICIONAR FILME -> ERRO DE REDE")
-                    is Result.UnknownError -> Log.d("TMDB_V4", "ADICIONAR FILME -> ERRO DESCONHECIDO: ${adicionar.mensagem}")
+                    is Result.HttpError -> currentUiState = UiState.Error("ADICIONAR FILME -> ERRO HTTP: ${adicionar.mensagem}")
+                    is Result.NetworkError -> currentUiState = UiState.Error("ADICIONAR FILME -> ERRO DE REDE")
+                    is Result.UnknownError -> currentUiState = UiState.Error("ADICIONAR FILME -> ERRO DESCONHECIDO: ${adicionar.mensagem}")
                 }
 
                 // Detalhes da lista
                 Log.d("TMDB_V4", "DETALHES DA LISTA -> Buscando detalhes da lista $listId")
                 when (val detalhes = repositoryV4Ktor.getListDetails(accessToken, listId)) {
                     is Result.Sucesso -> Log.d("TMDB_V4", "DETALHES DA LISTA -> SUCESSO: ${detalhes.data}")
-                    is Result.HttpError -> Log.d("TMDB_V4", "DETALHES DA LISTA -> ERRO HTTP: ${detalhes.mensagem}")
-                    is Result.NetworkError -> Log.d("TMDB_V4", "DETALHES DA LISTA -> ERRO DE REDE")
-                    is Result.UnknownError -> Log.d("TMDB_V4", "DETALHES DA LISTA -> ERRO DESCONHECIDO: ${detalhes.mensagem}")
+                    is Result.HttpError -> currentUiState = UiState.Error("DETALHES DA LISTA -> ERRO HTTP: ${detalhes.mensagem}")
+                    is Result.NetworkError -> currentUiState = UiState.Error("DETALHES DA LISTA -> ERRO DE REDE")
+                    is Result.UnknownError -> currentUiState = UiState.Error("DETALHES DA LISTA -> ERRO DESCONHECIDO: ${detalhes.mensagem}")
                 }
             }
-            is Result.HttpError -> Log.d("TMDB_V4", "CRIAR LISTA -> ERRO HTTP: ${criar.mensagem}")
-            is Result.NetworkError -> Log.d("TMDB_V4", "CRIAR LISTA -> ERRO DE REDE")
-            is Result.UnknownError -> Log.d("TMDB_V4", "CRIAR LISTA -> ERRO DESCONHECIDO: ${criar.mensagem}")
+            is Result.HttpError -> currentUiState = UiState.Error("CRIAR LISTA -> ERRO HTTP: ${criar.mensagem}")
+            is Result.NetworkError -> currentUiState = UiState.Error("CRIAR LISTA -> ERRO DE REDE")
+            is Result.UnknownError -> currentUiState = UiState.Error("CRIAR LISTA -> ERRO DESCONHECIDO: ${criar.mensagem}")
         }
     }
+
 }
