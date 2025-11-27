@@ -18,6 +18,7 @@ import androidx.lifecycle.lifecycleScope
 import com.danilloteles.appnetflixapi.common.Result
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
 import com.danilloteles.appnetflixapi.repository.v4.FilmeRepositoryV4
+import com.danilloteles.appnetflixapi.repository.v4.FilmeRepositoryV4Ktor
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -25,6 +26,7 @@ class TesteAPIV4Activity : ComponentActivity() {
 
     private val userPreferencesRepository by lazy { UserPreferencesRepository(applicationContext) }
     private val repositoryV4 by lazy { FilmeRepositoryV4(userPreferencesRepository) }
+    private val repositoryV4Ktor by lazy { FilmeRepositoryV4Ktor() }
 
     // Estados da UI para o novo fluxo
     private sealed class UiState {
@@ -124,7 +126,7 @@ class TesteAPIV4Activity : ComponentActivity() {
     private suspend fun iniciarFluxoAutenticacao() {
         currentUiState = UiState.Loading
         Log.d("TMDB_V4", "Criando request token (sem redirect_to)...")
-        when (val req = repositoryV4.createRequestToken(null)) {
+        when (val req = repositoryV4Ktor.createRequestToken(null)) {
             is Result.Sucesso -> {
                 val requestToken = req.data.request_token
                 Log.d("TMDB_V4", "Request token recebido: $requestToken")
@@ -151,7 +153,7 @@ class TesteAPIV4Activity : ComponentActivity() {
     private suspend fun trocarRequestPorAccessToken(requestToken: String) {
         currentUiState = UiState.Loading
         Log.d("TMDB_V4", "Trocando request token por access token...")
-        when (val res = repositoryV4.createAccessToken(requestToken)) {
+        when (val res = repositoryV4Ktor.createAccessToken(requestToken)) {
             is Result.Sucesso -> {
                 val accessToken = res.data.access_token
                 val accountId = res.data.account_id
@@ -175,14 +177,14 @@ class TesteAPIV4Activity : ComponentActivity() {
     private suspend fun testarChamadasComToken(accessToken: String) {
         Log.d("TMDB_V4", "TESTE INICIADO... usando token")
         // Criar Lista
-        when (val criar = repositoryV4.createList(accessToken, nome = "Minha Lista Kotlin API V4", descricao = "Lista criada via Retrofit")) {
+        when (val criar = repositoryV4Ktor.createList(accessToken, nome = "Minha Lista Kotlin API V4", descricao = "Lista criada via Retrofit")) {
             is Result.Sucesso -> {
                 Log.d("TMDB_V4", "CRIAR LISTA -> SUCESSO: ${criar.data}")
                 val listId = criar.data.id.toString()
 
                 // Adicionar filme
                 Log.d("TMDB_V4", "ADICIONAR FILME -> Adicionando filme com ID 550 à lista $listId")
-                when (val adicionar = repositoryV4.addMovie(accessToken, listId, movieId = 550)) {
+                when (val adicionar = repositoryV4Ktor.addMovie(accessToken, listId, movieId = 550)) {
                     is Result.Sucesso -> Log.d("TMDB_V4", "ADICIONAR FILME -> SUCESSO: ${adicionar.data}")
                     is Result.HttpError -> Log.d("TMDB_V4", "ADICIONAR FILME -> ERRO HTTP: ${adicionar.mensagem}")
                     is Result.NetworkError -> Log.d("TMDB_V4", "ADICIONAR FILME -> ERRO DE REDE")
@@ -191,7 +193,7 @@ class TesteAPIV4Activity : ComponentActivity() {
 
                 // Detalhes da lista
                 Log.d("TMDB_V4", "DETALHES DA LISTA -> Buscando detalhes da lista $listId")
-                when (val detalhes = repositoryV4.getListDetails(accessToken, listId)) {
+                when (val detalhes = repositoryV4Ktor.getListDetails(accessToken, listId)) {
                     is Result.Sucesso -> Log.d("TMDB_V4", "DETALHES DA LISTA -> SUCESSO: ${detalhes.data}")
                     is Result.HttpError -> Log.d("TMDB_V4", "DETALHES DA LISTA -> ERRO HTTP: ${detalhes.mensagem}")
                     is Result.NetworkError -> Log.d("TMDB_V4", "DETALHES DA LISTA -> ERRO DE REDE")

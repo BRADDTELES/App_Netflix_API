@@ -4,7 +4,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("com.google.devtools.ksp")
+    alias(libs.plugins.devtools.ksp)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -82,6 +83,16 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     // Browser
     implementation(libs.androidx.browser)
+    // Ktor Client Core
+    implementation(libs.ktor.client.core)
+    // Engine para Android (CIO é uma boa escolha, assíncrono e baseado em corrotinas)
+    implementation(libs.ktor.client.cio)
+    // Plugin de Negociação de Conteúdo (para lidar com JSON)
+    implementation(libs.ktor.client.content.negotiation)
+    // Serializador JSON específico (kotlinx.serialization)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    // Plugin de Logging (excelente para debug, similar ao HttpLoggingInterceptor)
+    implementation(libs.ktor.client.logging)
     // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.compose.adaptive.navigation)
