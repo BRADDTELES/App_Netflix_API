@@ -151,6 +151,7 @@ fun NetflixApp(
                 MeuFilmeDetalhesScreen(
                     movieId = movieId,
                     listId = listId,
+                    onBackClick = { navController.popBackStack() },
                     onClick = { /* TODO: Implement navigation from MyMovieDetails if needed */ }
                 )
             } else {
@@ -177,6 +178,7 @@ fun NetflixApp(
                 MinhaSerieDetalhesScreen(
                     serieId = serieId,
                     listId = listId,
+                    onBackClick = { navController.popBackStack() },
                     onClick = { /* TODO: Implement navigation from MySerieDetails if needed */ }
                 )
             } else {

@@ -127,7 +127,7 @@ class TesteAPIV4Activity : ComponentActivity() {
     private fun processIntent(intent: Intent?) {
         intent?.data?.let { uri ->
             Log.d("TMDB_V4", "Deep link recebido: $uri")
-            if (uri.scheme == "netflixapp" && uri.host == "callback") {
+            if (uri.scheme == "netflixapp" && uri.host == "auth") {
                 val requestToken = uri.getQueryParameter("request_token")
                 val approved = uri.getQueryParameter("approved")?.toBooleanStrictOrNull() ?: false
 

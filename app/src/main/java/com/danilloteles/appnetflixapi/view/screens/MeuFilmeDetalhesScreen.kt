@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.AddToQueue
@@ -27,6 +28,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
@@ -81,6 +83,7 @@ import com.danilloteles.appnetflixapi.viewmodel.MeuFilmeDetalhesViewModel
 fun MeuFilmeDetalhesScreen(
     movieId: Int,
     listId: String?,
+    onBackClick: () -> Unit,
     onClick: (Int) -> Unit
 ) {
     val viewModel: MeuFilmeDetalhesViewModel = viewModel(
@@ -108,6 +111,7 @@ fun MeuFilmeDetalhesScreen(
             MeuConteudoFilmeDetalhes(
                 filme = state.data,
                 viewModel = viewModel,
+                onBackClick = onBackClick,
                 onClick = onClick,
                 listId = listId
             )
@@ -131,6 +135,7 @@ fun MeuFilmeDetalhesScreen(
 fun MeuConteudoFilmeDetalhes(
     filme: FilmeDetalhes,
     viewModel: MeuFilmeDetalhesViewModel?,
+    onBackClick: () -> Unit,
     onClick: (Int) -> Unit,
     listId: String?
 ) {
@@ -215,10 +220,10 @@ fun MeuConteudoFilmeDetalhes(
                 )
             },
             containerColor = BLACK,
-        ) { innerPadding ->
+        ) { paddingValues ->
             LazyColumn(
                 modifier = Modifier
-                    .padding(innerPadding)
+                    .padding(paddingValues)
                     .fillMaxSize()
                     .background(BLACK)
             ) {
@@ -393,6 +398,7 @@ private fun MeuFilmeDetalhesScreenPreview() {
     MeuFilmeDetalhesScreen(
         movieId = 1,
         listId = null,
+        onBackClick = {},
         onClick = {}
     )
 }

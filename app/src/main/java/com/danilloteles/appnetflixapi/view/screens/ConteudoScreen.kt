@@ -222,8 +222,8 @@ fun VideoItem(
         AsyncImage(
             model = "${Constantes.IMAGE_BASE_URL}${item.poster_path}",
             contentDescription = item.title,
-            placeholder = painterResource(id = R.drawable.ic_placeholder),
-            error = painterResource(id = R.drawable.ic_error),
+            placeholder = painterResource(id = R.drawable.capa),
+            error = painterResource(id = R.drawable.capa),
             modifier = Modifier
                 .width(160.dp)
                 .height(200.dp)

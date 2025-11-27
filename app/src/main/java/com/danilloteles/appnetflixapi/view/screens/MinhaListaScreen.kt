@@ -280,6 +280,7 @@ fun MinhaListaScreen(
                             MeuFilmeDetalhesScreen(
                                 movieId = navItem.itemId.toInt(),
                                 listId = navItem.listId,
+                                onBackClick = { coroutineScope.launch { scaffoldNavigator.navigateBack() } },
                                 onClick = { /* No-op, navigation is handled by scaffoldNavigator */ }
                             )
                         }
@@ -287,6 +288,7 @@ fun MinhaListaScreen(
                             MinhaSerieDetalhesScreen(
                                 serieId = navItem.itemId.toInt(),
                                 listId = navItem.listId,
+                                onBackClick = { coroutineScope.launch { scaffoldNavigator.navigateBack() } },
                                 onClick = { /* No-op, navigation is handled by scaffoldNavigator */ }
                             )
                         }
