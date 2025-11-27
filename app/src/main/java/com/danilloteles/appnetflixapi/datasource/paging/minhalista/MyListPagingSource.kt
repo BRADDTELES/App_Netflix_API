@@ -64,55 +64,50 @@ class MyListPagingSource(
 
                             Log.d("PagingSourceDebug", "--- Desambiguando ID: ${item.id} ---")
                             Log.d("PagingSourceDebug", "Item Original -> media_type: ${item.media_type}, title: ${item.title}, name: ${item.name}")
-                            Log.d("PagingSourceDebug", "Resultado Filme -> title: ${filme?.title}")
-                            Log.d("PagingSourceDebug", "Resultado Série -> name: ${serie?.name}")
+                            Log.d("PagingSourceDebug", "Resultado Filme -> id: ${filme?.id}, title: ${filme?.title}, runtime: ${filme?.runtime ?: 0}, budget: ${filme?.budget ?: 0}, revenue: ${filme?.revenue ?: 0}")
+                            Log.d("PagingSourceDebug", "Resultado Série -> id: ${serie?.id}, name: ${serie?.name}, seasons: ${serie?.seasons?.size ?: 0}, episode_run_time: ${serie?.episode_run_time?.size ?: 0}, number_of_episodes: ${serie?.number_of_episodes ?: 0}")
 
-                            when {
-                                // Caso 1: Ambos existem, precisamos desempatar
-                                filme != null && serie != null -> {
-                                    Log.d("PagingSourceDebug", "COLISÃO DETECTADA. Iniciando desempate.")
+                            // Lógica de desambiguação: verifica atributos exclusivos e trata colisões
+                            // Prioridade 1: Identificação exclusiva por atributo
 
-                                    // HEURÍSTICA AGRESSIVA:
-                                    // Se o item original da lista foi classificado como "movie" (o cenário do bug da API),
-                                    // e uma série com o mesmo ID também foi encontrada, vamos assumir que é a série
-                                    // que o usuário queria, pois a API de lista corrompeu os dados (media_type, title, etc).
-                                    if (item.media_type == "movie") {
-                                        Log.d("PagingSourceDebug", "DECISÃO: SÉRIE (Heurística: media_type 'movie' em colisão -> prioriza série).")
-                                        serie.toMediaItem()
-                                    } else {
-                                        // Para outros casos (ex: media_type 'tv' ou nulo), usamos a lógica de correspondência de nome/título.
-                                        val originalTitleOrName = item.name ?: item.title
-                                        val filmeMatch = originalTitleOrName.equals(filme.title, ignoreCase = true)
-                                        val serieMatch = originalTitleOrName.equals(serie.name, ignoreCase = true)
-                                        Log.d("PagingSourceDebug", "Comparando '${originalTitleOrName}' -> filmeMatch: $filmeMatch, serieMatch: $serieMatch")
+                            val isSerieExclusiva = serie != null &&
+                                serie.seasons.isNotEmpty() &&
+                                serie.episode_run_time.isNotEmpty() &&
+                                serie.number_of_episodes > 0 &&
+                                (filme == null || (filme.runtime == 0 && filme.budget == 0 && filme.revenue == 0))
 
-                                        if (serieMatch && !filmeMatch) {
-                                            Log.d("PagingSourceDebug", "DECISÃO: SÉRIE (correspondência de nome exclusiva).")
-                                            serie.toMediaItem()
-                                        } else if (filmeMatch && !serieMatch) {
-                                            Log.d("PagingSourceDebug", "DECISÃO: FILME (correspondência de título exclusiva).")
-                                            filme.toMediaItem()
-                                        } else { // Casos mais ambíguos (ambos batem ou nenhum bate)
-                                            Log.d("PagingSourceDebug", "Desempate ambíguo. Priorizando série como fallback para corrigir bug da API.")
-                                            serie.toMediaItem() // Em caso de dúvida total, ainda priorizamos a série.
-                                        }
-                                    }
-                                }
-                                // Caso 2: Apenas o filme existe
-                                filme != null -> {
-                                    Log.d("PagingSourceDebug", "DECISÃO: FILME (único encontrado).")
-                                    filme.toMediaItem()
-                                }
-                                // Caso 3: Apenas a série existe
-                                serie != null -> {
-                                    Log.d("PagingSourceDebug", "DECISÃO: SÉRIE (única encontrada).")
-                                    serie.toMediaItem()
-                                }
-                                // Caso 4: Nenhum existe
-                                else -> {
-                                    Log.e("PagingSourceDebug", "DECISÃO: NENHUM (falha em ambas as buscas para o ID ${item.id}).")
-                                    null
-                                }
+                            val isFilmeExclusivo = filme != null &&
+                                filme.runtime > 0 &&
+                                filme.budget > 0 &&
+                                filme.revenue > 0 &&
+                                (serie == null || (serie.seasons.isEmpty() && serie.episode_run_time.isEmpty() && serie.number_of_episodes == 0))
+
+                            if (isSerieExclusiva) {
+                                Log.d("PagingSourceDebug", "DECISÃO: SÉRIE (identificação exclusiva por múltiplos atributos para ID ${item.id}).")
+                                serie.toMediaItem()
+                            } else if (isFilmeExclusivo) {
+                                Log.d("PagingSourceDebug", "DECISÃO: FILME (identificação exclusiva por múltiplos atributos para ID ${item.id}).")
+                                filme.toMediaItem()
+                            }
+                            // Prioridade 2: Caso de COLISÃO COMPLETA ou ambígua
+                            // Se ambos têm atributos exclusivos, priorizamos a SÉRIE devido ao bug.
+                            else if (filme != null && filme.runtime > 0 && filme.budget > 0 && filme.revenue > 0 &&
+                                     serie != null && serie.seasons.isNotEmpty() && serie.episode_run_time.isNotEmpty() && serie.number_of_episodes > 0) {
+                                Log.d("PagingSourceDebug", "DECISÃO: SÉRIE (colisão completa por múltiplos atributos, priorizando SÉRIE devido ao bug da API para ID ${item.id}).")
+                                serie.toMediaItem()
+                            }
+                            // Prioridade 3: Fallback para casos menos claros
+                            else if (filme != null) {
+                                Log.d("PagingSourceDebug", "DECISÃO: FILME (fallback para ID ${item.id}).")
+                                filme.toMediaItem()
+                            }
+                            else if (serie != null) {
+                                Log.d("PagingSourceDebug", "DECISÃO: SÉRIE (fallback para ID ${item.id}).")
+                                serie.toMediaItem()
+                            }
+                            else {
+                                Log.e("PagingSourceDebug", "DECISÃO: NENHUM (falha em ambas as buscas para o ID ${item.id}).")
+                                null
                             }
                         } catch (e: Exception) {
                             Log.e("PagingSourceDebug", "Exceção ao buscar detalhes para o ID ${item.id}: ${e.message}", e)

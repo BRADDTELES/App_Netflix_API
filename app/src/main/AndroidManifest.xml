@@ -14,7 +14,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AppNetflixAPI">
         <activity
-            android:name=".view.TesteAPIV4Activity"
+            android:name=".view.screens.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.AppNetflixAPI"
