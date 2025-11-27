@@ -25,7 +25,7 @@ android {
         buildConfigField("String", "API_READ_ACCESS_TOKEN", apiReadAccessToken)
 
         applicationId = "com.danilloteles.appnetflixapi"
-        minSdk = 24
+        minSdk = 25
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -85,6 +85,7 @@ dependencies {
     // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.compose.adaptive.navigation)
+    implementation(libs.androidx.compose.material)
     // Add the KSP plugin to your project
     ksp(libs.androidx.room.compiler)
     // Kotlin Extensions and Coroutines support for Room

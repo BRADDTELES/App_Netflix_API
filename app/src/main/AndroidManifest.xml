@@ -24,12 +24,21 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- Intent-filter para Deep Linking -->
+            <!-- Intent-filter para Deep Linking (manter por enquanto, não será usado pelo fluxo de App Links) -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="netflixapp" android:host="auth" />
+                <data android:scheme="netflixapp" android:host="callback" />
+            </intent-filter>
+            <!-- NOVO Intent-filter para App Links (HTTPS) -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https"
+                      android:host="braddteles.github.io"
+                      android:pathPrefix="/android-app-links" />
             </intent-filter>
         </activity>
     </application>

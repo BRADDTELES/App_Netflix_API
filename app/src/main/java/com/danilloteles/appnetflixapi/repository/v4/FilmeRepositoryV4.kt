@@ -20,15 +20,16 @@ class FilmeRepositoryV4(
 ) {
 
     private val apiV4 = RetrofitHelperV4.filmeApiV4
+    private val authApiV4 = RetrofitHelperV4.authApiV4
 
-    suspend fun createRequestToken(redirectTo: String): Result<RequestTokenResponse> =
+    suspend fun createRequestToken(redirectTo: String?): Result<RequestTokenResponse> =
         safeApiCall {
-            apiV4.createRequestToken(RequestTokenRequest(redirect_to = redirectTo))
+            authApiV4.createRequestToken(RequestTokenRequest(redirect_to = redirectTo ?: ""))
         }
 
     suspend fun createAccessToken(requestToken: String): Result<AccessTokenResponse> =
         safeApiCall {
-            apiV4.createAccessToken(AccessTokenRequest(request_token = requestToken))
+            authApiV4.createAccessToken(AccessTokenRequest(request_token = requestToken))
         }
 
     suspend fun createList(accessToken: String, nome: String, descricao: String?) =
@@ -77,7 +78,7 @@ class FilmeRepositoryV4(
             apiV4.getListDetails("Bearer $accessToken", listId)
         }
 
-    suspend fun <T> safeApiCall(apiCall: suspend () -> T): Result<T> {
+    private suspend fun <T> safeApiCall(apiCall: suspend () -> T): Result<T> {
         return try {
             Result.Sucesso(apiCall())
         } catch (e: HttpException) {
