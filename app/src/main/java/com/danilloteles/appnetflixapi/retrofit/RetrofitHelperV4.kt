@@ -1,7 +1,8 @@
 package com.danilloteles.appnetflixapi.retrofit
 
 import com.danilloteles.appnetflixapi.BuildConfig
-import com.danilloteles.appnetflixapi.api.FilmeAPIV4
+import com.danilloteles.appnetflixapi.api.APIV4
+import com.danilloteles.appnetflixapi.constantes.Constantes
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -9,8 +10,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object RetrofitHelperV4 {
-
-    private const val BASE_URL = "https://api.themoviedb.org/4/"
 
     // Logging interceptor (apenas em debug)
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
@@ -53,25 +52,22 @@ object RetrofitHelperV4 {
         .build()
 
     // Instância do Retrofit para chamadas que precisam do Access Token do USUÁRIO
-    val filmeApiV4: FilmeAPIV4 by lazy {
+    val apiV4: APIV4 by lazy {
         Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(Constantes.BASE_URL_V4)
             .client(publicOkHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create(FilmeAPIV4::class.java)
+            .create(APIV4::class.java)
     }
 
     // Instância do Retrofit para o fluxo de AUTENTICAÇÃO (usa o Read Access Token)
-    val authApiV4: FilmeAPIV4 by lazy {
+    val authApiV4: APIV4 by lazy {
         Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(Constantes.BASE_URL_V4)
             .client(authOkHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create(FilmeAPIV4::class.java)
+            .create(APIV4::class.java)
     }
 }
-
-// Adicione essa dependência no build.gradle.kts (module):
-// implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")

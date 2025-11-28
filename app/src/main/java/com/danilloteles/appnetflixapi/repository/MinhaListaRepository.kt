@@ -5,13 +5,18 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.danilloteles.appnetflixapi.api.FilmeAPI
-import com.danilloteles.appnetflixapi.api.FilmeAPIV4
+import com.danilloteles.appnetflixapi.api.APIV4
 import com.danilloteles.appnetflixapi.common.Result
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
 import com.danilloteles.appnetflixapi.datasource.paging.minhalista.MyListPagingSource
 import com.danilloteles.appnetflixapi.model.ListaDetalhesResposta
 import com.danilloteles.appnetflixapi.model.MediaItem
+import com.danilloteles.appnetflixapi.model.filme.AccountDetailsResponse
 import com.danilloteles.appnetflixapi.model.filme.AccountListsResponse
+import com.danilloteles.appnetflixapi.model.filme.AddRemoveListItemRequest
+import com.danilloteles.appnetflixapi.model.filme.CreateListRequest
+import com.danilloteles.appnetflixapi.model.filme.CreateListResponse
+import com.danilloteles.appnetflixapi.model.filme.ListaItemResposta
 import com.danilloteles.appnetflixapi.model.filme.ListaResposta
 import com.danilloteles.appnetflixapi.model.v4.response.RemoveListResponse
 import com.danilloteles.appnetflixapi.utils.events.SortOrder
@@ -24,18 +29,18 @@ import java.io.IOException
 
 class MinhaListaRepository(
     private val filmeAPI: FilmeAPI,
-    private val filmeAPIV4: FilmeAPIV4, // Injetando a API v4
+    private val APIV4: APIV4, // Injetando a API v4
     private val userPreferencesRepository: UserPreferencesRepository
 ) {
 
     // --- Métodos V4 ---
 
     fun obterListasDaContaV4(accountId: String, accessToken: String): Flow<Result<AccountListsResponse>> = flow {
-        emit(safeApiCall { filmeAPIV4.getAccountLists(accessToken, accountId) })
+        emit(safeApiCall { APIV4.getAccountLists(accessToken, accountId) })
     }.flowOn(Dispatchers.IO)
 
     suspend fun removerListaV4(listId: String, accessToken: String): Result<RemoveListResponse> {
-        return safeApiCall { filmeAPIV4.removeList(accessToken, listId) }
+        return safeApiCall { APIV4.removeList(accessToken, listId) }
     }
 
 
@@ -51,12 +56,28 @@ class MinhaListaRepository(
         ).flow
     }
 
-    suspend fun obterDetalhesDaLista(listId: String, sessionId: String): Response<ListaDetalhesResposta> {
-        return filmeAPI.obterDetalhesDaLista(listId, sessionId)
+    suspend fun obterDetalhesDaConta(sessionId: String): Response<AccountDetailsResponse> {
+        return filmeAPI.obterDetalhesDaConta(sessionId)
+    }
+
+    suspend fun criarLista(sessionId: String, request: CreateListRequest): Response<CreateListResponse> {
+        return filmeAPI.criarLista(sessionId, request)
     }
 
     suspend fun obterListasDaConta(accountId: Int, sessionId: String): Response<AccountListsResponse> {
         return filmeAPI.obterListasDaConta(accountId, sessionId)
+    }
+
+    suspend fun obterDetalhesDaLista(listId: String, sessionId: String): Response<ListaDetalhesResposta> {
+        return filmeAPI.obterDetalhesDaLista(listId, sessionId)
+    }
+
+    suspend fun adicionarItemALista(listId: String, sessionId: String, request: AddRemoveListItemRequest): Response<ListaItemResposta> {
+        return filmeAPI.adicionarItemALista(listId, sessionId, request)
+    }
+
+    suspend fun removerItemDaLista(listId: String, sessionId: String, request: AddRemoveListItemRequest): Response<ListaItemResposta> {
+        return filmeAPI.removerItemDaLista(listId, sessionId, request)
     }
 
     suspend fun removerLista(listId: String, sessionId: String): Response<ListaResposta> {

@@ -49,6 +49,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
+import com.danilloteles.appnetflixapi.repository.MinhaListaRepository
+import com.danilloteles.appnetflixapi.repository.v4.RepositoryV4
+import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
+import com.danilloteles.appnetflixapi.retrofit.RetrofitHelperV4
 import com.danilloteles.appnetflixapi.view.componentes.OutlinedTextFieldCustom
 import com.danilloteles.appnetflixapi.viewmodel.FormularioViewModel
 import kotlinx.coroutines.delay
@@ -60,7 +64,12 @@ fun FormularioScreen(
 ) {
     val context = LocalContext.current
     val viewModel: FormularioViewModel = viewModel(
-        factory = FormularioViewModel.Factory(UserPreferencesRepository(context))
+        factory = FormularioViewModel.Factory(
+            UserPreferencesRepository(context),
+            RepositoryV4(
+                userPreferences = UserPreferencesRepository(context)
+            )
+        )
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }

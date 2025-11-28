@@ -78,7 +78,7 @@ interface FilmeAPI {
         @Body request: CreateSessionRequest
     ): Response<SessionIdResponse>
 
-    // --- Endpoints para Gerenciamento de Listas e Conta ---
+    // --- Endpoints para Gerenciamento de Listas e Conta V3 ---
 
     @GET("account")
     suspend fun obterDetalhesDaConta(

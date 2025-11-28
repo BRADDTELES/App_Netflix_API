@@ -16,7 +16,7 @@ import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesReposi
 import com.danilloteles.appnetflixapi.view.screens.ConteudoScreen
 import com.danilloteles.appnetflixapi.view.screens.FilmeScreen
 import com.danilloteles.appnetflixapi.view.screens.FormularioScreen
-import com.danilloteles.appnetflixapi.view.screens.LoginScreenV4
+import com.danilloteles.appnetflixapi.view.screens.LoginScreen
 import com.danilloteles.appnetflixapi.view.screens.MinhaListaScreen
 import com.danilloteles.appnetflixapi.view.screens.MeuFilmeDetalhesScreen
 import com.danilloteles.appnetflixapi.view.screens.MinhaSerieDetalhesScreen
@@ -102,7 +102,7 @@ fun NetflixApp(
             val destination = backStackEntry.arguments?.getString(AppDestination.DESTINATION_ARG)
             val requestToken = backStackEntry.arguments?.getString(AppDestination.REQUEST_TOKEN_ARG)
 
-            LoginScreenV4(
+            LoginScreen(
                 navController = navController,
                 deepLinkRequestToken = requestToken,
                 destinationRoute = destination ?: AppDestination.MINHA_LISTA_SCREEN

@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.danilloteles.appnetflixapi.common.Result
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
-import com.danilloteles.appnetflixapi.repository.v4.FilmeRepositoryV4
+import com.danilloteles.appnetflixapi.repository.v4.RepositoryV4
 import com.danilloteles.appnetflixapi.utils.events.LoginEvent
 import com.danilloteles.appnetflixapi.utils.events.UiState
 import kotlinx.coroutines.delay
@@ -16,8 +16,8 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class AuthV4ViewModel(
-    private val repository: FilmeRepositoryV4,
+class LoginAuthViewModel(
+    private val repository: RepositoryV4,
     private val userPreferences: UserPreferencesRepository
 ) : ViewModel() {
 
@@ -188,13 +188,13 @@ class AuthV4ViewModel(
     }
 
     class Factory(
-        private val repository: FilmeRepositoryV4,
+        private val repository: RepositoryV4,
         private val userPreferences: UserPreferencesRepository
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(AuthV4ViewModel::class.java)) {
+            if (modelClass.isAssignableFrom(LoginAuthViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
-                return AuthV4ViewModel(repository, userPreferences) as T
+                return LoginAuthViewModel(repository, userPreferences) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

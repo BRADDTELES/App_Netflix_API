@@ -29,7 +29,6 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -73,7 +72,7 @@ fun MinhaListaScreen(
             userPreferencesRepository = UserPreferencesRepository(context),
             minhaListaRepository = MinhaListaRepository(
                 filmeAPI = RetrofitHelper.filmeAPI, // v3
-                filmeAPIV4 = RetrofitHelperV4.filmeApiV4, // v4
+                APIV4 = RetrofitHelperV4.apiV4, // v4
                 userPreferencesRepository = UserPreferencesRepository(context)
             )
         )

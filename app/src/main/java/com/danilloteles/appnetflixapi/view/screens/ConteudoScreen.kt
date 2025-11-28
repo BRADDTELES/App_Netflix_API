@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -26,8 +25,6 @@ import androidx.compose.material.icons.filled.Abc
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.ThumbUp
-import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -93,7 +90,7 @@ fun ConteudoScreen(
             listId = listId,
             minhaListaRepository = MinhaListaRepository(
                 filmeAPI = RetrofitHelper.filmeAPI,
-                filmeAPIV4 = RetrofitHelperV4.filmeApiV4,
+                APIV4 = RetrofitHelperV4.apiV4,
                 userPreferencesRepository = UserPreferencesRepository(context)
             ),
             userPreferencesRepository = UserPreferencesRepository(context)

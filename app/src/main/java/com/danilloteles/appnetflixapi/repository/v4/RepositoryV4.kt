@@ -9,17 +9,18 @@ import com.danilloteles.appnetflixapi.model.v4.request.MediaItemRequest
 import com.danilloteles.appnetflixapi.model.v4.request.RemoveItemsRequest
 import com.danilloteles.appnetflixapi.model.v4.request.RequestTokenRequest
 import com.danilloteles.appnetflixapi.model.v4.response.AccessTokenResponse
+import com.danilloteles.appnetflixapi.model.v4.response.CreateListResponse
 import com.danilloteles.appnetflixapi.model.v4.response.RequestTokenResponse
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelperV4
 import retrofit2.HttpException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 
-class FilmeRepositoryV4(
+class RepositoryV4(
     private val userPreferences: UserPreferencesRepository? = null // opcional injeção
 ) {
 
-    private val apiV4 = RetrofitHelperV4.filmeApiV4
+    private val apiV4 = RetrofitHelperV4.apiV4
     private val authApiV4 = RetrofitHelperV4.authApiV4
 
     suspend fun createRequestToken(redirectTo: String?): Result<RequestTokenResponse> =
@@ -32,7 +33,7 @@ class FilmeRepositoryV4(
             authApiV4.createAccessToken(AccessTokenRequest(request_token = requestToken))
         }
 
-    suspend fun createList(accessToken: String, nome: String, descricao: String?) =
+    suspend fun createList(accessToken: String, nome: String, descricao: String?): Result<CreateListResponse> =
         safeApiCall {
             apiV4.createList("Bearer $accessToken", CreateListRequest(name = nome, description = descricao))
         }

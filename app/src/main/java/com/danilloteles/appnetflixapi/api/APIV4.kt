@@ -23,7 +23,7 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
 
-interface FilmeAPIV4 {
+interface APIV4 {
     @POST("auth/request_token")
     suspend fun createRequestToken(
         @Body body: RequestTokenRequest

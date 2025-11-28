@@ -30,7 +30,7 @@ class RetrofitHelper {
             .build()
 
         val filmeAPI: FilmeAPI = Retrofit.Builder()
-            .baseUrl("https://api.themoviedb.org/3/")
+            .baseUrl(Constantes.BASE_URL_V3)
             .addConverterFactory(GsonConverterFactory.create() )
             .client(okHttpClient)
             .build()
