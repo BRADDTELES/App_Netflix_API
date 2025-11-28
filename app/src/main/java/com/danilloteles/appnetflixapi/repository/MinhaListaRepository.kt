@@ -18,7 +18,8 @@ import com.danilloteles.appnetflixapi.model.filme.CreateListRequest
 import com.danilloteles.appnetflixapi.model.filme.CreateListResponse
 import com.danilloteles.appnetflixapi.model.filme.ListaItemResposta
 import com.danilloteles.appnetflixapi.model.filme.ListaResposta
-import com.danilloteles.appnetflixapi.model.v4.response.RemoveListResponse
+import com.danilloteles.appnetflixapi.model.v4.response.AccountListsV4Response
+import com.danilloteles.appnetflixapi.model.v4.response.RemoveListV4Response
 import com.danilloteles.appnetflixapi.utils.events.SortOrder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -35,11 +36,11 @@ class MinhaListaRepository(
 
     // --- Métodos V4 ---
 
-    fun obterListasDaContaV4(accountId: String, accessToken: String): Flow<Result<AccountListsResponse>> = flow {
+    fun obterListasDaContaV4(accountId: String, accessToken: String): Flow<Result<AccountListsV4Response>> = flow {
         emit(safeApiCall { APIV4.getAccountLists(accessToken, accountId) })
     }.flowOn(Dispatchers.IO)
 
-    suspend fun removerListaV4(listId: String, accessToken: String): Result<RemoveListResponse> {
+    suspend fun removerListaV4(listId: String, accessToken: String): Result<RemoveListV4Response> {
         return safeApiCall { APIV4.removeList(accessToken, listId) }
     }
 

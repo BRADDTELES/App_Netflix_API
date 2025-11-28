@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class MediaItemRequest(
+data class MediaItemV4Request(
     @SerialName("media_type")
     val media_type: String, // "movie" ou "tv"
     @SerialName("media_id")

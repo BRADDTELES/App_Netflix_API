@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class AccessTokenRequest(
-    @SerialName("request_token")
-    val request_token: String
+data class AddItemsV4Request(
+    @SerialName("items")
+    val items: List<MediaItemV4Request>
 )

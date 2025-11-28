@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class MediaItemResponse(
+data class MediaItemV4Response(
     @SerialName("media_id")
     val media_id: Int,
     @SerialName("media_type")

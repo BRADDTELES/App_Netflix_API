@@ -6,8 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.danilloteles.appnetflixapi.common.Result
 import com.danilloteles.appnetflixapi.utils.events.UiState
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
-import com.danilloteles.appnetflixapi.model.v4.response.CreateListResponse
-import com.danilloteles.appnetflixapi.repository.MinhaListaRepository
+import com.danilloteles.appnetflixapi.model.v4.response.CreateListV4Response
 import com.danilloteles.appnetflixapi.repository.v4.RepositoryV4
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,8 +18,8 @@ class FormularioViewModel(
     private val repositoryV4: RepositoryV4
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<UiState<CreateListResponse>>(UiState.Idle)
-    val uiState: StateFlow<UiState<CreateListResponse>> = _uiState
+    private val _uiState = MutableStateFlow<UiState<CreateListV4Response>>(UiState.Idle)
+    val uiState: StateFlow<UiState<CreateListV4Response>> = _uiState
 
     fun createList(name: String, description: String) {
         viewModelScope.launch {
@@ -46,10 +45,6 @@ class FormularioViewModel(
                 }
             }
         }
-    }
-
-    fun resetUiState() {
-        _uiState.value = UiState.Idle
     }
 
     class Factory(

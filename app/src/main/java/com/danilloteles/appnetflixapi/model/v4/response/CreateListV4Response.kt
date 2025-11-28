@@ -4,15 +4,13 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class AccessTokenResponse(
-    @SerialName("access_token")
-    val access_token: String,
-    @SerialName("account_id")
-    val account_id: String,
-    @SerialName("status_code")
-    val status_code: Int,
+data class CreateListV4Response(
     @SerialName("status_message")
     val status_message: String,
+    @SerialName("id")
+    val id: Int,
     @SerialName("success")
-    val success: Boolean
+    val success: Boolean,
+    @SerialName("status_code")
+    val status_code: Int
 )

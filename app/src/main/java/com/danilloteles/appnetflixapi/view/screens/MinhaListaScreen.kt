@@ -53,7 +53,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
 import com.danilloteles.appnetflixapi.model.filme.TmdbList
+import com.danilloteles.appnetflixapi.model.v4.response.TmdbListV4
 import com.danilloteles.appnetflixapi.repository.MinhaListaRepository
+import com.danilloteles.appnetflixapi.repository.v4.RepositoryV4
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelperV4
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
@@ -70,10 +72,8 @@ fun MinhaListaScreen(
     val viewModel: MinhaListaViewModel = viewModel(
         factory = MinhaListaViewModel.MinhaListaViewModelFactory(
             userPreferencesRepository = UserPreferencesRepository(context),
-            minhaListaRepository = MinhaListaRepository(
-                filmeAPI = RetrofitHelper.filmeAPI, // v3
-                APIV4 = RetrofitHelperV4.apiV4, // v4
-                userPreferencesRepository = UserPreferencesRepository(context)
+            repositoryV4 = RepositoryV4(
+                userPreferences = UserPreferencesRepository(context)
             )
         )
     )
@@ -89,7 +89,7 @@ fun MinhaListaScreen(
     val selectedItem = scaffoldNavigator.currentDestination?.contentKey
 
     var showDeleteConfirmation by remember { mutableStateOf(false) }
-    var itemToDelete by remember { mutableStateOf<TmdbList?>(null) }
+    var itemToDelete by remember { mutableStateOf<TmdbListV4?>(null) }
 
     var fabMenuExpanded by rememberSaveable { mutableStateOf(false) }
     val listState = rememberLazyListState()
@@ -340,9 +340,9 @@ fun MinhaListaScreen(
 
 @Composable
 private fun DeletableListItem(
-    item: TmdbList,
-    onDeleteRequest: (TmdbList) -> Unit,
-    onItemClick: (TmdbList) -> Unit
+    item: TmdbListV4,
+    onDeleteRequest: (TmdbListV4) -> Unit,
+    onItemClick: (TmdbListV4) -> Unit
 ) {
     val dismissState = rememberSwipeToDismissBoxState()
     val scope = rememberCoroutineScope()
@@ -370,7 +370,7 @@ private fun DeletableListItem(
     ) {
         ListItem(
             headlineContent = { Text(item.name) },
-            supportingContent = { Text(text = "${item.item_count} conteúdos. Deslize para a esquerda para remover.", fontSize = 12.sp) },
+            supportingContent = { Text(text = "${item.number_of_items} conteúdos. Deslize para a esquerda para remover.", fontSize = 12.sp) },
             colors = ListItemDefaults.colors(
                 containerColor = Color.Black,
                 headlineColor = Color.White,

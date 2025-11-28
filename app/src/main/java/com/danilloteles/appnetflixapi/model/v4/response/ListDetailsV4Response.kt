@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
 @Serializable
-data class ListDetailsResponse(
+data class ListDetailsV4Response(
     @SerialName("id")
     val id: Int,
     @SerialName("name")
@@ -21,5 +21,5 @@ data class ListDetailsResponse(
     @SerialName("created_by")
     val created_by: JsonElement?,
     @SerialName("results")
-    val results: List<ItemDetailsResponse>
+    val results: List<ItemDetailsV4Response>
 )

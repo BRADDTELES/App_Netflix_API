@@ -1,76 +1,65 @@
 package com.danilloteles.appnetflixapi.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.danilloteles.appnetflixapi.common.Result
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
-import com.danilloteles.appnetflixapi.model.filme.TmdbList
-import com.danilloteles.appnetflixapi.repository.MinhaListaRepository
+import com.danilloteles.appnetflixapi.model.v4.response.TmdbListV4
+import com.danilloteles.appnetflixapi.repository.v4.RepositoryV4
 import com.danilloteles.appnetflixapi.utils.events.UiState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MinhaListaViewModel(
     private val userPreferencesRepository: UserPreferencesRepository,
-    private val minhaListaRepository: MinhaListaRepository,
+    private val repositoryV4: RepositoryV4
 ) : ViewModel() {
 
-    private val _minhasListasState = MutableStateFlow<UiState<List<TmdbList>>>(UiState.Idle)
-    val minhasListasState: StateFlow<UiState<List<TmdbList>>> = _minhasListasState
+    private val _minhasListasState = MutableStateFlow<UiState<List<TmdbListV4>>>(UiState.Idle)
+    val minhasListasState: StateFlow<UiState<List<TmdbListV4>>> = _minhasListasState
 
     private val _listaRemovidaState = MutableStateFlow<UiState<Unit>>(UiState.Idle)
     val listaRemovidaState: StateFlow<UiState<Unit>> = _listaRemovidaState
 
     init {
-        observeAuthenticationAndFetchLists()
+        observeAuthenticationEBusqueListas()
     }
 
-    private fun observeAuthenticationAndFetchLists() {
-        val accessTokenFlow = userPreferencesRepository.accessTokenV4
-        val accountIdFlow = userPreferencesRepository.accountId
-
-        combine(accessTokenFlow, accountIdFlow) { token, id ->
-            if (!token.isNullOrEmpty() && !id.isNullOrEmpty()) {
-                Log.d("MinhaListaViewModel", "Token e ID válidos. Buscando listas.")
-                token to id
-            } else {
-                Log.d("MinhaListaViewModel", "Token ou ID nulos. Usuário não autenticado.")
-                null
-            }
-        }.flatMapLatest { credentials ->
+    fun observeAuthenticationEBusqueListas() {
+        viewModelScope.launch {
             _minhasListasState.value = UiState.Loading
-            if (credentials != null) {
-                val (accessToken, accountId) = credentials
-                minhaListaRepository.obterListasDaContaV4(accountId, "Bearer $accessToken")
-            } else {
-                MutableStateFlow(Result.HttpError(401, "Usuário não autenticado."))
+            val accessToken = userPreferencesRepository.accessTokenV4.first()
+            val accountObjectId = userPreferencesRepository.accountId.first()
+            if (accessToken.isNullOrEmpty() || accountObjectId.isNullOrEmpty()) {
+                _minhasListasState.value = UiState.Error("Usuário não autenticado e não encontrado")
+                return@launch
             }
-        }.onEach { result ->
-            when (result) {
+
+            when(val result = repositoryV4.getAccountLits(accessToken, accountObjectId)){
                 is Result.Sucesso -> {
-                    _minhasListasState.value = UiState.Success(result.data.results)
+                    val response = result.data.body()
+                    if (response?.results != null) {
+                        _minhasListasState.value = UiState.Success(response.results)
+                    } else {
+                        emptyList<TmdbListV4>()
+                    }
                 }
                 is Result.HttpError -> {
-                    _minhasListasState.value = UiState.Error("Erro ${result.code}: ${result.mensagem}")
+                    _minhasListasState.value = UiState.Error("Erro HTTP: ${result.mensagem} - Code: ${result.code}")
                 }
                 is Result.NetworkError -> {
-                    _minhasListasState.value = UiState.Error(result.mensagem)
+                    _minhasListasState.value = UiState.Error("Erro de Network: ${result.mensagem}")
                 }
                 is Result.UnknownError -> {
-                    _minhasListasState.value = UiState.Error(result.mensagem)
+                    _minhasListasState.value = UiState.Error("Erro desconhecido: ${result.mensagem}")
                 }
             }
-        }.launchIn(viewModelScope)
+        }
     }
 
     fun buscarMinhasListas() {
@@ -78,7 +67,7 @@ class MinhaListaViewModel(
         // reiniciando a observação. A maneira mais simples é ter um "trigger".
         // Por enquanto, a lógica reativa no init deve ser suficiente.
         // Se o pull-to-refresh for necessário, podemos implementar um Flow de trigger.
-        observeAuthenticationAndFetchLists() // Re-aciona o fluxo
+        observeAuthenticationEBusqueListas() // Re-aciona o fluxo
     }
 
 
@@ -91,16 +80,19 @@ class MinhaListaViewModel(
                 return@launch
             }
 
-            when(val result = minhaListaRepository.removerListaV4(listId.toString(), "Bearer $accessToken")){
+            when(val result = repositoryV4.removeList(accessToken, listId.toString())){
                 is Result.Sucesso -> {
                      _listaRemovidaState.value = UiState.Success(Unit)
                      buscarMinhasListas() // Atualiza a lista após remover
                 }
                 is Result.HttpError -> {
-                     _listaRemovidaState.value = UiState.Error("Erro ao remover: ${result.mensagem}")
+                     _listaRemovidaState.value = UiState.Error("Erro HTTP ao remover lista: ${result.mensagem}")
                 }
-                else -> {
-                     _listaRemovidaState.value = UiState.Error("Erro desconhecido ao remover lista.")
+                is Result.NetworkError -> {
+                    _listaRemovidaState.value = UiState.Error("Erro de Network ao remover lista: ${result.mensagem}")
+                }
+                is Result.UnknownError -> {
+                    _listaRemovidaState.value = UiState.Error("Erro desconhecido ao remover lista: ${result.mensagem}")
                 }
             }
         }
@@ -112,14 +104,14 @@ class MinhaListaViewModel(
 
     class MinhaListaViewModelFactory(
         private val userPreferencesRepository: UserPreferencesRepository,
-        private val minhaListaRepository: MinhaListaRepository
+        private val repositoryV4: RepositoryV4
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(MinhaListaViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
                 return MinhaListaViewModel(
                     userPreferencesRepository,
-                    minhaListaRepository
+                    repositoryV4
                 ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")

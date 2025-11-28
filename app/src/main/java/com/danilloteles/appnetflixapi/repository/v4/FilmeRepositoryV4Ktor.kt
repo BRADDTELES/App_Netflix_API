@@ -1,21 +1,19 @@
 package com.danilloteles.appnetflixapi.repository.v4
 
-import androidx.compose.foundation.text.input.delete
-import androidx.core.graphics.get
 import com.danilloteles.appnetflixapi.common.Result
 import com.danilloteles.appnetflixapi.ktor.KtorClientV4
-import com.danilloteles.appnetflixapi.model.v4.request.AccessTokenRequest
-import com.danilloteles.appnetflixapi.model.v4.request.AddItemsRequest
-import com.danilloteles.appnetflixapi.model.v4.request.CreateListRequest
-import com.danilloteles.appnetflixapi.model.v4.request.MediaItemRequest
-import com.danilloteles.appnetflixapi.model.v4.request.RemoveItemsRequest
-import com.danilloteles.appnetflixapi.model.v4.request.RequestTokenRequest
-import com.danilloteles.appnetflixapi.model.v4.response.AccessTokenResponse
-import com.danilloteles.appnetflixapi.model.v4.response.AddItemsResponse
-import com.danilloteles.appnetflixapi.model.v4.response.CreateListResponse
-import com.danilloteles.appnetflixapi.model.v4.response.ListDetailsResponse
-import com.danilloteles.appnetflixapi.model.v4.response.RemoveItemsResponse
-import com.danilloteles.appnetflixapi.model.v4.response.RequestTokenResponse
+import com.danilloteles.appnetflixapi.model.v4.request.AccessTokenV4Request
+import com.danilloteles.appnetflixapi.model.v4.request.AddItemsV4Request
+import com.danilloteles.appnetflixapi.model.v4.request.CreateListV4Request
+import com.danilloteles.appnetflixapi.model.v4.request.MediaItemV4Request
+import com.danilloteles.appnetflixapi.model.v4.request.RemoveItemsV4Request
+import com.danilloteles.appnetflixapi.model.v4.request.RequestTokenV4Request
+import com.danilloteles.appnetflixapi.model.v4.response.AccessTokenV4Response
+import com.danilloteles.appnetflixapi.model.v4.response.AddItemsV4Response
+import com.danilloteles.appnetflixapi.model.v4.response.CreateListV4Response
+import com.danilloteles.appnetflixapi.model.v4.response.ListDetailsV4Response
+import com.danilloteles.appnetflixapi.model.v4.response.RemoveItemsV4Response
+import com.danilloteles.appnetflixapi.model.v4.response.RequestTokenV4Response
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.RedirectResponseException
@@ -34,37 +32,37 @@ class FilmeRepositoryV4Ktor {
     private val authClient = KtorClientV4.authClient
     private val publicClient = KtorClientV4.publicClient
 
-    suspend fun createRequestToken(redirectTo: String?): Result<RequestTokenResponse> =
+    suspend fun createRequestToken(redirectTo: String?): Result<RequestTokenV4Response> =
         safeApiCall {
             authClient.post("auth/request_token") {
                 setBody(
-                    RequestTokenRequest(
+                    RequestTokenV4Request(
                         redirect_to = redirectTo ?: "http://www.themoviedb.org/"
                     )
                 )
             }.body()
         }
 
-    suspend fun createAccessToken(requestToken: String): Result<AccessTokenResponse> =
+    suspend fun createAccessToken(requestToken: String): Result<AccessTokenV4Response> =
         safeApiCall {
             publicClient.post("auth/access_token") {
-                setBody(AccessTokenRequest(request_token = requestToken))
+                setBody(AccessTokenV4Request(request_token = requestToken))
             }.body()
         }
 
-    suspend fun createList(accessToken: String, nome: String, descricao: String?): Result<CreateListResponse> =
+    suspend fun createList(accessToken: String, nome: String, descricao: String?): Result<CreateListV4Response> =
         safeApiCall {
             publicClient.post("list") {
                 header("Authorization", "Bearer $accessToken")
-                setBody(CreateListRequest(name = nome, description = descricao))
+                setBody(CreateListV4Request(name = nome, description = descricao))
             }.body()
         }
 
     // TODO: Implementar os outros métodos (addMovie, getListDetails, removeMovie...) de forma similar.
-    suspend fun addMovie(accessToken: String, listId: String, movieId: Int): Result<AddItemsResponse> =
+    suspend fun addMovie(accessToken: String, listId: String, movieId: Int): Result<AddItemsV4Response> =
         safeApiCall {
-            val requestBody = AddItemsRequest(
-                items = listOf(MediaItemRequest(media_type = "movie", media_id = movieId))
+            val requestBody = AddItemsV4Request(
+                items = listOf(MediaItemV4Request(media_type = "movie", media_id = movieId))
             )
             publicClient.post("list/$listId/items") {
                 header("Authorization", "Bearer $accessToken")
@@ -72,10 +70,10 @@ class FilmeRepositoryV4Ktor {
             }.body()
         }
 
-    suspend fun addSerie(accessToken: String, listId: String, tvId: Int): Result<AddItemsResponse> =
+    suspend fun addSerie(accessToken: String, listId: String, tvId: Int): Result<AddItemsV4Response> =
         safeApiCall {
-            val requestBody = AddItemsRequest(
-                items = listOf(MediaItemRequest(media_type = "tv", media_id = tvId))
+            val requestBody = AddItemsV4Request(
+                items = listOf(MediaItemV4Request(media_type = "tv", media_id = tvId))
             )
             publicClient.post("list/$listId/items") {
                 header("Authorization", "Bearer $accessToken")
@@ -83,11 +81,11 @@ class FilmeRepositoryV4Ktor {
             }.body()
         }
 
-    suspend fun removeMovie(accessToken: String, listId: String, movieId: Int): Result<RemoveItemsResponse> =
+    suspend fun removeMovie(accessToken: String, listId: String, movieId: Int): Result<RemoveItemsV4Response> =
         safeApiCall {
-            val requestBody = RemoveItemsRequest(
+            val requestBody = RemoveItemsV4Request(
                 items = listOf(
-                    MediaItemRequest(media_type = "movie", media_id = movieId)
+                    MediaItemV4Request(media_type = "movie", media_id = movieId)
                 )
             )
             publicClient.delete("list/$listId/items") {
@@ -96,11 +94,11 @@ class FilmeRepositoryV4Ktor {
             }.body()
         }
 
-    suspend fun removeSerie(accessToken: String, listId: String, tvId: Int): Result<RemoveItemsResponse> =
+    suspend fun removeSerie(accessToken: String, listId: String, tvId: Int): Result<RemoveItemsV4Response> =
         safeApiCall {
-            val requestBody = RemoveItemsRequest(
+            val requestBody = RemoveItemsV4Request(
                 items = listOf(
-                    MediaItemRequest(media_type = "tv", media_id = tvId)
+                    MediaItemV4Request(media_type = "tv", media_id = tvId)
                 )
             )
             publicClient.delete("list/$listId/items") {
@@ -112,7 +110,7 @@ class FilmeRepositoryV4Ktor {
     /**
      * Busca os detalhes de uma lista específica, incluindo os filmes contidos nela.
      */
-    suspend fun getListDetails(accessToken: String, listId: String): Result<ListDetailsResponse> =
+    suspend fun getListDetails(accessToken: String, listId: String): Result<ListDetailsV4Response> =
         safeApiCall {
             publicClient.get("list/$listId") {
                 header("Authorization", "Bearer $accessToken")
@@ -124,7 +122,7 @@ class FilmeRepositoryV4Ktor {
     /**
      * Remove todos os itens de uma lista.
      */
-    suspend fun clearList(accessToken: String, listId: Int): Result<RemoveItemsResponse> =
+    suspend fun clearList(accessToken: String, listId: Int): Result<RemoveItemsV4Response> =
         safeApiCall {
             // Este endpoint da API v4 é um GET, o que também é incomum para uma ação de modificação.
             publicClient.get("list/$listId/clear") {
@@ -135,7 +133,7 @@ class FilmeRepositoryV4Ktor {
     /**
      * Deleta uma lista inteira.
      */
-    suspend fun deleteList(accessToken: String, listId: Int): Result<RemoveItemsResponse> =
+    suspend fun deleteList(accessToken: String, listId: Int): Result<RemoveItemsV4Response> =
         safeApiCall {
             publicClient.delete("list/$listId") {
                 header("Authorization", "Bearer $accessToken")

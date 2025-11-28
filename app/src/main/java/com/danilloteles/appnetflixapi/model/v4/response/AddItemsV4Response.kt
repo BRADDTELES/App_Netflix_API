@@ -4,9 +4,9 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class RequestTokenResponse(
-    @SerialName("request_token")
-    val request_token: String,
+data class AddItemsV4Response(
+    @SerialName("results")
+    val results: List<MediaItemV4Response>,
     @SerialName("status_code")
     val status_code: Int,
     @SerialName("status_message")

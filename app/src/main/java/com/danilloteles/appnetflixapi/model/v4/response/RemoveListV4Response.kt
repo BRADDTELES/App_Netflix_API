@@ -2,7 +2,7 @@ package com.danilloteles.appnetflixapi.model.v4.response
 
 import com.google.gson.annotations.SerializedName
 
-data class RemoveListResponse(
+data class RemoveListV4Response(
     @SerializedName("success")
     val success: Boolean,
     @SerializedName("status_code")
