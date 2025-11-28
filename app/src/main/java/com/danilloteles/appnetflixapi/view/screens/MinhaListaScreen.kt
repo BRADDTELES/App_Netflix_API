@@ -56,6 +56,7 @@ import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesReposi
 import com.danilloteles.appnetflixapi.model.filme.TmdbList
 import com.danilloteles.appnetflixapi.repository.MinhaListaRepository
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
+import com.danilloteles.appnetflixapi.retrofit.RetrofitHelperV4
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.utils.events.UiState
 import com.danilloteles.appnetflixapi.viewmodel.MinhaListaViewModel
@@ -71,7 +72,8 @@ fun MinhaListaScreen(
         factory = MinhaListaViewModel.MinhaListaViewModelFactory(
             userPreferencesRepository = UserPreferencesRepository(context),
             minhaListaRepository = MinhaListaRepository(
-                filmeAPI = RetrofitHelper.filmeAPI,
+                filmeAPI = RetrofitHelper.filmeAPI, // v3
+                filmeAPIV4 = RetrofitHelperV4.filmeApiV4, // v4
                 userPreferencesRepository = UserPreferencesRepository(context)
             )
         )

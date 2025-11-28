@@ -52,9 +52,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
-
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Processar intent inicial (quando o app é aberto pelo deep link)
+        handleIntent(intent)
 
         setContent {
             NetflixApp(deeplinkRequestToken = deeplinkRequestToken)
@@ -63,24 +65,62 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        Log.d("TAG-MainActivity", "onNewIntent chamado com URI: ${intent.data}")
-        intent.data?.let { uri ->
-            if (  uri.scheme == "netflixapp" && uri.host == "auth"  ) {
+        setIntent(intent) // IMPORTANTE: Atualizar o intent atual
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        Log.d("MainActivity", "=== handleIntent chamado ===")
+        Log.d("MainActivity", "Intent action: ${intent?.action}")
+        Log.d("MainActivity", "Intent data: ${intent?.data}")
+
+        intent?.data?.let { uri ->
+            Log.d("MainActivity", "URI completo: $uri")
+            Log.d("MainActivity", "Scheme: ${uri.scheme}")
+            Log.d("MainActivity", "Host: ${uri.host}")
+            Log.d("MainActivity", "Path: ${uri.path}")
+            Log.d("MainActivity", "Query: ${uri.query}")
+
+            // Verificar se é o deep link esperado
+            if (uri.scheme == "netflixapp" && uri.host == "auth") {
+
+                // Tentar extrair o request_token de diferentes formas
                 val requestToken = uri.getQueryParameter("request_token")
-                Log.d("TAG-MainActivity", "Deep link reconhecido. Request token extraído: $requestToken")
-                deeplinkRequestToken.value = requestToken
-                Log.d("TAG-MainActivity", "deeplinkRequestToken.value atualizado para: ${deeplinkRequestToken.value}")
-            } else {
-                Log.d("TAG-MainActivity", "URI do deep link não corresponde aos critérios.")
-                Log.d("TAG-MainActivity", "Esperado scheme: netflixapp, host: auth")
-                Log.d("TAG-MainActivity", "URI recebida: $uri")
-                Log.d("TAG-MainActivity", "Scheme recebido: ${uri.scheme}, Host recebido: ${uri.host}")
+
+                if (requestToken != null && requestToken != "TEST_TOKEN") {
+                    Log.d("MainActivity", "✅ Request token extraído com sucesso: $requestToken")
+                    deeplinkRequestToken.value = requestToken
+                } else if (requestToken == null) {
+                    Log.w(
+                        "MainActivity",
+                        "⚠️ Deep link sem parâmetros - ignorando (provavelmente do TMDB)"
+                    )
+                    Log.w("MainActivity", "O polling vai detectar a aprovação automaticamente")
+                    // NÃO fazer nada aqui - deixar o polling funcionar
+                } else {
+                    Log.d("MainActivity", "🧪 Token de teste detectado: $requestToken")
+                    deeplinkRequestToken.value = requestToken
+                }
+
+                // Tentar extrair manualmente da query string
+                uri.query?.let { query ->
+                    Log.d("MainActivity", "Query string completa: $query")
+                    val tokenMatch = Regex("request_token=([^&]+)").find(query)
+                    if (tokenMatch != null) {
+                        val extractedToken = tokenMatch.groupValues[1]
+                        Log.d("MainActivity", "✅ Token extraído manualmente: $extractedToken")
+                        deeplinkRequestToken.value = extractedToken
+                    }
+                }
+            }else {
+                Log.w("MainActivity", "Deep link não corresponde ao esperado")
+                Log.w("MainActivity", "Esperado: scheme=netflixapp, host=auth")
+                Log.w("MainActivity", "Recebido: scheme=${uri.scheme}, host=${uri.host}")
             }
-        } ?: run {
-            Log.d("TAG-MainActivity", "Intent.data é nulo em onNewIntent.")
-        }
+        } ?: Log.d("MainActivity", "Intent.data é nulo - não é um deep link")
     }
 }
+
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -97,7 +137,8 @@ fun NetflixScreen(
         factory = PopularFilmeViewModel.PopularMoviesViewModelFactory(filmeRepository)
     )
 
-    val popularMoviesPagingItems = popularFilmeViewModel.popularMoviesStream.collectAsLazyPagingItems()
+    val popularMoviesPagingItems =
+        popularFilmeViewModel.popularMoviesStream.collectAsLazyPagingItems()
 
     val listState = rememberLazyGridState()
     var fabState by remember { mutableStateOf(FabState.EXPANDED) }
@@ -140,7 +181,9 @@ fun NetflixScreen(
             )
 
             Box(
-                modifier = Modifier.fillMaxSize().background(BLACK)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(BLACK)
             ) {
                 if (popularMoviesPagingItems.loadState.refresh is LoadState.Loading) {
                     LoadingIndicatorCustom(

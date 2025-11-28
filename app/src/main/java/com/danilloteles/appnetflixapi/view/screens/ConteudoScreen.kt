@@ -74,6 +74,7 @@ import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesReposi
 import com.danilloteles.appnetflixapi.model.MediaItem
 import com.danilloteles.appnetflixapi.repository.MinhaListaRepository
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
+import com.danilloteles.appnetflixapi.retrofit.RetrofitHelperV4
 import com.danilloteles.appnetflixapi.utils.events.SortOrder
 import com.danilloteles.appnetflixapi.viewmodel.ConteudoViewModel
 
@@ -92,6 +93,7 @@ fun ConteudoScreen(
             listId = listId,
             minhaListaRepository = MinhaListaRepository(
                 filmeAPI = RetrofitHelper.filmeAPI,
+                filmeAPIV4 = RetrofitHelperV4.filmeApiV4,
                 userPreferencesRepository = UserPreferencesRepository(context)
             ),
             userPreferencesRepository = UserPreferencesRepository(context)

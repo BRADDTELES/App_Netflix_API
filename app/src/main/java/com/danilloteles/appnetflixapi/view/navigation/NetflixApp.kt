@@ -19,6 +19,7 @@ import com.danilloteles.appnetflixapi.view.screens.ConteudoScreen
 import com.danilloteles.appnetflixapi.view.screens.FilmeScreen
 import com.danilloteles.appnetflixapi.view.screens.FormularioScreen
 import com.danilloteles.appnetflixapi.view.screens.LoginScreen
+import com.danilloteles.appnetflixapi.view.screens.LoginScreenV4
 import com.danilloteles.appnetflixapi.view.screens.MainActivity
 import com.danilloteles.appnetflixapi.view.screens.MinhaListaScreen
 import com.danilloteles.appnetflixapi.view.screens.PopularFilmeDetalhesScreen
@@ -45,15 +46,26 @@ fun NetflixApp(
 
     LaunchedEffect(requestTokenFromDeeplink) {
         requestTokenFromDeeplink?.let { token ->
-            // Navega para a LoginScreen passando o token como argumento
-            // Se já estiver na LoginScreen, evita navegar novamente, mas o LaunchedEffect na LoginScreen ainda vai reagir ao token
-            navController.navigate("${AppDestination.LOGIN_SCREEN}/$token") {
-                popUpTo(AppDestination.MAIN_SCREEN) { // Limpa a back stack até a MainScreen
-                    inclusive = false // Não remove a MainScreen
+            Log.d("TAG-NetflixApp", "Token recebido do deep link: $token")
+
+            // IMPORTANTE: Só navegar se o token for válido (não vazio e não for TEST_TOKEN de debug)
+            if (token.isNotEmpty() && token.length > 50) { // JWT tokens são longos
+                Log.d("TAG-NetflixApp", "Token válido detectado, navegando para LoginScreen")
+
+                // Navega para a LoginScreen passando o token como argumento
+                navController.navigate("${AppDestination.LOGIN_SCREEN}/$token") {
+                    popUpTo(AppDestination.MAIN_SCREEN) {
+                        inclusive = false
+                    }
                 }
+
+                // Resetar o token na MainActivity
+                MainActivity.deeplinkRequestToken.value = null
+            } else {
+                Log.w("TAG-NetflixApp", "Token inválido ou vazio, ignorando navegação")
+                // Limpar o token inválido
+                MainActivity.deeplinkRequestToken.value = null
             }
-            // Resetar o token na MainActivity para evitar que o LaunchedEffect seja re-acionado desnecessariamente
-            MainActivity.deeplinkRequestToken.value = null
         }
     }
 
@@ -281,6 +293,37 @@ fun NetflixApp(
                     )
                 }
             )
+        }
+
+        // Substitua apenas a parte das rotas de Login no seu NetflixApp.kt
+
+// Rota com argumento (quando vem do deep link)
+        composable(
+            route = "${AppDestination.LOGIN_SCREEN}/{${AppDestination.REQUEST_TOKEN_ARG}}",
+            arguments = listOf(
+                navArgument(AppDestination.REQUEST_TOKEN_ARG) {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
+            val requestToken = backStackEntry.arguments?.getString(AppDestination.REQUEST_TOKEN_ARG)
+            Log.d("NetflixApp", "Rota com argumento - Token: $requestToken")
+
+            // Use a nova LoginScreenV4
+            LoginScreenV4(
+                navController = navController,
+                deepLinkRequestToken = requestToken
+            )
+        }
+
+// Rota sem argumento (primeira vez que o usuário acessa)
+        composable(route = AppDestination.LOGIN_SCREEN) {
+            Log.d("NetflixApp", "Rota sem argumento - Login inicial")
+
+            // Use a nova LoginScreenV4
+            LoginScreenV4(navController = navController)
         }
     }
 }

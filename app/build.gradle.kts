@@ -93,6 +93,8 @@ dependencies {
     implementation(libs.ktor.serialization.kotlinx.json)
     // Plugin de Logging (excelente para debug, similar ao HttpLoggingInterceptor)
     implementation(libs.ktor.client.logging)
+    // Logging do OkHttp para debug
+    implementation(libs.logging.interceptor)
     // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.compose.adaptive.navigation)

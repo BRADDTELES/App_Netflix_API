@@ -3,6 +3,7 @@ package com.danilloteles.appnetflixapi.retrofit
 import com.danilloteles.appnetflixapi.BuildConfig
 import com.danilloteles.appnetflixapi.api.FilmeAPIV4
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
@@ -11,13 +12,23 @@ object RetrofitHelperV4 {
 
     private const val BASE_URL = "https://api.themoviedb.org/4/"
 
+    // Logging interceptor (apenas em debug)
+    private val loggingInterceptor = HttpLoggingInterceptor().apply {
+        level = if (BuildConfig.DEBUG) {
+            HttpLoggingInterceptor.Level.BODY // Mostra tudo em debug
+        } else {
+            HttpLoggingInterceptor.Level.NONE // Nada em produção
+        }
+    }
+
     // Cliente OkHttp SEM o interceptor de autorização
     // Usado para chamadas onde o Access Token do usuário será injetado dinamicamente
     private val publicOkHttpClient = OkHttpClient.Builder()
+        .addInterceptor(loggingInterceptor) // ← ADICIONE ISSO
         .addInterceptor { chain ->
             val newRequest = chain.request().newBuilder()
                 .addHeader("Content-Type", "application/json;charset=utf-8")
-                .addHeader("Accept","application/json")
+                .addHeader("Accept", "application/json")
                 .build()
             chain.proceed(newRequest)
         }
@@ -28,19 +39,18 @@ object RetrofitHelperV4 {
     // Cliente OkHttp COM o interceptor que adiciona o Read Access Token (v4)
     // Usado para o fluxo inicial de autenticação (/auth/request_token e /auth/access_token)
     private val authOkHttpClient = OkHttpClient.Builder()
+        .addInterceptor(loggingInterceptor) // ← ADICIONE ISSO
         .addInterceptor { chain ->
             val newRequest = chain.request().newBuilder()
                 .addHeader("Authorization", "Bearer ${BuildConfig.API_READ_ACCESS_TOKEN}")
                 .addHeader("Content-Type", "application/json;charset=utf-8")
-                .addHeader("Accept","application/json")
+                .addHeader("Accept", "application/json")
                 .build()
-
             chain.proceed(newRequest)
         }
         .connectTimeout(60, TimeUnit.SECONDS)
         .readTimeout(60, TimeUnit.SECONDS)
         .build()
-
 
     // Instância do Retrofit para chamadas que precisam do Access Token do USUÁRIO
     val filmeApiV4: FilmeAPIV4 by lazy {
@@ -62,3 +72,6 @@ object RetrofitHelperV4 {
             .create(FilmeAPIV4::class.java)
     }
 }
+
+// Adicione essa dependência no build.gradle.kts (module):
+// implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
