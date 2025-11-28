@@ -5,14 +5,7 @@ import android.widget.Toast
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -44,20 +37,22 @@ import com.danilloteles.appnetflixapi.viewmodel.AuthV4ViewModel
 @Composable
 fun LoginScreenV4(
     navController: NavController,
-    deepLinkRequestToken: String? = null
+    deepLinkRequestToken: String? = null,
+    destinationRoute: String = AppDestination.MINHA_LISTA_SCREEN // Destino padrão
 ) {
     val context = LocalContext.current
     val userPreferences = UserPreferencesRepository(context.applicationContext)
-    val repository = FilmeRepositoryV4(userPreferences)
+    // A AuthV4ViewModel precisa do seu próprio repositório para as chamadas de autenticação
+    val authRepository = FilmeRepositoryV4(userPreferences)
 
     val viewModel: AuthV4ViewModel = viewModel(
-        factory = AuthV4ViewModel.Factory(repository, userPreferences)
+        factory = AuthV4ViewModel.Factory(authRepository, userPreferences)
     )
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isPolling by viewModel.isPolling.collectAsStateWithLifecycle()
 
-    Log.d("LoginScreenV4", "Composição - deepLinkRequestToken: $deepLinkRequestToken")
+    Log.d("LoginScreenV4", "Composição - deepLinkRequestToken: $deepLinkRequestToken, Destino: $destinationRoute")
 
     // LaunchedEffect para eventos do ViewModel
     LaunchedEffect(Unit) {
@@ -71,23 +66,28 @@ fun LoginScreenV4(
                 }
 
                 LoginEvent.LoginSuccess -> {
-                    Log.d("LoginScreenV4", "Login v4 realizado com sucesso!")
-                    navController.navigate(AppDestination.MINHA_LISTA_SCREEN) {
-                        popUpTo(AppDestination.MAIN_SCREEN) { inclusive = false }
+                    Log.d("LoginScreenV4", "Login v4 realizado com sucesso! Navegando para: $destinationRoute")
+                    navController.navigate(destinationRoute) {
+                        // Remove a tela de login da pilha de navegação de forma correta
+                        popUpTo(AppDestination.LOGIN_ROUTE_PATTERN) {
+                            inclusive = true
+                        }
+                        // Garante que a tela de destino seja a única no topo
+                        launchSingleTop = true
                     }
-                    // Resetar o token
+                    // Resetar o token, se houver
                     MainActivity.deeplinkRequestToken.value = null
                 }
             }
         }
     }
 
-    // LaunchedEffect para processar o deep link (quando o usuário retorna do navegador)
+    // LaunchedEffect para processar o deep link (se o usuário retornar do navegador)
     LaunchedEffect(deepLinkRequestToken) {
         deepLinkRequestToken?.let { token ->
-            Log.d("LoginScreenV4", "Deep link detectado com token: $token")
-            Log.d("LoginScreenV4", "Iniciando conversão para access token...")
-            viewModel.completeAuthenticationV4(token)
+            Log.d("LoginScreenV4", "Deep link detectado com token: $token. O polling cuidará disso.")
+            // Apenas limpamos o valor para não ser processado novamente, pois o polling é o método principal
+            MainActivity.deeplinkRequestToken.value = null
         }
     }
 
@@ -135,7 +135,7 @@ fun LoginScreenV4(
             }
         }
 
-        when (uiState) {
+        when (val state = uiState) {
             is UiState.Loading -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -146,15 +146,9 @@ fun LoginScreenV4(
             }
 
             is UiState.Error -> {
-                // Só mostrar erro se NÃO estiver em polling
-                // (erros durante polling são esperados)
                 if (!isPolling) {
-                    LaunchedEffect(Unit) {
-                        Toast.makeText(
-                            context,
-                            (uiState as UiState.Error).message,
-                            Toast.LENGTH_LONG
-                        ).show()
+                    LaunchedEffect(state.message) {
+                        Toast.makeText(context, state.message, Toast.LENGTH_LONG).show()
                     }
                 }
             }

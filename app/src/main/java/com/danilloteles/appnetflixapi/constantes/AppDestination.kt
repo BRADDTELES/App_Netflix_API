@@ -19,12 +19,14 @@ object AppDestination {
     const val REQUEST_TOKEN_ARG = "request_token"
     const val LIST_ID_ARG = "listId"
     const val MOVIE_TITLE_ARG = "movieTitle" // Novo argumento para o título
+    const val DESTINATION_ARG = "destination" // Argumento para o destino pós-login
 
     val MOVIE_DETAILS_ROUTE = "$MOVIE_DETAILS_SCREEN/{$MOVIE_ID_ARG}"
     val SERIE_DETAILS_ROUTE = "$SERIE_DETAILS_SCREEN/{$SERIE_ID_ARG}"
     val CONTEUDO_ROUTE = "$CONTEUDO_SCREEN/{$LIST_ID_ARG}/{$MOVIE_TITLE_ARG}" // Nova rota para ConteudoScreen
     val LIST_FORM_ROUTE = LIST_FORM_SCREEN
     val LOGIN_ROUTE = "$LOGIN_SCREEN?$REQUEST_TOKEN_ARG={$REQUEST_TOKEN_ARG}"
+    const val LOGIN_ROUTE_PATTERN = "$LOGIN_SCREEN?${DESTINATION_ARG}={${DESTINATION_ARG}}&${REQUEST_TOKEN_ARG}={${REQUEST_TOKEN_ARG}}"
     val MY_MOVIE_DETAILS_ROUTE = "$MY_MOVIE_DETAILS/{$MOVIE_ID_ARG}?$LIST_ID_ARG={$LIST_ID_ARG}"
     val MY_SERIES_DETAILS_ROUTE = "$MY_SERIES_DETAILS/{$SERIE_ID_ARG}?$LIST_ID_ARG={$LIST_ID_ARG}"
     val SERIES_LIST_ROUTE = SERIES_LIST_SCREEN
