@@ -25,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -32,8 +33,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
+import com.danilloteles.appnetflixapi.api.FilmeAPI
 import com.danilloteles.appnetflixapi.constantes.Constantes
 import com.danilloteles.appnetflixapi.model.filme.FilmeDetalhes
+import com.danilloteles.appnetflixapi.repository.FilmeRepository
+import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
 import com.danilloteles.appnetflixapi.utils.events.UiState
@@ -45,8 +49,11 @@ import com.danilloteles.appnetflixapi.viewmodel.FilmeDetalhesViewModel
 fun PopularFilmeDetalhesScreen(
     movieId: Int
 ) {
+
+    val filmeRepository = FilmeRepository(RetrofitHelper.filmeAPI)
+
     val viewModel: FilmeDetalhesViewModel = viewModel(
-        factory = FilmeDetalhesViewModel.Factory(movieId)
+        factory = FilmeDetalhesViewModel.Factory(movieId, filmeRepository)
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -81,7 +88,12 @@ fun PopularFilmeDetalhesScreen(
             // O erro agora é tratado pelo Snackbar.
             // Exibir um estado vazio ou um componente que permita ao usuário tentar novamente.
             // Por simplicidade, exibimos uma caixa vazia.
-            Box(modifier = Modifier.fillMaxSize().background(BLACK))
+            Box(
+                modifier = Modifier.fillMaxSize().background(BLACK),
+                contentAlignment = Alignment.Center
+            ){
+                Text(text = "Não foi possível recuperar detalhes do filme", color = WHITE)
+            }
         }
     }
 }

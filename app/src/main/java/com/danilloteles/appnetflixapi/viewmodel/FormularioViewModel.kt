@@ -32,6 +32,7 @@ class FormularioViewModel(
 
             when (val result = repositoryV4.createList(accessToken, name, description)){
                 is Result.Sucesso -> {
+                    userPreferencesRepository.savePrimaryListId(result.data.id.toString())
                     _uiState.value = UiState.Success(result.data)
                 }
                 is Result.HttpError -> {

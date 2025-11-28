@@ -5,13 +5,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.danilloteles.appnetflixapi.api.FilmeAPI
+import com.danilloteles.appnetflixapi.common.Result
 import com.danilloteles.appnetflixapi.model.filme.AddRemoveListItemRequest
 import com.danilloteles.appnetflixapi.model.filme.FilmeDetalhes
-import com.danilloteles.appnetflixapi.model.filme.TmdbList
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
 import com.danilloteles.appnetflixapi.datasource.datastore.MyListPreferencesRepository
 import com.danilloteles.appnetflixapi.utils.events.UiState
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
+import com.danilloteles.appnetflixapi.model.filme.TmdbList
+import com.danilloteles.appnetflixapi.model.v4.response.TmdbListV4
+import com.danilloteles.appnetflixapi.repository.v4.RepositoryV4
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -20,6 +23,7 @@ import kotlinx.coroutines.launch
 class MeuFilmeDetalhesViewModel(
     private val movieId: Int,
     private val filmeAPI: FilmeAPI,
+    private val repositoryV4: RepositoryV4,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val myListPreferencesRepository: MyListPreferencesRepository,
     private val listId: String? // listId passed from navigation
@@ -34,11 +38,14 @@ class MeuFilmeDetalhesViewModel(
     private val _myListActionUiState = MutableStateFlow<UiState<Unit>>(UiState.Idle)
     val myListActionUiState: StateFlow<UiState<Unit>> = _myListActionUiState
 
-    private val _userListsUiState = MutableStateFlow<UiState<List<TmdbList>>>(UiState.Idle)
-    val userListsUiState: StateFlow<UiState<List<TmdbList>>> = _userListsUiState
+    private val _userListsUiState = MutableStateFlow<UiState<List<TmdbListV4>>>(UiState.Idle)
+    val userListsUiState: StateFlow<UiState<List<TmdbListV4>>> = _userListsUiState
 
     private var primaryListId: String? = null
     private var accountId: Int? = null
+
+    private val _myListActionV4UiState = MutableStateFlow<UiState<String>>(UiState.Idle)
+    val myListActionV4UiState: StateFlow<UiState<String>> = _myListActionV4UiState
 
     init {
         loadMovieDetails()
@@ -77,32 +84,54 @@ class MeuFilmeDetalhesViewModel(
     }
 
     private fun loadUserLists() {
+        val TAG_DEBUG = "MyMovieDetailsVM-Debug"
         viewModelScope.launch {
             _userListsUiState.value = UiState.Loading
-            userPreferencesRepository.sessionId.first()?.let { sessionId ->
-                val currentAccountId = getOrCreateAccountId(sessionId)
-                if (currentAccountId != null) {
-                    try {
-                        val response = filmeAPI.obterListasDaConta(currentAccountId, sessionId)
-                        if (response.isSuccessful) {
-                            response.body()?.let { accountListsResponse ->
-                                _userListsUiState.value = UiState.Success(accountListsResponse.results)
-                            } ?: run {
-                                _userListsUiState.value = UiState.Error("Não foi possível carregar as listas do usuário.")
-                            }
-                        } else {
-                            _userListsUiState.value = UiState.Error("Erro ao carregar listas do usuário.")
-                            Log.e("TAG-MyMovieDetailsViewModel", "Erro ao carregar listas do usuário: ${response.code()}")
-                        }
-                    } catch (e: Exception) {
-                        _userListsUiState.value = UiState.Error("Erro de conexão ao carregar listas.")
-                        Log.e("TAG-MyMovieDetailsViewModel", "Erro: ${e.message}", e)
+            Log.d(TAG_DEBUG, "Iniciando loadUserLists...")
+
+            val accessToken = userPreferencesRepository.accessTokenV4.first()
+            val accountId = userPreferencesRepository.accountId.first()
+            if (accessToken == null || accountId == null) {
+                _userListsUiState.value = UiState.Error("Token de acesso V4 ou Account ID não encontrados. Faça o login novamente.")
+                Log.e(TAG_DEBUG, "Falha: accessToken ou accountId são nulos.")
+                return@launch
+            }
+
+            Log.d(TAG_DEBUG, "V4 -> Usando accessToken e accountId para buscar listas.")
+
+            val result = repositoryV4.getAccountLits(accessToken, accountId)
+            if (result is Result.Sucesso) {
+                val response = result.data
+                if (response.isSuccessful){
+                    response.body()?.let { accountListsV4Response ->
+                        val data = accountListsV4Response.results
+                        _userListsUiState.value = UiState.Success(data = data)
+                        Log.d(TAG_DEBUG, "Sucesso V4! ${data.size} listas carregadas.")
+                    } ?: run {
+                        _userListsUiState.value = UiState.Error("Resposta da API V4 bem-sucedida, mas o corpo é nulo.")
                     }
                 } else {
-                    _userListsUiState.value = UiState.Error("Usuário não autenticado ou Account ID não disponível.")
+                    val errorBody = response.errorBody()?.string() ?: "Corpo do erro indisponível"
+                    _userListsUiState.value = UiState.Error("Erro ao carregar listas do usuário (V4).")
+                    Log.e(TAG_DEBUG, "Falha V4: A API respondeu com o código ${response.code()}. Erro: $errorBody")
                 }
-            } ?: run {
-                _userListsUiState.value = UiState.Error("Usuário não autenticado. Faça login para ver suas listas.")
+            } else {
+                when (result){
+                    is Result.HttpError -> {
+                        _myListActionV4UiState.value = UiState.Error("Erro HTTP: ${result.mensagem} - Code: ${result.code}")
+                    }
+                    is Result.NetworkError -> {
+                        _myListActionV4UiState.value = UiState.Error("Erro de Network: ${result.mensagem}")
+                    }
+                    is Result.UnknownError -> {
+                        _myListActionV4UiState.value = UiState.Error("Erro desconhecido: ${result.mensagem}")
+                    }
+                    else -> {
+                        val error = result as Result.UnknownError
+                        _userListsUiState.value = UiState.Error(error.mensagem)
+                        Log.e(TAG_DEBUG, "Falha V4: A chamada para repositoryV4.getAccountLits falhou. Mensagem: ${error.mensagem}")
+                    }
+                }
             }
         }
     }
@@ -172,61 +201,55 @@ class MeuFilmeDetalhesViewModel(
         }
     }
 
-    fun addOrRemoveMovie(targetListIdForAction: String? = null) {
+    fun addOrRemoveMovieV4(targetListIdForAction: String) {
         Log.d("TAG-MyMovieDetailsViewModel", "addOrRemoveMovie iniciado. MovieId: $movieId, targetListIdForAction: $targetListIdForAction")
         viewModelScope.launch {
-            _myListActionUiState.value = UiState.Loading
-            userPreferencesRepository.sessionId.first()?.let { sessionId ->
-                Log.d("TAG-MyMovieDetailsViewModel", "SessionId obtido: $sessionId")
-                
-                val finalListToModifyId = targetListIdForAction ?: listId ?: primaryListId ?: userPreferencesRepository.primaryListId.first()
-                
-                if (finalListToModifyId == null) {
-                    _myListActionUiState.value = UiState.Error("Erro: ID da lista não disponível. Tente novamente.")
-                    Log.e("TAG-MyMovieDetailsViewModel", "List ID não disponível para adicionar/remover filme.")
+            _myListActionV4UiState.value = UiState.Loading
+            try {
+                val accessToken = userPreferencesRepository.accessTokenV4.first()
+                if (accessToken.isNullOrEmpty()) {
+                    _myListActionV4UiState.value = UiState.Error("Usuário não autenticado")
                     return@launch
                 }
-
-                val request = AddRemoveListItemRequest(media_id = movieId)
-                Log.d("TAG-MyMovieDetailsViewModel", "Requisição API: $request para listId: $finalListToModifyId")
-                try {
-                    val response = if (_isInMyList.value) {
-                        Log.d("TAG-MyMovieDetailsViewModel", "Tentando remover filme (ID: $movieId) da lista (ID: $finalListToModifyId).")
-                        filmeAPI.removerItemDaLista(finalListToModifyId, sessionId, request)
-                    } else {
-                        Log.d("TAG-MyMovieDetailsViewModel", "Tentando adicionar filme (ID: $movieId) à lista (ID: $finalListToModifyId).")
-                        filmeAPI.adicionarItemALista(finalListToModifyId, sessionId, request)
-                    }
-
-                    Log.d("TAG-MyMovieDetailsViewModel", "Resposta da API - isSuccessful: ${response.isSuccessful}, Code: ${response.code()}, Body: ${response.body()}")
-
-                    if (response.isSuccessful && (response.body()?.status_code == 1 || response.body()?.status_code == 12 || response.body()?.status_code == 13)) {
-                        _isInMyList.value = !_isInMyList.value
-                        _myListActionUiState.value = UiState.Success(Unit)
-                        checkIfMovieInMyList(finalListToModifyId)
-                        Log.d("TAG-MyMovieDetailsViewModel", "Cache da lista atualizado. Filme ID: $movieId, _isInMyList: ${_isInMyList.value}")
-                    } else {
-                        val errorMessage = response.errorBody()?.string() ?: "Erro desconhecido"
-                        _myListActionUiState.value = UiState.Error("Erro ao adicionar/remover filme.")
-                        Log.e("TAG-MyMovieDetailsViewModel", "Falha ao adicionar/remover filme: ${response.code()} - $errorMessage")
-                    }
-                } catch (e: Exception) {
-                    _myListActionUiState.value = UiState.Error("Erro de conexão ao adicionar/remover filme.")
-                    Log.e("TAG-MyMovieDetailsViewModel", "Erro de conexão ao adicionar/remover filme: ${e.message}", e)
+                val listIdInt = targetListIdForAction.toInt()
+                val result = if (_isInMyList.value) {
+                    repositoryV4.removeMovie(accessToken, listIdInt.toString(), movieId)
+                } else {
+                    repositoryV4.addMovie(accessToken, listIdInt.toString(), movieId)
                 }
-            } ?: run {
-                _myListActionUiState.value = UiState.Error("Erro: Usuário não autenticado. Faça login para gerenciar sua lista.")
-                Log.e("TAG-MyMovieDetailsViewModel", "Usuário não autenticado para adicionar/remover filme.")
+
+                if (result is Result.Sucesso) {
+                    val message = if (_isInMyList.value) "Filme removido com sucesso!" else "Filme adicionado com sucesso!"
+                    _myListActionV4UiState.value = UiState.Success(message)
+                    _isInMyList.value = !_isInMyList.value
+                    checkIfMovieInMyList(targetListIdForAction)
+                } else {
+                    when (result){
+                        is Result.HttpError -> {
+                            _myListActionV4UiState.value = UiState.Error("Erro HTTP: ${result.mensagem} - Code: ${result.code}")
+                        }
+                        is Result.NetworkError -> {
+                            _myListActionV4UiState.value = UiState.Error("Erro de Network: ${result.mensagem}")
+                        }
+                        is Result.UnknownError -> {
+                            _myListActionV4UiState.value = UiState.Error("Erro desconhecido: ${result.mensagem}")
+                        }
+                        else -> {}
+                    }
+                }
+            } catch (e: Exception) {
+                _myListActionV4UiState.value = UiState.Error("Falha na operação: ${e.message}")
             }
         }
     }
 
-    fun resetMyListActionUiState() {
-        _myListActionUiState.value = UiState.Idle
+    fun resetMyListActionV4UiState() {
+        _myListActionV4UiState.value = UiState.Idle
     }
 
     class Factory(
         private val movieId: Int,
+        private val repositoryV4: RepositoryV4,
         private val userPreferencesRepository: UserPreferencesRepository,
         private val myListPreferencesRepository: MyListPreferencesRepository,
         private val listId: String?
@@ -237,6 +260,7 @@ class MeuFilmeDetalhesViewModel(
                 return MeuFilmeDetalhesViewModel(
                     movieId,
                     RetrofitHelper.filmeAPI,
+                    repositoryV4,
                     userPreferencesRepository,
                     myListPreferencesRepository,
                     listId

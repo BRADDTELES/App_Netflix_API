@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.danilloteles.appnetflixapi.model.filme.FilmeDetalhes
+import com.danilloteles.appnetflixapi.repository.FilmeRepository
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
 import com.danilloteles.appnetflixapi.utils.events.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,10 +13,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class FilmeDetalhesViewModel(
-    private val movieId: Int
+    private val movieId: Int,
+    private val filmeRepository: FilmeRepository
 ) : ViewModel() {
-
-    private val filmeAPI = RetrofitHelper.filmeAPI
 
     private val _uiState = MutableStateFlow<UiState<FilmeDetalhes>>(UiState.Loading)
     val uiState: StateFlow<UiState<FilmeDetalhes>> = _uiState
@@ -28,7 +28,7 @@ class FilmeDetalhesViewModel(
         viewModelScope.launch {
             _uiState.value = UiState.Loading
             try {
-                val response = filmeAPI.recuperarDetalhesFilme(movieId)
+                val response = filmeRepository.recuperarDetalhesFilme(movieId)
                 if (response.isSuccessful) {
                     response.body()?.let { movie ->
                         _uiState.value = UiState.Success(movie)
@@ -50,12 +50,13 @@ class FilmeDetalhesViewModel(
     }
 
     class Factory(
-        private val movieId: Int
+        private val movieId: Int,
+        private val filmeRepository: FilmeRepository
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(FilmeDetalhesViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
-                return FilmeDetalhesViewModel(movieId) as T
+                return FilmeDetalhesViewModel(movieId, filmeRepository) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }
