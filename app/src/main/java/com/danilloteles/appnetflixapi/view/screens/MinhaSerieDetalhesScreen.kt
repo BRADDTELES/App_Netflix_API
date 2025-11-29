@@ -67,8 +67,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import com.danilloteles.appnetflixapi.constantes.Constantes
+import com.danilloteles.appnetflixapi.datasource.datastore.MyListPreferencesRepository
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
 import com.danilloteles.appnetflixapi.model.serie.SerieDetalhes
+import com.danilloteles.appnetflixapi.repository.v4.RepositoryV4
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.GRAY_100
 import com.danilloteles.appnetflixapi.ui.theme.GRAY_900
@@ -87,6 +89,7 @@ fun MinhaSerieDetalhesScreen(
     val viewModel: MinhaSerieDetalhesViewModel = viewModel(
         factory = MinhaSerieDetalhesViewModel.Factory(
             serieId,
+            repositoryV4 = RepositoryV4(),
             UserPreferencesRepository(LocalContext.current),
             listId
         )
@@ -140,19 +143,20 @@ fun MeuConteudoSerieDetalhes(
     val myListActionUiState by viewModel?.myListActionUiState?.collectAsStateWithLifecycle() ?: remember { mutableStateOf(UiState.Idle) }
     val userListsUiState by viewModel?.userListsUiState?.collectAsStateWithLifecycle() ?: remember { mutableStateOf(UiState.Idle) }
     val snackbarHostState = remember { SnackbarHostState() }
+    val myListActionV4UiState by viewModel?.myListActionV4UiState?.collectAsStateWithLifecycle()
+        ?: remember { mutableStateOf(UiState.Idle) }
 
     var showListSelection by remember { mutableStateOf(false) }
 
-    LaunchedEffect(myListActionUiState) {
-        when (val state = myListActionUiState) {
+    LaunchedEffect(myListActionV4UiState) {
+        when (val state = myListActionV4UiState) {
             is UiState.Success -> {
-                val message = if (isInMyList) "Série adicionado à lista!" else "Série removido da lista."
-                snackbarHostState.showSnackbar(message)
-                viewModel?.resetMyListActionUiState()
+                snackbarHostState.showSnackbar(state.data)
+                viewModel?.resetMyListActionV4UiState()
             }
             is UiState.Error -> {
                 snackbarHostState.showSnackbar(state.message)
-                viewModel?.resetMyListActionUiState()
+                viewModel?.resetMyListActionV4UiState()
             }
             else -> {}
         }
@@ -302,21 +306,23 @@ fun MeuConteudoSerieDetalhes(
                                     DropdownMenuItem(
                                         text = { Text("Remover da Lista") },
                                         onClick = {
-                                            viewModel?.addOrRemoveSerie(listId)
+                                            listId?.let { id ->
+                                                viewModel?.addOrRemoveSerieV4(id)
+                                            }
                                             splitButtonChecked = false
                                         },
                                         leadingIcon = {
                                             Icon(Icons.Outlined.Delete, contentDescription = null)
                                         },
                                     )
-                                } else if (showListSelection) {
+                                }
+                                else if (showListSelection) {
                                     // Exibe um título para o submenu
                                     DropdownMenuItem(
                                         text = { Text("Selecione uma lista", fontWeight = FontWeight.Bold) },
                                         onClick = {},
                                         enabled = false // Desativa o clique
                                     )
-
                                     when (val state = userListsUiState) {
                                         is UiState.Success -> {
                                             if (state.data.isEmpty()) {
@@ -330,7 +336,7 @@ fun MeuConteudoSerieDetalhes(
                                                     DropdownMenuItem(
                                                         text = { Text(list.name) },
                                                         onClick = {
-                                                            viewModel?.addOrRemoveSerie(list.id.toString())
+                                                            viewModel?.addOrRemoveSerieV4(list.id.toString())
                                                             // Fecha tudo após a seleção
                                                             showListSelection = false
                                                             splitButtonChecked = false

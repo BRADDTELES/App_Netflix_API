@@ -60,6 +60,7 @@ import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelperV4
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.utils.events.UiState
+import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
 import com.danilloteles.appnetflixapi.viewmodel.MinhaListaViewModel
 import kotlinx.coroutines.launch
 
@@ -224,8 +225,11 @@ fun MinhaListaScreen(
                         when (val state = uiState) {
                             is UiState.Loading -> {
                                 if (!isRefreshing) {
-                                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                        CircularProgressIndicator()
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        LoadingIndicatorCustom(animationDelay = 2000)
                                     }
                                 }
                             }

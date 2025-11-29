@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
+@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 
 package com.danilloteles.appnetflixapi.view.screens
 
@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -31,6 +32,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.LoadingIndicatorDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -40,6 +43,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -61,19 +65,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.paging.LoadState
-import androidx.paging.compose.LazyPagingItems
-import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
 import com.danilloteles.appnetflixapi.R
 import com.danilloteles.appnetflixapi.constantes.Constantes
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
-import com.danilloteles.appnetflixapi.model.MediaItem
-import com.danilloteles.appnetflixapi.repository.MinhaListaRepository
-import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
-import com.danilloteles.appnetflixapi.retrofit.RetrofitHelperV4
+import com.danilloteles.appnetflixapi.model.v4.response.ItemDetailsV4Response
+import com.danilloteles.appnetflixapi.repository.v4.RepositoryV4
 import com.danilloteles.appnetflixapi.utils.events.SortOrder
+import com.danilloteles.appnetflixapi.utils.events.UiState
 import com.danilloteles.appnetflixapi.viewmodel.ConteudoViewModel
+import com.danilloteles.appnetflixapi.ui.theme.BLACK
+import com.danilloteles.appnetflixapi.ui.theme.VERMELHO
+import com.danilloteles.appnetflixapi.ui.theme.WHITE
+import com.danilloteles.appnetflixapi.ui.theme.GRAY_100
+import com.danilloteles.appnetflixapi.ui.theme.GRAY_900
+import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
 
 @Composable
 fun ConteudoScreen(
@@ -88,17 +94,13 @@ fun ConteudoScreen(
         key = listId,
         factory = ConteudoViewModel.ConteudoViewModelFactory(
             listId = listId,
-            minhaListaRepository = MinhaListaRepository(
-                filmeAPI = RetrofitHelper.filmeAPI,
-                APIV4 = RetrofitHelperV4.apiV4,
-                userPreferencesRepository = UserPreferencesRepository(context)
-            ),
-            userPreferencesRepository = UserPreferencesRepository(context)
+            userPreferencesRepository = UserPreferencesRepository(context),
+            repositoryV4 = RepositoryV4()
         )
     )
 
-    val lazyPagingItems: LazyPagingItems<MediaItem> = viewModel.conteudoPaginado.collectAsLazyPagingItems()
-    val isRefreshing = lazyPagingItems.loadState.refresh is LoadState.Loading
+    val uiState by viewModel.uiState.collectAsState()
+    val sortedItems by viewModel.sortedItems.collectAsState()
 
     Scaffold(
         topBar = {
@@ -109,64 +111,63 @@ fun ConteudoScreen(
                         fontSize = 20.sp,
                         fontWeight = FontWeight.SemiBold,
                         style = MaterialTheme.typography.headlineMedium,
-                        color = Color.White
+                        color = WHITE,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Red,
-                    actionIconContentColor = Color.White,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
+                    containerColor = VERMELHO,
+                    actionIconContentColor = WHITE,
+                    titleContentColor = WHITE,
+                    navigationIconContentColor = WHITE
                 ),
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = Color.White)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = WHITE)
                     }
                 },
                 actions = {
-                    IconButton(onClick = { lazyPagingItems.refresh() }) {
-                        Icon(Icons.Filled.Refresh, "Atualizar", tint = Color.White)
+                    IconButton(onClick = { viewModel.buscarDetalhesDaLista() }) {
+                        Icon(Icons.Filled.Refresh, "Atualizar", tint = WHITE)
                     }
                 }
             )
         }
-    ) {
-paddingValues ->
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .padding(paddingValues)
                 .fillMaxSize()
-                .background(Color.Black)
+                .background(BLACK)
         ) {
             ConnectedButtonGroupComposable(
-                onSortChange = { newSortOrder -> viewModel.setSortOrder(newSortOrder) }
+                onSortChange = { newSortOrder -> viewModel.definirOrdemDeClassificacao(newSortOrder) }
             )
             PullToRefreshBox(
-                isRefreshing = isRefreshing,
-                onRefresh = { lazyPagingItems.refresh() },
+                isRefreshing = uiState is UiState.Loading,
+                onRefresh = { viewModel.buscarDetalhesDaLista() },
                 modifier = Modifier.fillMaxSize()
             ) {
-                when (val state = lazyPagingItems.loadState.refresh) {
-                    is LoadState.Loading -> {
-                        if (!isRefreshing) {
-                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator()
-                            }
+                when (val state = uiState) {
+                    is UiState.Loading -> {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            LoadingIndicatorCustom(animationDelay = 2000)
                         }
                     }
-                    is LoadState.Error -> {
+                    is UiState.Error -> {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Text(
-                                text = "Erro: ${state.error.message}\nPuxe para tentar novamente.",
-                                color = Color.White,
+                                text = "Erro: ${state.message}\nPuxe para tentar novamente.",
+                                color = WHITE,
                                 textAlign = TextAlign.Center
                             )
                         }
                     }
-                    is LoadState.NotLoading -> {
-                        if (lazyPagingItems.itemCount == 0) {
+                    is UiState.Success -> {
+                        if (sortedItems.isEmpty()) {
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                Text("Esta lista está vazia.", color = Color.White)
+                                Text("Esta lista está vazia.", color = WHITE)
                             }
                         } else {
                             LazyVerticalGrid(
@@ -177,21 +178,21 @@ paddingValues ->
                                 modifier = Modifier.fillMaxSize()
                             ) {
                                 items(
-                                    count = lazyPagingItems.itemCount,
-                                    key = { index -> lazyPagingItems.peek(index)?.id ?: index }
-                                ) { index ->
-                                    val item = lazyPagingItems[index]
-                                    if (item != null) {
-                                        VideoItem(
-                                            item = item,
-                                            listId = listId,
-                                            onMovieClick = onMovieClick,
-                                            onSerieClick = onSerieClick
-                                        )
-                                    }
+                                    items = sortedItems,
+                                    key = { it.id }
+                                ) { item ->
+                                    VideoItem(
+                                        item = item,
+                                        listId = listId,
+                                        onMovieClick = onMovieClick,
+                                        onSerieClick = onSerieClick
+                                    )
                                 }
                             }
                         }
+                    }
+                    is UiState.Idle -> {
+                        // Pode mostrar um estado inicial ou não fazer nada
                     }
                 }
             }
@@ -201,7 +202,7 @@ paddingValues ->
 
 @Composable
 fun VideoItem(
-    item: MediaItem,
+    item: ItemDetailsV4Response,
     listId: String,
     onMovieClick: (Int, String?) -> Unit,
     onSerieClick: (Int, String?) -> Unit
@@ -220,7 +221,7 @@ fun VideoItem(
     ) {
         AsyncImage(
             model = "${Constantes.IMAGE_BASE_URL}${item.poster_path}",
-            contentDescription = item.title,
+            contentDescription = item.title ?: item.name,
             placeholder = painterResource(id = R.drawable.capa),
             error = painterResource(id = R.drawable.capa),
             modifier = Modifier
@@ -231,7 +232,7 @@ fun VideoItem(
         )
         Text(
             text = item.title ?: item.name ?: "",
-            color = Color.White,
+            color = WHITE,
             fontSize = 14.sp,
             modifier = Modifier
                 .fillMaxWidth()
@@ -245,7 +246,7 @@ fun VideoItem(
 
 @Composable
 fun ConnectedButtonGroupComposable(onSortChange: (SortOrder) -> Unit) {
-    val options = listOf("Padrão", "A-Z")
+    val options = listOf("Favoritos", "A-Z")
     val unCheckedIcons =
         listOf(Icons.Filled.FavoriteBorder, Icons.Default.Abc)
     val checkedIcons = listOf(Icons.Filled.Favorite, Icons.Filled.Abc)
@@ -268,7 +269,7 @@ fun ConnectedButtonGroupComposable(onSortChange: (SortOrder) -> Unit) {
                     val newSortOrder = when (index) {
                         0 -> SortOrder.DEFAULT
                         1 -> SortOrder.TITLE_ASC
-                        else -> SortOrder.DEFAULT // Fallback, embora não deva ser alcançado
+                        else -> SortOrder.DEFAULT
                     }
                     onSortChange(newSortOrder)
                 },
@@ -277,13 +278,13 @@ fun ConnectedButtonGroupComposable(onSortChange: (SortOrder) -> Unit) {
                 when (index) {
                     0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
                     options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                    else -> ButtonGroupDefaults.connectedMiddleButtonShapes() // Não deve ser alcançado com 2 botões
+                    else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                 },
                 colors = ToggleButtonDefaults.toggleButtonColors(
-                    checkedContainerColor = Color.Red,
-                    checkedContentColor = Color.White,
-                    containerColor = Color.White,
-                    contentColor = Color.Gray
+                    checkedContainerColor = VERMELHO,
+                    checkedContentColor = WHITE,
+                    containerColor = WHITE,
+                    contentColor = GRAY_900
                 )
             ) {
                 Icon(
@@ -300,9 +301,6 @@ fun ConnectedButtonGroupComposable(onSortChange: (SortOrder) -> Unit) {
 @Preview
 @Composable
 private fun ConteudoScreenPreview() {
-    // O Preview depende de um ViewModel funcional e dados reais.
-    // Para um preview útil, seria necessário injetar uma implementação falsa
-    // que retorna PagingData estático.
     ConteudoScreen(
         listId = "1",
         movieTitle = "Minha Lista de Exemplo",

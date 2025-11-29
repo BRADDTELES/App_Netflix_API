@@ -72,7 +72,6 @@ import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.GRAY_100
 import com.danilloteles.appnetflixapi.ui.theme.GRAY_900
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
-import com.danilloteles.appnetflixapi.datasource.datastore.MyListPreferencesRepository
 import com.danilloteles.appnetflixapi.utils.events.UiState
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
 import com.danilloteles.appnetflixapi.repository.v4.RepositoryV4
@@ -91,7 +90,6 @@ fun MeuFilmeDetalhesScreen(
             movieId,
             repositoryV4 = RepositoryV4(),
             UserPreferencesRepository(LocalContext.current),
-            MyListPreferencesRepository(LocalContext.current),
             listId
         )
     )
@@ -317,7 +315,7 @@ fun MeuConteudoFilmeDetalhes(
                             ) {
                                 if (isInMyList) {
                                     DropdownMenuItem(
-                                        text = { Text("Remover da Lista (v4)") },
+                                        text = { Text("Remover da Lista") },
                                         onClick = {
                                             listId?.let { id ->
                                                 viewModel?.addOrRemoveMovieV4(id)
@@ -382,7 +380,7 @@ fun MeuConteudoFilmeDetalhes(
                                 }
                                 else {
                                     DropdownMenuItem(
-                                        text = { Text("Adicionar à Lista (v4)") },
+                                        text = { Text("Adicionar à Lista") },
                                         onClick = {
                                             showListSelection = true // Ativa o modo de seleção de lista
                                         },

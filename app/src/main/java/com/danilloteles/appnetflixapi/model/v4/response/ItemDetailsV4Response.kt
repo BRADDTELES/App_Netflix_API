@@ -29,6 +29,8 @@ data class ItemDetailsV4Response(
     val release_date: String?,
     @SerialName("title")
     val title: String?,
+    @SerialName("name")
+    val name: String?,
     @SerialName("video")
     val video: Boolean?,
     @SerialName("vote_average")
