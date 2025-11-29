@@ -27,7 +27,7 @@ class FilmeDetalhesViewModel(
         viewModelScope.launch {
             _uiState.value = UiState.Loading
             try {
-                val response = filmeRepository.recuperarDetalhesFilme(movieId)
+                val response = filmeRepository.recuperarDetalhesFilme(movieId, "pt-BR")
                 if (response.isSuccessful) {
                     response.body()?.let { movie ->
                         _uiState.value = UiState.Success(movie)

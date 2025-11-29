@@ -89,8 +89,11 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material3.FloatingActionButton
+import com.danilloteles.appnetflixapi.utils.common.LanguageHelper
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
 
@@ -195,13 +198,19 @@ fun MeuConteudoFilmeDetalhes(
 
     val scaffoldState = rememberBottomSheetScaffoldState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    var showFabMenu by remember { mutableStateOf(false) }
 
     // PLAYER DE VÍDEO EM TELA CHEIA
     if (showVideoPlayer && selectedVideoKey != null) {
+        val context = LocalContext.current
         NetflixVideoPlayer(
             videoKey = selectedVideoKey!!,
             title = filme.title,
-            onClose = { viewModel?.fecharVideoPlayer() }
+            onClose = { viewModel?.fecharVideoPlayer() },
+            onOpenInYouTube = {
+                // ⭐ PASSAR O CONTEXTO E VIDEOKEY CORRETAMENTE
+                viewModel?.abrirVideoNoYouTube(context, selectedVideoKey!!)
+            }
         )
         return // Para quando o player estiver ativo, não renderizar o resto
     }
@@ -209,41 +218,54 @@ fun MeuConteudoFilmeDetalhes(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalAlignment = Alignment.End
-            ) {
-                // FAB para lista de trailers
-                if (videosUiState is UiState.Success) {
-                    FloatingActionButton(
-                        onClick = { viewModel?.mostrarListaDeTrailers() },
-                        containerColor = GRAY_900,
-                        contentColor = WHITE,
-                        modifier = Modifier.size(56.dp)
-                    ) {
-                        Icon(
-                            Icons.Filled.List,
-                            contentDescription = "Lista de Trailers",
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
-
+            Box {
                 ExtendedFloatingActionButton(
                     onClick = {
-                        viewModel?.buscarVideosFilme()
+                        if (videosUiState is UiState.Success) {
+                            showFabMenu = !showFabMenu
+                        } else {
+                            viewModel?.buscarVideosFilme()
+                        }
                     },
                     containerColor = VERMELHO,
-                    contentColor = WHITE,
-                    modifier = Modifier
-                        .padding(16.dp)
+                    contentColor = WHITE
                 ) {
                     Icon(
-                        Icons.Filled.PlayArrow,
-                        contentDescription = "Reproduzir Trailer"
+                        if (videosUiState is UiState.Success) Icons.Filled.VideoLibrary else Icons.Filled.PlayArrow,
+                        contentDescription = "Trailer"
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Assistir")
+                    Text(if (videosUiState is UiState.Success) "Vídeos" else "Trailer")
+                }
+
+                // Menu dropdown do FAB
+                DropdownMenu(
+                    expanded = showFabMenu,
+                    onDismissRequest = { showFabMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Reproduzir Trailer Principal") },
+                        onClick = {
+                            if (videosUiState is UiState.Success) {
+                                val primeiroTrailer = (videosUiState as UiState.Success).data.first()
+                                viewModel?.reproduzirVideo(primeiroTrailer.key)
+                            }
+                            showFabMenu = false
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Filled.PlayArrow, contentDescription = null)
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Ver Todos os Trailers") },
+                        onClick = {
+                            viewModel?.mostrarListaDeTrailers()
+                            showFabMenu = false
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Filled.List, contentDescription = null)
+                        }
+                    )
                 }
             }
         }
@@ -264,7 +286,6 @@ fun MeuConteudoFilmeDetalhes(
                             .aspectRatio(2f / 3f),
                         contentScale = ContentScale.Crop
                     )
-
                 }
             },
             scaffoldState = scaffoldState,
@@ -475,20 +496,41 @@ fun MeuConteudoFilmeDetalhes(
                     Spacer(modifier = Modifier.height(32.dp))
                 }
                 item {
+                    val displayTitle = LanguageHelper.getDisplayTitle(
+                        title = filme.title,
+                        originalTitle = filme.original_title
+                    )
+                    val isTranslated = LanguageHelper.isTranslated(
+                        title =  filme.title,
+                        originalTitle = filme.original_title
+                    )
+
                     Text(
-                        text = filme.title,
+                        text = displayTitle,
                         color = WHITE,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
+                    // Mostrar título original se for traduzido
+                    if (isTranslated) {
+                        Text(
+                            text = filme.original_title,
+                            color = WHITE.copy(alpha = 0.7f),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Normal,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                        )
+                    }
                 }
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
                 }
                 item {
+                    val displayOverview = LanguageHelper.getDisplayOverview(filme.overview)
+
                     Text(
-                        text = filme.overview,
+                        text = displayOverview,
                         color = WHITE,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,

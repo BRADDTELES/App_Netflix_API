@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -27,6 +28,8 @@ import coil3.request.crossfade
 import com.danilloteles.appnetflixapi.R
 import com.danilloteles.appnetflixapi.constantes.Constantes
 import com.danilloteles.appnetflixapi.model.v3.MediaItem
+import com.danilloteles.appnetflixapi.ui.theme.WHITE
+import com.danilloteles.appnetflixapi.utils.common.LanguageHelper
 
 @Composable
 fun MovieItem(
@@ -58,8 +61,13 @@ fun MovieItem(
             error = painterResource(R.drawable.capa)
         )
 
+        val displayTitle = LanguageHelper.getDisplayTitleOrName(
+            title = filme.title,
+            originalTitle = filme.original_title
+        )
+
         Text(
-            text = title,
+            text = displayTitle,
             color = Color.White,
             fontSize = 14.sp,
             modifier = Modifier.fillMaxWidth().padding(start = 20.dp, top = 8.dp),
@@ -67,9 +75,7 @@ fun MovieItem(
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
-
     }
-
 }
 
 @Preview

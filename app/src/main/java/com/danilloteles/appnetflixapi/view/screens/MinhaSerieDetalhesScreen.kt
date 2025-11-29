@@ -13,10 +13,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.outlined.AddToQueue
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Icon
@@ -26,6 +30,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
@@ -67,13 +72,19 @@ import coil3.compose.AsyncImage
 import com.danilloteles.appnetflixapi.constantes.Constantes
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
 import com.danilloteles.appnetflixapi.model.v3.serie.SerieDetalhes
+import com.danilloteles.appnetflixapi.repository.v3.FilmeRepository
 import com.danilloteles.appnetflixapi.repository.v4.RepositoryV4
+import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.GRAY_100
 import com.danilloteles.appnetflixapi.ui.theme.GRAY_900
+import com.danilloteles.appnetflixapi.ui.theme.VERMELHO
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
+import com.danilloteles.appnetflixapi.utils.common.LanguageHelper
 import com.danilloteles.appnetflixapi.utils.events.UiState
 import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
+import com.danilloteles.appnetflixapi.view.componentes.NetflixVideoPlayer
+import com.danilloteles.appnetflixapi.view.componentes.TrailerBottomSheet
 import com.danilloteles.appnetflixapi.viewmodel.MinhaSerieDetalhesViewModel
 
 @Composable
@@ -86,6 +97,7 @@ fun MinhaSerieDetalhesScreen(
     val viewModel: MinhaSerieDetalhesViewModel = viewModel(
         factory = MinhaSerieDetalhesViewModel.Factory(
             serieId,
+            filmeRepository = FilmeRepository(RetrofitHelper.filmeAPI),
             repositoryV4 = RepositoryV4(),
             UserPreferencesRepository(LocalContext.current),
             listId
@@ -136,9 +148,21 @@ fun MeuConteudoSerieDetalhes(
     onClick: (Int) -> Unit,
     listId: String?
 ) {
-    val isInMyList by viewModel?.isInMyList?.collectAsStateWithLifecycle() ?: remember { mutableStateOf(false) }
-    val myListActionUiState by viewModel?.myListActionUiState?.collectAsStateWithLifecycle() ?: remember { mutableStateOf(UiState.Idle) }
-    val userListsUiState by viewModel?.userListsUiState?.collectAsStateWithLifecycle() ?: remember { mutableStateOf(UiState.Idle) }
+
+    val videosUiState by viewModel?.videosUiState?.collectAsStateWithLifecycle()
+        ?: remember { mutableStateOf(UiState.Idle) }
+    val showVideoPlayer by viewModel?.showVideoPlayer?.collectAsStateWithLifecycle()
+        ?: remember { mutableStateOf(false) }
+    val selectedVideoKey by viewModel?.selectedVideoKey?.collectAsStateWithLifecycle()
+        ?: remember { mutableStateOf<String?>(null) }
+    val showTrailerBottomSheet by viewModel?.showTrailerBottomSheet?.collectAsStateWithLifecycle()
+        ?: remember { mutableStateOf(false) }
+    val isInMyList by viewModel?.isInMyList?.collectAsStateWithLifecycle()
+        ?: remember { mutableStateOf(false) }
+    val myListActionUiState by viewModel?.myListActionUiState?.collectAsStateWithLifecycle()
+        ?: remember { mutableStateOf(UiState.Idle) }
+    val userListsUiState by viewModel?.userListsUiState?.collectAsStateWithLifecycle()
+        ?: remember { mutableStateOf(UiState.Idle) }
     val snackbarHostState = remember { SnackbarHostState() }
     val myListActionV4UiState by viewModel?.myListActionV4UiState?.collectAsStateWithLifecycle()
         ?: remember { mutableStateOf(UiState.Idle) }
@@ -161,12 +185,82 @@ fun MeuConteudoSerieDetalhes(
 
     val scaffoldState = rememberBottomSheetScaffoldState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    var showFabMenu by remember { mutableStateOf(false) }
+
+    // PLAYER DE VÍDEO EM TELA CHEIA
+    if (showVideoPlayer && selectedVideoKey != null) {
+        val context = LocalContext.current
+        NetflixVideoPlayer(
+            videoKey = selectedVideoKey!!,
+            title = serie.name,
+            onClose = { viewModel?.fecharVideoPlayer() },
+            onOpenInYouTube = {
+                // ⭐ PASSAR O CONTEXTO E VIDEOKEY CORRETAMENTE
+                viewModel?.abrirVideoNoYouTube(context, selectedVideoKey!!)
+            }
+        )
+        return // Para quando o player estiver ativo, não renderizar o resto
+    }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) {
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        floatingActionButton = {
+            Box {
+                ExtendedFloatingActionButton(
+                    onClick = {
+                        if (videosUiState is UiState.Success) {
+                            showFabMenu = !showFabMenu
+                        } else {
+                            viewModel?.buscarVideosSerie()
+                        }
+                    },
+                    containerColor = VERMELHO,
+                    contentColor = WHITE
+                ) {
+                    Icon(
+                        if (videosUiState is UiState.Success) Icons.Filled.VideoLibrary else Icons.Filled.PlayArrow,
+                        contentDescription = "Trailer"
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(if (videosUiState is UiState.Success) "Vídeos" else "Trailer")
+                }
+
+                // Menu dropdown do FAB
+                DropdownMenu(
+                    expanded = showFabMenu,
+                    onDismissRequest = { showFabMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Reproduzir Trailer Principal") },
+                        onClick = {
+                            if (videosUiState is UiState.Success) {
+                                val primeiroTrailer = (videosUiState as UiState.Success).data.first()
+                                viewModel?.reproduzirVideo(primeiroTrailer.key)
+                            }
+                            showFabMenu = false
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Filled.PlayArrow, contentDescription = null)
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Ver Todos os Trailers") },
+                        onClick = {
+                            viewModel?.mostrarListaDeTrailers()
+                            showFabMenu = false
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Filled.List, contentDescription = null)
+                        }
+                    )
+                }
+            }
+        }
+    ) { paddingValues ->
         BottomSheetScaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection).padding(it),
+            modifier = Modifier
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .padding(paddingValues),
             sheetContent = {
                 Box(
                     modifier = Modifier.fillMaxWidth()
@@ -179,7 +273,6 @@ fun MeuConteudoSerieDetalhes(
                             .aspectRatio(2f / 3f),
                         contentScale = ContentScale.Crop
                     )
-
                 }
             },
             scaffoldState = scaffoldState,
@@ -217,10 +310,10 @@ fun MeuConteudoSerieDetalhes(
                 )
             },
             containerColor = BLACK,
-        ) { paddingValues ->
+        ) { scaffoldPaddingValues ->
             LazyColumn(
                 modifier = Modifier
-                    .padding(paddingValues)
+                    .padding(scaffoldPaddingValues)
                     .fillMaxSize()
                     .background(BLACK)
             ) {
@@ -368,27 +461,93 @@ fun MeuConteudoSerieDetalhes(
                     Spacer(modifier = Modifier.height(32.dp))
                 }
                 item {
+                    val displayName = LanguageHelper.getDisplayTitleOrName(
+                        name = serie.name,
+                        originalName = serie.original_name
+                    )
+                    val isTranslated = LanguageHelper.isContentTranslated(
+                        name = serie.name,
+                        originalName = serie.original_name
+                    )
+
                     Text(
-                        text = serie.name,
+                        text = displayName,
                         color = WHITE,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
+                    // Mostrar nome original se for traduzido
+                    if (isTranslated) {
+                        Text(
+                            text = serie.original_name ?: "",
+                            color = WHITE.copy(alpha = 0.7f),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Normal,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                        )
+                    }
                 }
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
                 }
                 item {
+                    val displayOverview = LanguageHelper.getDisplayOverview(serie.overview)
+
                     Text(
-                        text = serie.overview,
+                        text = displayOverview,
                         color = WHITE,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
                 }
+                // ADICIONAR INDICADOR DE LOADING DOS VÍDEOS
+                if (videosUiState is UiState.Loading) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                LoadingIndicatorCustom(animationDelay = 2000)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Carregando trailers...",
+                                    color = WHITE
+                                )
+                            }
+                        }
+                    }
+                }
             }
+        }
+    }
+    // BOTTOM SHEET PARA TRAILERS
+    if (showTrailerBottomSheet) {
+        when (val videoState = videosUiState) {
+            is UiState.Success -> {
+                TrailerBottomSheet(
+                    videos = videoState.data,
+                    onVideoSelected = { videoKey ->
+                        viewModel?.reproduzirVideo(videoKey)
+                    },
+                    onDismiss = {
+                        viewModel?.fecharTrailerBottomSheet()
+                    }
+                )
+            }
+            is UiState.Error -> {
+                LaunchedEffect(videoState.message) {
+                    snackbarHostState.showSnackbar(videoState.message)
+                    viewModel?.fecharTrailerBottomSheet()
+                }
+            }
+            else -> {}
         }
     }
 }

@@ -1,5 +1,8 @@
 package com.danilloteles.appnetflixapi.viewmodel
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -18,6 +21,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import android.content.pm.PackageManager
+import androidx.core.net.toUri
 
 class MeuFilmeDetalhesViewModel(
     private val movieId: Int,
@@ -75,6 +80,11 @@ class MeuFilmeDetalhesViewModel(
                 val response = filmeRepository.recuperarVideosFilme(movieId, "pt-BR")
                 if (response.isSuccessful) {
                     response.body()?.let { videoResponse ->
+                        Log.d("TAG-MeuFilmeDetalhesViewModel", "Total de vídeos retornados: ${videoResponse.results.size}")
+
+                        videoResponse.results.forEach { video ->
+                            Log.d("TAG-MeuFilmeDetalhesViewModel", "Vídeo: ${video.name} | Tipo: ${video.type} | Site: ${video.site} | Oficial: ${video.official}")
+                        }
                         val trailersAndTeasers = videoResponse.results.filter { video ->
                             video.site.equals("YouTube", ignoreCase = true) &&
                                     (video.type.equals("Trailer", ignoreCase = true) ||
@@ -83,14 +93,14 @@ class MeuFilmeDetalhesViewModel(
                             compareByDescending<Video> { it.official }
                                 .thenByDescending { it.type.equals("Trailer", ignoreCase = true) }
                         )
-
+                        Log.d("TAG-MeuFilmeDetalhesViewModel", "Vídeos após filtro: ${trailersAndTeasers.size}")
                         if (trailersAndTeasers.isNotEmpty()) {
                             _videosUiState.value = UiState.Success(trailersAndTeasers)
 
                             // 🎬 MUDANÇA AQUI: Reproduzir o primeiro trailer automaticamente
                             val primeiroTrailer = trailersAndTeasers.first()
                             reproduzirVideo(primeiroTrailer.key)
-
+                            Log.d("TAG-MeuFilmeDetalhesViewModel", "Primeiro trailer selecionado: ${trailersAndTeasers.first().name}")
                             Log.d("TAG-MeuFilmeDetalhesViewModel", "Reproduzindo primeiro trailer: ${primeiroTrailer.name}")
                         } else {
                             _videosUiState.value = UiState.Error("Nenhum trailer disponível para este filme.")
@@ -164,6 +174,44 @@ class MeuFilmeDetalhesViewModel(
         Log.d("TAG-MeuFilmeDetalhesViewModel", "Reproduzindo vídeo com key: $videoKey")
     }
 
+    // ADICIONAR novo método para abrir no YouTube App:
+    fun abrirVideoNoYouTube(context: Context, videoKey: String) {
+        Log.d("TAG-MeuFilmeDetalhesViewModel", "Tentando abrir vídeo no YouTube: $videoKey")
+
+        try {
+            // PRIMEIRO: Tentar abrir no app do YouTube usando scheme específico
+            val youtubeAppIntent = Intent(Intent.ACTION_VIEW).apply {
+                data = Uri.parse("vnd.youtube:$videoKey")
+                setPackage("com.google.android.youtube") // Força usar o app do YouTube
+            }
+
+            // Verificar se o app do YouTube está instalado
+            if (youtubeAppIntent.resolveActivity(context.packageManager) != null) {
+                context.startActivity(youtubeAppIntent)
+                Log.d("TAG-MeuFilmeDetalhesViewModel", "Vídeo aberto no app YouTube")
+            } else {
+                throw Exception("App YouTube não instalado")
+            }
+        } catch (e: Exception) {
+            Log.w("TAG-MeuFilmeDetalhesViewModel", "Falha ao abrir no app YouTube: ${e.message}")
+
+            try {
+                // FALLBACK: Abrir no navegador
+                val webIntent = Intent(Intent.ACTION_VIEW).apply {
+                    data = Uri.parse("https://www.youtube.com/watch?v=$videoKey")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(webIntent)
+                Log.d("TAG-MeuFilmeDetalhesViewModel", "Vídeo aberto no navegador")
+            } catch (e2: Exception) {
+                Log.e("TAG-MeuFilmeDetalhesViewModel", "Falha ao abrir no navegador: ${e2.message}")
+            }
+        }
+
+        // Fechar o player após abrir
+        fecharVideoPlayer()
+    }
+
     fun fecharVideoPlayer() {
         _showVideoPlayer.value = false
         _selectedVideoKey.value = null
@@ -179,7 +227,7 @@ class MeuFilmeDetalhesViewModel(
         viewModelScope.launch {
             _uiState.value = UiState.Loading
             try {
-                val response = filmeRepository.recuperarDetalhesFilme(movieId)
+                val response = filmeRepository.recuperarDetalhesFilme(movieId, "pt-BR")
                 if (response.isSuccessful) {
                     response.body()?.let { details ->
                         _uiState.value = UiState.Success(details)

@@ -35,7 +35,8 @@ interface FilmeAPI {
 
     @GET("movie/{movie_id}")
     suspend fun recuperarDetalhesFilme(
-        @Path("movie_id") id: Int
+        @Path("movie_id") id: Int,
+        @Query("language") language: String = "pt-BR"
     ): Response<FilmeDetalhes>
 
     @GET("movie/top_rated")
@@ -48,15 +49,10 @@ interface FilmeAPI {
         @Query("page") page: Int
     ): Response<FilmeResposta>
 
-    @GET("account/{account_id}/rated/movies")
-    suspend fun recuperarFilmesClassificados(
-        @Path("account_id") accountId: Int,
-        @Query("session_id") sessionId: String
-    ): Response<FilmeClassificado>
-
     @GET("tv/{series_id}")
     suspend fun recuperarDetalhesSerie(
-        @Path("series_id") id: Int
+        @Path("series_id") id: Int,
+        @Query("language") language: String = "pt-BR"
     ): Response<SerieDetalhes>
 
     @GET("tv/popular")

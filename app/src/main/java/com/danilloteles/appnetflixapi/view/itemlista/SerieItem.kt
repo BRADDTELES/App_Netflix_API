@@ -28,6 +28,7 @@ import com.danilloteles.appnetflixapi.R
 import com.danilloteles.appnetflixapi.constantes.Constantes
 import com.danilloteles.appnetflixapi.model.v3.MediaItem
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
+import com.danilloteles.appnetflixapi.utils.common.LanguageHelper
 
 @Composable
 fun SerieItem(
@@ -57,8 +58,18 @@ fun SerieItem(
             placeholder = painterResource(id = R.drawable.capa),
             error = painterResource(id = R.drawable.capa)
         )
+
+        val displayName = LanguageHelper.getDisplayTitleOrName(
+            name = serie.name,
+            originalName = serie.original_name
+        )
+        val displayTitle = LanguageHelper.getDisplayTitleOrName(
+            name = serie.title,
+            originalName = serie.original_name
+        )
+
         Text(
-            text = serie.name ?: serie.title ?: "",
+            text = displayName ?: displayTitle ?: "",
             color = WHITE,
             fontSize = 14.sp,
             modifier = Modifier.fillMaxWidth().padding(8.dp),

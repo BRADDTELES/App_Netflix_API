@@ -1,5 +1,8 @@
 package com.danilloteles.appnetflixapi.viewmodel
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -9,6 +12,8 @@ import com.danilloteles.appnetflixapi.common.Result
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
 import com.danilloteles.appnetflixapi.model.v3.serie.SerieDetalhes
 import com.danilloteles.appnetflixapi.model.v4.response.TmdbListV4
+import com.danilloteles.appnetflixapi.model.video.Video
+import com.danilloteles.appnetflixapi.repository.v3.FilmeRepository
 import com.danilloteles.appnetflixapi.repository.v4.RepositoryV4
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
 import com.danilloteles.appnetflixapi.utils.events.UiState
@@ -19,11 +24,23 @@ import kotlinx.coroutines.launch
 
 class MinhaSerieDetalhesViewModel(
     private val serieId: Int,
-    private val filmeAPI: FilmeAPI,
+    private val filmeRepository: FilmeRepository,
     private val repositoryV4: RepositoryV4,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val listId: String?
 ) : ViewModel() {
+
+    private val _videosUiState = MutableStateFlow<UiState<List<Video>>>(UiState.Idle)
+    val videosUiState: StateFlow<UiState<List<Video>>> = _videosUiState
+
+    private val _showVideoPlayer = MutableStateFlow(false)
+    val showVideoPlayer: StateFlow<Boolean> = _showVideoPlayer
+
+    private val _selectedVideoKey = MutableStateFlow<String?>(null)
+    val selectedVideoKey: StateFlow<String?> = _selectedVideoKey
+
+    private val _showTrailerBottomSheet = MutableStateFlow(false)
+    val showTrailerBottomSheet: StateFlow<Boolean> = _showTrailerBottomSheet
 
     private val _uiState = MutableStateFlow<UiState<SerieDetalhes>>(UiState.Loading)
     val uiState: StateFlow<UiState<SerieDetalhes>> = _uiState
@@ -53,11 +70,149 @@ class MinhaSerieDetalhesViewModel(
         }
     }
 
+    fun buscarVideosSerie() {
+        viewModelScope.launch {
+            _videosUiState.value = UiState.Loading
+            try {
+                val response = filmeRepository.recuperarVideosSerie(serieId, "pt-BR")
+                if (response.isSuccessful) {
+                    response.body()?.let { videoResponse ->
+                        Log.d("TAG-MySerieDetailsViewModel", "Total de vídeos retornados: ${videoResponse.results.size}")
+
+                        videoResponse.results.forEach { video ->
+                            Log.d("TAG-MySerieDetailsViewModel", "Vídeo: ${video.name} | Tipo: ${video.type} | Site: ${video.site} | Oficial: ${video.official}")
+                        }
+                        val trailersAndTeasers = videoResponse.results.filter { video ->
+                            video.site.equals("YouTube", ignoreCase = true) &&
+                                    (video.type.equals("Trailer", ignoreCase = true) ||
+                                            video.type.equals("Teaser", ignoreCase = true))
+                        }.sortedWith(
+                            compareByDescending<Video> { it.official }
+                                .thenByDescending { it.type.equals("Trailer", ignoreCase = true) }
+                        )
+                        Log.d("TAG-MySerieDetailsViewModel", "Vídeos após filtro: ${trailersAndTeasers.size}")
+                        if (trailersAndTeasers.isNotEmpty()) {
+                            _videosUiState.value = UiState.Success(trailersAndTeasers)
+
+                            val primeiroTrailer = trailersAndTeasers.first()
+                            reproduzirVideo(primeiroTrailer.key)
+                            Log.d("TAG-MySerieDetailsViewModel", "Primeiro trailer selecionado: ${trailersAndTeasers.first().name}")
+                            Log.d("TAG-MySerieDetailsViewModel", "Reproduzindo primeiro trailer: ${primeiroTrailer.name}")
+                        } else {
+                            _videosUiState.value = UiState.Error("Nenhum trailer disponível para esta série.")
+                        }
+                    } ?: run {
+                        _videosUiState.value = UiState.Error("Resposta vazia da API de vídeos.")
+                    }
+                } else {
+                    _videosUiState.value = UiState.Error("Erro ao buscar vídeos: ${response.code()}")
+                    Log.e("TAG-MySerieDetailsViewModel", "Erro HTTP ${response.code()}: ${response.message()}")
+                }
+            } catch (e: Exception) {
+                _videosUiState.value = UiState.Error("Erro de conexão ao buscar vídeos.")
+                Log.e("TAG-MySerieDetailsViewModel", "Exceção ao buscar vídeos: ${e.message}", e)
+            }
+        }
+    }
+
+    fun mostrarListaDeTrailers() {
+        viewModelScope.launch {
+            if (_videosUiState.value is UiState.Success) {
+                _showTrailerBottomSheet.value = true
+            } else {
+                // Se ainda não carregou, buscar primeiro
+                buscarListaDeTrailers()
+            }
+        }
+    }
+
+    private fun buscarListaDeTrailers() {
+        viewModelScope.launch {
+            _videosUiState.value = UiState.Loading
+            try {
+                val response = filmeRepository.recuperarVideosSerie(serieId, "pt-BR")
+                if (response.isSuccessful) {
+                    response.body()?.let { videoResponse ->
+                        val trailersAndTeasers = videoResponse.results.filter { video ->
+                            video.site.equals("YouTube", ignoreCase = true) &&
+                                    (video.type.equals("Trailer", ignoreCase = true) ||
+                                            video.type.equals("Teaser", ignoreCase = true))
+                        }.sortedWith(
+                            compareByDescending<Video> { it.official }
+                                .thenByDescending { it.type.equals("Trailer", ignoreCase = true) }
+                        )
+
+                        if (trailersAndTeasers.isNotEmpty()) {
+                            _videosUiState.value = UiState.Success(trailersAndTeasers)
+                            _showTrailerBottomSheet.value = true // Mostrar bottom sheet
+                        } else {
+                            _videosUiState.value = UiState.Error("Nenhum trailer disponível para esta série.")
+                        }
+                    } ?: run {
+                        _videosUiState.value = UiState.Error("Resposta vazia da API de vídeos.")
+                    }
+                } else {
+                    _videosUiState.value = UiState.Error("Erro ao buscar vídeos: ${response.code()}")
+                    Log.e("TAG-MySerieDetailsViewModel", "Erro HTTP ${response.code()}: ${response.message()}")
+                }
+            } catch (e: Exception) {
+                _videosUiState.value = UiState.Error("Erro de conexão ao buscar vídeos.")
+                Log.e("TAG-MySerieDetailsViewModel", "Exceção ao buscar vídeos: ${e.message}", e)
+            }
+        }
+    }
+
+    fun reproduzirVideo(videoKey: String) {
+        _selectedVideoKey.value = videoKey
+        _showVideoPlayer.value = true
+        _showTrailerBottomSheet.value = false
+    }
+
+    fun abrirVideoNoYouTube(context: Context, videoKey: String) {
+        try {
+            // PRIMEIRO: Tentar abrir no app do YouTube usando scheme específico
+            val youtubeAppIntent = Intent(Intent.ACTION_VIEW).apply {
+                data = Uri.parse("vnd.youtube:$videoKey")
+                setPackage("com.google.android.youtube") // Força usar o app do YouTube
+            }
+
+            // Verificar se o app do YouTube está instalado
+            if (youtubeAppIntent.resolveActivity(context.packageManager) != null) {
+                context.startActivity(youtubeAppIntent)
+            } else {
+                throw Exception("App YouTube não instalado")
+            }
+        } catch (e: Exception) {
+            try {
+                // FALLBACK: Abrir no navegador
+                val webIntent = Intent(Intent.ACTION_VIEW).apply {
+                    data = Uri.parse("https://www.youtube.com/watch?v=$videoKey")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(webIntent)
+            } catch (e2: Exception) {
+                Log.e("TAG-MySerieDetailsViewModel", "Falha ao abrir no navegador: ${e2.message}")
+            }
+        }
+
+        // Fechar o player após abrir
+        fecharVideoPlayer()
+    }
+
+    fun fecharVideoPlayer() {
+        _showVideoPlayer.value = false
+        _selectedVideoKey.value = null
+    }
+
+    fun fecharTrailerBottomSheet() {
+        _showTrailerBottomSheet.value = false
+    }
+
     private fun loadSerieDetails() {
         viewModelScope.launch {
             _uiState.value = UiState.Loading
             try {
-                val response = filmeAPI.recuperarDetalhesSerie(serieId)
+                val response = filmeRepository.recuperarDetalhesSerie(serieId, "pt-BR")
                 if (response.isSuccessful) {
                     response.body()?.let { details ->
                         _uiState.value = UiState.Success(details)
@@ -214,6 +369,7 @@ class MinhaSerieDetalhesViewModel(
 
     class Factory(
         private val serieId: Int,
+        private val filmeRepository: FilmeRepository,
         private val repositoryV4: RepositoryV4,
         private val userPreferencesRepository: UserPreferencesRepository,
         private val listId: String?
@@ -224,7 +380,7 @@ class MinhaSerieDetalhesViewModel(
                 @Suppress("UNCHECKED_CAST")
                 return MinhaSerieDetalhesViewModel(
                     serieId,
-                    RetrofitHelper.filmeAPI,
+                    filmeRepository,
                     repositoryV4,
                     userPreferencesRepository,
                     listId
