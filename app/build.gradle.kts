@@ -95,6 +95,17 @@ dependencies {
     implementation(libs.ktor.client.logging)
     // Logging do OkHttp para debug
     implementation(libs.logging.interceptor)
+
+    // ExoPlayer 3 (Recomendado)
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.ui)
+    implementation(libs.androidx.media3.common)
+    // YouTube Player API (Para trailers do YouTube)
+    implementation(libs.core)
+    implementation(libs.chromecast.sender)
+    // Compose Video Player (Mais moderno para Compose)
+    implementation(libs.compose.video)
+
     // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.compose.adaptive.navigation)
