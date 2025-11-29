@@ -3,8 +3,8 @@ package com.danilloteles.appnetflixapi.datasource.paging.serie
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.danilloteles.appnetflixapi.api.FilmeAPI
-import com.danilloteles.appnetflixapi.model.MediaItem
-import com.danilloteles.appnetflixapi.model.serie.toMediaItem
+import com.danilloteles.appnetflixapi.model.v3.MediaItem
+import com.danilloteles.appnetflixapi.model.v3.serie.toMediaItem
 
 class TopRatedSeriesPagingSource(
     private val filmeAPI: FilmeAPI

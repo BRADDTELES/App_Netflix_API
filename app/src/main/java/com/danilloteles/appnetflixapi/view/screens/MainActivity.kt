@@ -30,8 +30,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.danilloteles.appnetflixapi.enums.FabState
-import com.danilloteles.appnetflixapi.model.MediaItem
-import com.danilloteles.appnetflixapi.repository.FilmeRepository
+import com.danilloteles.appnetflixapi.model.v3.MediaItem
+import com.danilloteles.appnetflixapi.repository.v3.FilmeRepository
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.WHITE

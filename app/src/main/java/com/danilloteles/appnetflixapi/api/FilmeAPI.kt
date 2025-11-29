@@ -1,21 +1,22 @@
 package com.danilloteles.appnetflixapi.api
 
-import com.danilloteles.appnetflixapi.model.ListaDetalhesResposta
-import com.danilloteles.appnetflixapi.model.filme.AccountDetailsResponse
-import com.danilloteles.appnetflixapi.model.filme.AccountListsResponse
-import com.danilloteles.appnetflixapi.model.filme.AddRemoveListItemRequest
-import com.danilloteles.appnetflixapi.model.filme.CreateListRequest
-import com.danilloteles.appnetflixapi.model.filme.CreateListResponse
-import com.danilloteles.appnetflixapi.model.filme.CreateSessionRequest
-import com.danilloteles.appnetflixapi.model.filme.FilmeClassificado
-import com.danilloteles.appnetflixapi.model.filme.FilmeDetalhes
-import com.danilloteles.appnetflixapi.model.filme.FilmeResposta
-import com.danilloteles.appnetflixapi.model.filme.ListaItemResposta
-import com.danilloteles.appnetflixapi.model.filme.ListaResposta
-import com.danilloteles.appnetflixapi.model.filme.RequestTokenResponse
-import com.danilloteles.appnetflixapi.model.filme.SessionIdResponse
-import com.danilloteles.appnetflixapi.model.serie.SerieDetalhes
-import com.danilloteles.appnetflixapi.model.serie.SerieResposta
+import com.danilloteles.appnetflixapi.model.v3.ListaDetalhesResposta
+import com.danilloteles.appnetflixapi.model.v3.filme.AccountDetailsResponse
+import com.danilloteles.appnetflixapi.model.v3.filme.AccountListsResponse
+import com.danilloteles.appnetflixapi.model.v3.filme.AddRemoveListItemRequest
+import com.danilloteles.appnetflixapi.model.v3.filme.CreateListRequest
+import com.danilloteles.appnetflixapi.model.v3.filme.CreateListResponse
+import com.danilloteles.appnetflixapi.model.v3.filme.CreateSessionRequest
+import com.danilloteles.appnetflixapi.model.v3.filme.FilmeClassificado
+import com.danilloteles.appnetflixapi.model.v3.filme.FilmeDetalhes
+import com.danilloteles.appnetflixapi.model.v3.filme.FilmeResposta
+import com.danilloteles.appnetflixapi.model.v3.filme.ListaItemResposta
+import com.danilloteles.appnetflixapi.model.v3.filme.ListaResposta
+import com.danilloteles.appnetflixapi.model.v3.filme.RequestTokenResponse
+import com.danilloteles.appnetflixapi.model.v3.filme.SessionIdResponse
+import com.danilloteles.appnetflixapi.model.v3.serie.SerieDetalhes
+import com.danilloteles.appnetflixapi.model.v3.serie.SerieResposta
+import com.danilloteles.appnetflixapi.model.video.VideoResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -122,4 +123,18 @@ interface FilmeAPI {
         @Path("list_id") listId: String,
         @Query("session_id") sessionId: String
     ): Response<ListaResposta>
+
+    // --- Video ---
+
+    @GET("movie/{movie_id}/videos")
+    suspend fun recuperarVideosFilme(
+        @Path("movie_id") movieId: Int,
+        @Query("language") language: String = "pt-BR"
+    ): Response<VideoResponse>
+
+    @GET("tv/{tv_id}/videos")
+    suspend fun recuperarVideosSerie(
+        @Path("tv_id") tvId: Int,
+        @Query("language") language: String = "pt-BR"
+    ): Response<VideoResponse>
 }

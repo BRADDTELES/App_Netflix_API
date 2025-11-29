@@ -5,8 +5,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import com.danilloteles.appnetflixapi.model.MediaItem
-import com.danilloteles.appnetflixapi.repository.FilmeRepository
+import com.danilloteles.appnetflixapi.model.v3.MediaItem
+import com.danilloteles.appnetflixapi.repository.v3.FilmeRepository
 import kotlinx.coroutines.flow.Flow
 
 class PopularFilmeViewModel(

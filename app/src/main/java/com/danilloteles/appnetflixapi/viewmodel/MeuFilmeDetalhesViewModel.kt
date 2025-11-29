@@ -6,11 +6,13 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.danilloteles.appnetflixapi.api.FilmeAPI
 import com.danilloteles.appnetflixapi.common.Result
-import com.danilloteles.appnetflixapi.model.filme.FilmeDetalhes
+import com.danilloteles.appnetflixapi.model.v3.filme.FilmeDetalhes
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
 import com.danilloteles.appnetflixapi.utils.events.UiState
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
 import com.danilloteles.appnetflixapi.model.v4.response.TmdbListV4
+import com.danilloteles.appnetflixapi.model.video.Video
+import com.danilloteles.appnetflixapi.repository.v3.FilmeRepository
 import com.danilloteles.appnetflixapi.repository.v4.RepositoryV4
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,11 +21,23 @@ import kotlinx.coroutines.launch
 
 class MeuFilmeDetalhesViewModel(
     private val movieId: Int,
-    private val filmeAPI: FilmeAPI,
+    private val filmeRepository: FilmeRepository,
     private val repositoryV4: RepositoryV4,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val listId: String?
 ) : ViewModel() {
+
+    private val _videosUiState = MutableStateFlow<UiState<List<Video>>>(UiState.Idle)
+    val videosUiState: StateFlow<UiState<List<Video>>> = _videosUiState
+
+    private val _showVideoPlayer = MutableStateFlow(false)
+    val showVideoPlayer: StateFlow<Boolean> = _showVideoPlayer
+
+    private val _selectedVideoKey = MutableStateFlow<String?>(null)
+    val selectedVideoKey: StateFlow<String?> = _selectedVideoKey
+
+    private val _showTrailerBottomSheet = MutableStateFlow(false)
+    val showTrailerBottomSheet: StateFlow<Boolean> = _showTrailerBottomSheet
 
     private val _uiState = MutableStateFlow<UiState<FilmeDetalhes>>(UiState.Loading)
     val uiState: StateFlow<UiState<FilmeDetalhes>> = _uiState
@@ -53,11 +67,119 @@ class MeuFilmeDetalhesViewModel(
         }
     }
 
+    fun buscarVideosFilme() {
+        Log.d("TAG-MeuFilmeDetalhesViewModel", "Iniciando busca de vídeos para movieId: $movieId")
+        viewModelScope.launch {
+            _videosUiState.value = UiState.Loading
+            try {
+                val response = filmeRepository.recuperarVideosFilme(movieId, "pt-BR")
+                if (response.isSuccessful) {
+                    response.body()?.let { videoResponse ->
+                        val trailersAndTeasers = videoResponse.results.filter { video ->
+                            video.site.equals("YouTube", ignoreCase = true) &&
+                                    (video.type.equals("Trailer", ignoreCase = true) ||
+                                            video.type.equals("Teaser", ignoreCase = true))
+                        }.sortedWith(
+                            compareByDescending<Video> { it.official }
+                                .thenByDescending { it.type.equals("Trailer", ignoreCase = true) }
+                        )
+
+                        if (trailersAndTeasers.isNotEmpty()) {
+                            _videosUiState.value = UiState.Success(trailersAndTeasers)
+
+                            // 🎬 MUDANÇA AQUI: Reproduzir o primeiro trailer automaticamente
+                            val primeiroTrailer = trailersAndTeasers.first()
+                            reproduzirVideo(primeiroTrailer.key)
+
+                            Log.d("TAG-MeuFilmeDetalhesViewModel", "Reproduzindo primeiro trailer: ${primeiroTrailer.name}")
+                        } else {
+                            _videosUiState.value = UiState.Error("Nenhum trailer disponível para este filme.")
+                        }
+                    } ?: run {
+                        _videosUiState.value = UiState.Error("Resposta vazia da API de vídeos.")
+                    }
+                } else {
+                    _videosUiState.value = UiState.Error("Erro ao buscar vídeos: ${response.code()}")
+                    Log.e("TAG-MeuFilmeDetalhesViewModel", "Erro HTTP ${response.code()}: ${response.message()}")
+                }
+            } catch (e: Exception) {
+                _videosUiState.value = UiState.Error("Erro de conexão ao buscar vídeos.")
+                Log.e("TAG-MeuFilmeDetalhesViewModel", "Exceção ao buscar vídeos: ${e.message}", e)
+            }
+        }
+    }
+
+    fun mostrarListaDeTrailers() {
+        viewModelScope.launch {
+            if (_videosUiState.value is UiState.Success) {
+                _showTrailerBottomSheet.value = true
+            } else {
+                // Se ainda não carregou, buscar primeiro
+                buscarListaDeTrailers()
+            }
+        }
+    }
+
+    private fun buscarListaDeTrailers() {
+        viewModelScope.launch {
+            _videosUiState.value = UiState.Loading
+            try {
+                val response = filmeRepository.recuperarVideosFilme(movieId, "pt-BR")
+                if (response.isSuccessful) {
+                    response.body()?.let { videoResponse ->
+                        val trailersAndTeasers = videoResponse.results.filter { video ->
+                            video.site.equals("YouTube", ignoreCase = true) &&
+                                    (video.type.equals("Trailer", ignoreCase = true) ||
+                                            video.type.equals("Teaser", ignoreCase = true))
+                        }.sortedWith(
+                            compareByDescending<Video> { it.official }
+                                .thenByDescending { it.type.equals("Trailer", ignoreCase = true) }
+                        )
+
+                        if (trailersAndTeasers.isNotEmpty()) {
+                            _videosUiState.value = UiState.Success(trailersAndTeasers)
+                            _showTrailerBottomSheet.value = true // Mostrar bottom sheet
+                            Log.d("TAG-MeuFilmeDetalhesViewModel", "${trailersAndTeasers.size} vídeos encontrados")
+                        } else {
+                            _videosUiState.value = UiState.Error("Nenhum trailer disponível para este filme.")
+                        }
+                    } ?: run {
+                        _videosUiState.value = UiState.Error("Resposta vazia da API de vídeos.")
+                    }
+                } else {
+                    _videosUiState.value = UiState.Error("Erro ao buscar vídeos: ${response.code()}")
+                    Log.e("TAG-MeuFilmeDetalhesViewModel", "Erro HTTP ${response.code()}: ${response.message()}")
+                }
+            } catch (e: Exception) {
+                _videosUiState.value = UiState.Error("Erro de conexão ao buscar vídeos.")
+                Log.e("TAG-MeuFilmeDetalhesViewModel", "Exceção ao buscar vídeos: ${e.message}", e)
+            }
+        }
+    }
+
+    fun reproduzirVideo(videoKey: String) {
+        _selectedVideoKey.value = videoKey
+        _showVideoPlayer.value = true
+        _showTrailerBottomSheet.value = false
+        Log.d("TAG-MeuFilmeDetalhesViewModel", "Reproduzindo vídeo com key: $videoKey")
+    }
+
+    fun fecharVideoPlayer() {
+        _showVideoPlayer.value = false
+        _selectedVideoKey.value = null
+        Log.d("TAG-MeuFilmeDetalhesViewModel", "Player de vídeo fechado")
+    }
+
+    fun fecharTrailerBottomSheet() {
+        _showTrailerBottomSheet.value = false
+        Log.d("TAG-MeuFilmeDetalhesViewModel", "Bottom sheet de trailers fechado")
+    }
+
     private fun loadMovieDetails() {
         viewModelScope.launch {
             _uiState.value = UiState.Loading
             try {
-                val response = filmeAPI.recuperarDetalhesFilme(movieId)
+                val response = filmeRepository.recuperarDetalhesFilme(movieId)
                 if (response.isSuccessful) {
                     response.body()?.let { details ->
                         _uiState.value = UiState.Success(details)
@@ -67,7 +189,10 @@ class MeuFilmeDetalhesViewModel(
                 } else {
                     _uiState.value =
                         UiState.Error("Erro ao carregar detalhes do filme.")
-                    Log.e("TAG-MyMovieDetailsViewModel", "Erro ao carregar detalhes do filme: ${response.code()}")
+                    Log.e(
+                        "TAG-MyMovieDetailsViewModel",
+                        "Erro ao carregar detalhes do filme: ${response.code()}"
+                    )
                 }
             } catch (e: Exception) {
                 _uiState.value = UiState.Error("Erro de conexão ao carregar detalhes.")
@@ -85,7 +210,8 @@ class MeuFilmeDetalhesViewModel(
             val accessToken = userPreferencesRepository.accessTokenV4.first()
             val accountId = userPreferencesRepository.accountId.first()
             if (accessToken == null || accountId == null) {
-                _userListsUiState.value = UiState.Error("Token de acesso V4 ou Account ID não encontrados. Faça o login novamente.")
+                _userListsUiState.value =
+                    UiState.Error("Token de acesso V4 ou Account ID não encontrados. Faça o login novamente.")
                 Log.e(TAG_DEBUG, "Falha: accessToken ou accountId são nulos.")
                 return@launch
             }
@@ -95,34 +221,48 @@ class MeuFilmeDetalhesViewModel(
             val result = repositoryV4.getAccountLits(accessToken, accountId)
             if (result is Result.Sucesso) {
                 val response = result.data
-                if (response.isSuccessful){
+                if (response.isSuccessful) {
                     response.body()?.let { accountListsV4Response ->
                         val data = accountListsV4Response.results
                         _userListsUiState.value = UiState.Success(data = data)
                         Log.d(TAG_DEBUG, "Sucesso V4! ${data.size} listas carregadas.")
                     } ?: run {
-                        _userListsUiState.value = UiState.Error("Resposta da API V4 bem-sucedida, mas o corpo é nulo.")
+                        _userListsUiState.value =
+                            UiState.Error("Resposta da API V4 bem-sucedida, mas o corpo é nulo.")
                     }
                 } else {
                     val errorBody = response.errorBody()?.string() ?: "Corpo do erro indisponível"
-                    _userListsUiState.value = UiState.Error("Erro ao carregar listas do usuário (V4).")
-                    Log.e(TAG_DEBUG, "Falha V4: A API respondeu com o código ${response.code()}. Erro: $errorBody")
+                    _userListsUiState.value =
+                        UiState.Error("Erro ao carregar listas do usuário (V4).")
+                    Log.e(
+                        TAG_DEBUG,
+                        "Falha V4: A API respondeu com o código ${response.code()}. Erro: $errorBody"
+                    )
                 }
             } else {
-                when (result){
+                when (result) {
                     is Result.HttpError -> {
-                        _myListActionV4UiState.value = UiState.Error("Erro HTTP: ${result.mensagem} - Code: ${result.code}")
+                        _myListActionV4UiState.value =
+                            UiState.Error("Erro HTTP: ${result.mensagem} - Code: ${result.code}")
                     }
+
                     is Result.NetworkError -> {
-                        _myListActionV4UiState.value = UiState.Error("Erro de Network: ${result.mensagem}")
+                        _myListActionV4UiState.value =
+                            UiState.Error("Erro de Network: ${result.mensagem}")
                     }
+
                     is Result.UnknownError -> {
-                        _myListActionV4UiState.value = UiState.Error("Erro desconhecido: ${result.mensagem}")
+                        _myListActionV4UiState.value =
+                            UiState.Error("Erro desconhecido: ${result.mensagem}")
                     }
+
                     else -> {
                         val error = result as Result.UnknownError
                         _userListsUiState.value = UiState.Error(error.mensagem)
-                        Log.e(TAG_DEBUG, "Falha V4: A chamada para repositoryV4.getAccountLits falhou. Mensagem: ${error.mensagem}")
+                        Log.e(
+                            TAG_DEBUG,
+                            "Falha V4: A chamada para repositoryV4.getAccountLits falhou. Mensagem: ${error.mensagem}"
+                        )
                     }
                 }
             }
@@ -133,15 +273,24 @@ class MeuFilmeDetalhesViewModel(
         // Se não houver um listId específico, não podemos verificar. O filme não está "na lista".
         val targetListId = listId ?: return Unit.also {
             _isInMyList.value = false
-            Log.d("TAG-MyMovieDetailsViewModel", "Nenhum listId fornecido para verificação. Botão de remover não será mostrado.")
+            Log.d(
+                "TAG-MyMovieDetailsViewModel",
+                "Nenhum listId fornecido para verificação. Botão de remover não será mostrado."
+            )
         }
 
-        Log.d("TAG-MyMovieDetailsViewModel", "checkIfMovieInMyList (V4) iniciado para movieId: $movieId em listId: $targetListId")
+        Log.d(
+            "TAG-MyMovieDetailsViewModel",
+            "checkIfMovieInMyList (V4) iniciado para movieId: $movieId em listId: $targetListId"
+        )
 
         viewModelScope.launch {
             val accessToken = userPreferencesRepository.accessTokenV4.first()
             if (accessToken == null) {
-                Log.e("TAG-MyMovieDetailsViewModel", "Access Token V4 nulo. Não é possível verificar a lista.")
+                Log.e(
+                    "TAG-MyMovieDetailsViewModel",
+                    "Access Token V4 nulo. Não é possível verificar a lista."
+                )
                 _isInMyList.value = false
                 return@launch
             }
@@ -151,8 +300,12 @@ class MeuFilmeDetalhesViewModel(
                     val listDetails = result.data
                     val containsMovie = listDetails.results.any { it.id == movieId }
                     _isInMyList.value = containsMovie
-                    Log.d("TAG-MyMovieDetailsViewModel", "Verificação V4: Lista $targetListId contém o filme $movieId: $containsMovie")
+                    Log.d(
+                        "TAG-MyMovieDetailsViewModel",
+                        "Verificação V4: Lista $targetListId contém o filme $movieId: $containsMovie"
+                    )
                 }
+
                 is Result.HttpError, is Result.NetworkError, is Result.UnknownError -> {
                     val errorMessage = when (result) {
                         is Result.HttpError -> "Erro HTTP ${result.code}: ${result.mensagem}"
@@ -160,7 +313,10 @@ class MeuFilmeDetalhesViewModel(
                         is Result.UnknownError -> "Erro Desconhecido: ${result.mensagem}"
                         else -> "Erro inesperado" // Não deve acontecer
                     }
-                    Log.e("TAG-MyMovieDetailsViewModel", "Falha ao obter detalhes da lista $targetListId para verificação: $errorMessage")
+                    Log.e(
+                        "TAG-MyMovieDetailsViewModel",
+                        "Falha ao obter detalhes da lista $targetListId para verificação: $errorMessage"
+                    )
                     _isInMyList.value = false
                 }
             }
@@ -168,7 +324,10 @@ class MeuFilmeDetalhesViewModel(
     }
 
     fun addOrRemoveMovieV4(targetListIdForAction: String) {
-        Log.d("TAG-MyMovieDetailsViewModel", "addOrRemoveMovie iniciado. MovieId: $movieId, targetListIdForAction: $targetListIdForAction")
+        Log.d(
+            "TAG-MyMovieDetailsViewModel",
+            "addOrRemoveMovie iniciado. MovieId: $movieId, targetListIdForAction: $targetListIdForAction"
+        )
         viewModelScope.launch {
             _myListActionV4UiState.value = UiState.Loading
             try {
@@ -184,7 +343,8 @@ class MeuFilmeDetalhesViewModel(
                 }
 
                 if (result is Result.Sucesso) {
-                    val message = if (_isInMyList.value) "Filme removido com sucesso!" else "Filme adicionado com sucesso!"
+                    val message =
+                        if (_isInMyList.value) "Filme removido com sucesso!" else "Filme adicionado com sucesso!"
                     _myListActionV4UiState.value = UiState.Success(message)
                     // Inverte o estado localmente para refletir a mudança imediatamente na UI
                     _isInMyList.value = !_isInMyList.value
@@ -209,6 +369,7 @@ class MeuFilmeDetalhesViewModel(
 
     class Factory(
         private val movieId: Int,
+        private val filmeRepository: FilmeRepository,
         private val repositoryV4: RepositoryV4,
         private val userPreferencesRepository: UserPreferencesRepository,
         private val listId: String?
@@ -218,7 +379,7 @@ class MeuFilmeDetalhesViewModel(
                 @Suppress("UNCHECKED_CAST")
                 return MeuFilmeDetalhesViewModel(
                     movieId,
-                    RetrofitHelper.filmeAPI,
+                    filmeRepository,
                     repositoryV4,
                     userPreferencesRepository,
                     listId

@@ -9,8 +9,8 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.danilloteles.appnetflixapi.datasource.paging.filme.PopularFilmesPagingSource
 import com.danilloteles.appnetflixapi.datasource.paging.filme.TopRatedFilmesPagingSource
-import com.danilloteles.appnetflixapi.model.MediaItem
-import com.danilloteles.appnetflixapi.repository.FilmeRepository
+import com.danilloteles.appnetflixapi.model.v3.MediaItem
+import com.danilloteles.appnetflixapi.repository.v3.FilmeRepository
 import com.danilloteles.appnetflixapi.utils.events.FilmeListFilterState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow

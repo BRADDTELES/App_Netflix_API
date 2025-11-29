@@ -52,12 +52,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
-import com.danilloteles.appnetflixapi.model.filme.TmdbList
 import com.danilloteles.appnetflixapi.model.v4.response.TmdbListV4
-import com.danilloteles.appnetflixapi.repository.MinhaListaRepository
 import com.danilloteles.appnetflixapi.repository.v4.RepositoryV4
-import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
-import com.danilloteles.appnetflixapi.retrofit.RetrofitHelperV4
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.utils.events.UiState
 import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom

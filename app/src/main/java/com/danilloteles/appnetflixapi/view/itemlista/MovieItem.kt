@@ -26,7 +26,7 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.danilloteles.appnetflixapi.R
 import com.danilloteles.appnetflixapi.constantes.Constantes
-import com.danilloteles.appnetflixapi.model.MediaItem
+import com.danilloteles.appnetflixapi.model.v3.MediaItem
 
 @Composable
 fun MovieItem(

@@ -16,7 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.paging.compose.LazyPagingItems
-import com.danilloteles.appnetflixapi.model.MediaItem
+import com.danilloteles.appnetflixapi.model.v3.MediaItem
 import com.danilloteles.appnetflixapi.view.itemlista.MovieItem
 
 @Composable

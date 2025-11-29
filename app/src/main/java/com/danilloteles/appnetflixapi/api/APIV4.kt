@@ -10,7 +10,6 @@ import com.danilloteles.appnetflixapi.model.v4.response.AddItemsV4Response
 import com.danilloteles.appnetflixapi.model.v4.response.CreateListV4Response
 import com.danilloteles.appnetflixapi.model.v4.response.ListDetailsV4Response
 import com.danilloteles.appnetflixapi.model.v4.response.RemoveItemsV4Response
-import com.danilloteles.appnetflixapi.model.filme.AccountListsResponse
 import com.danilloteles.appnetflixapi.model.v4.response.AccountListsV4Response
 import com.danilloteles.appnetflixapi.model.v4.response.RemoveListV4Response
 import com.danilloteles.appnetflixapi.model.v4.response.RequestTokenV4Response

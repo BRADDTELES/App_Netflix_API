@@ -13,11 +13,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.AddToQueue
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Icon
@@ -27,7 +28,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
@@ -67,16 +68,31 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import com.danilloteles.appnetflixapi.constantes.Constantes
-import com.danilloteles.appnetflixapi.model.filme.FilmeDetalhes
+import com.danilloteles.appnetflixapi.model.v3.filme.FilmeDetalhes
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.GRAY_100
 import com.danilloteles.appnetflixapi.ui.theme.GRAY_900
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
 import com.danilloteles.appnetflixapi.utils.events.UiState
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
+import com.danilloteles.appnetflixapi.repository.v3.FilmeRepository
 import com.danilloteles.appnetflixapi.repository.v4.RepositoryV4
+import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
+import com.danilloteles.appnetflixapi.ui.theme.VERMELHO
 import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
+import com.danilloteles.appnetflixapi.view.componentes.NetflixVideoPlayer
+import com.danilloteles.appnetflixapi.view.componentes.TrailerBottomSheet
 import com.danilloteles.appnetflixapi.viewmodel.MeuFilmeDetalhesViewModel
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material3.FloatingActionButton
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
 
 @Composable
 fun MeuFilmeDetalhesScreen(
@@ -88,6 +104,7 @@ fun MeuFilmeDetalhesScreen(
     val viewModel: MeuFilmeDetalhesViewModel = viewModel(
         factory = MeuFilmeDetalhesViewModel.Factory(
             movieId,
+            filmeRepository = FilmeRepository(RetrofitHelper.filmeAPI),
             repositoryV4 = RepositoryV4(),
             UserPreferencesRepository(LocalContext.current),
             listId
@@ -140,6 +157,15 @@ fun MeuConteudoFilmeDetalhes(
     onClick: (Int) -> Unit,
     listId: String?
 ) {
+
+    val videosUiState by viewModel?.videosUiState?.collectAsStateWithLifecycle()
+        ?: remember { mutableStateOf(UiState.Idle) }
+    val showVideoPlayer by viewModel?.showVideoPlayer?.collectAsStateWithLifecycle()
+        ?: remember { mutableStateOf(false) }
+    val selectedVideoKey by viewModel?.selectedVideoKey?.collectAsStateWithLifecycle()
+        ?: remember { mutableStateOf<String?>(null) }
+    val showTrailerBottomSheet by viewModel?.showTrailerBottomSheet?.collectAsStateWithLifecycle()
+        ?: remember { mutableStateOf(false) }
     val isInMyList by viewModel?.isInMyList?.collectAsStateWithLifecycle()
         ?: remember { mutableStateOf(false) }
     val myListActionUiState by viewModel?.myListActionUiState?.collectAsStateWithLifecycle()
@@ -170,13 +196,62 @@ fun MeuConteudoFilmeDetalhes(
     val scaffoldState = rememberBottomSheetScaffoldState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
+    // PLAYER DE VÍDEO EM TELA CHEIA
+    if (showVideoPlayer && selectedVideoKey != null) {
+        NetflixVideoPlayer(
+            videoKey = selectedVideoKey!!,
+            title = filme.title,
+            onClose = { viewModel?.fecharVideoPlayer() }
+        )
+        return // Para quando o player estiver ativo, não renderizar o resto
+    }
+
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) {
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        floatingActionButton = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalAlignment = Alignment.End
+            ) {
+                // FAB para lista de trailers
+                if (videosUiState is UiState.Success) {
+                    FloatingActionButton(
+                        onClick = { viewModel?.mostrarListaDeTrailers() },
+                        containerColor = GRAY_900,
+                        contentColor = WHITE,
+                        modifier = Modifier.size(56.dp)
+                    ) {
+                        Icon(
+                            Icons.Filled.List,
+                            contentDescription = "Lista de Trailers",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+
+                ExtendedFloatingActionButton(
+                    onClick = {
+                        viewModel?.buscarVideosFilme()
+                    },
+                    containerColor = VERMELHO,
+                    contentColor = WHITE,
+                    modifier = Modifier
+                        .padding(16.dp)
+                ) {
+                    Icon(
+                        Icons.Filled.PlayArrow,
+                        contentDescription = "Reproduzir Trailer"
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Assistir")
+                }
+            }
+        }
+    ) { paddingValues ->
         BottomSheetScaffold(
             modifier = Modifier
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .padding(it),
+                .padding(paddingValues),
             sheetContent = {
                 Box(
                     modifier = Modifier.fillMaxWidth()
@@ -227,10 +302,10 @@ fun MeuConteudoFilmeDetalhes(
                 )
             },
             containerColor = BLACK,
-        ) { paddingValues ->
+        ) { scaffoldPaddingValues ->
             LazyColumn(
                 modifier = Modifier
-                    .padding(paddingValues)
+                    .padding(scaffoldPaddingValues)
                     .fillMaxSize()
                     .background(BLACK)
             ) {
@@ -420,14 +495,59 @@ fun MeuConteudoFilmeDetalhes(
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
                 }
+                // ADICIONAR INDICADOR DE LOADING DOS VÍDEOS
+                if (videosUiState is UiState.Loading) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                LoadingIndicatorCustom(animationDelay = 2000)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Carregando trailers...",
+                                    color = WHITE
+                                )
+                            }
+                        }
+                    }
+                }
             }
+        }
+    }
+    // BOTTOM SHEET PARA TRAILERS
+    if (showTrailerBottomSheet) {
+        when (val videoState = videosUiState) {
+            is UiState.Success -> {
+                TrailerBottomSheet(
+                    videos = videoState.data,
+                    onVideoSelected = { videoKey ->
+                        viewModel?.reproduzirVideo(videoKey)
+                    },
+                    onDismiss = {
+                        viewModel?.fecharTrailerBottomSheet()
+                    }
+                )
+            }
+            is UiState.Error -> {
+                LaunchedEffect(videoState.message) {
+                    snackbarHostState.showSnackbar(videoState.message)
+                    viewModel?.fecharTrailerBottomSheet()
+                }
+            }
+            else -> {}
         }
     }
 }
 
 @Preview
 @Composable
-private fun MeuFilmeDetalhesScreenPreview() {
+private fun MeuConteudoFilmeDetalhesPreview() {
     MeuFilmeDetalhesScreen(
         movieId = 1,
         listId = null,

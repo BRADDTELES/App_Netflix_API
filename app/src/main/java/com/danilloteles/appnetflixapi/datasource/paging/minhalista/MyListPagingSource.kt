@@ -5,9 +5,9 @@ import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.danilloteles.appnetflixapi.api.FilmeAPI
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
-import com.danilloteles.appnetflixapi.model.MediaItem
-import com.danilloteles.appnetflixapi.model.filme.toMediaItem
-import com.danilloteles.appnetflixapi.model.serie.toMediaItem
+import com.danilloteles.appnetflixapi.model.v3.MediaItem
+import com.danilloteles.appnetflixapi.model.v3.filme.toMediaItem
+import com.danilloteles.appnetflixapi.model.v3.serie.toMediaItem
 import com.danilloteles.appnetflixapi.utils.events.SortOrder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async

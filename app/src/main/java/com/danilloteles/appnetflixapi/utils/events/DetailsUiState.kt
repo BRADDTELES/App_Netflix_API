@@ -1,7 +1,7 @@
 /* TODO: Classe por enquanto sem uso */
 package com.danilloteles.appnetflixapi.utils.events
 
-import com.danilloteles.appnetflixapi.model.filme.FilmeDetalhes
+import com.danilloteles.appnetflixapi.model.v3.filme.FilmeDetalhes
 
 sealed interface DetailsUiState {
     object Loading : DetailsUiState
