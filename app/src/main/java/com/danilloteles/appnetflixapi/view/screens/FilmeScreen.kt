@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
+@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 
 package com.danilloteles.appnetflixapi.view.screens
 
@@ -7,20 +7,32 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.material.icons.outlined.Movie
+import androidx.compose.material.icons.outlined.StarOutline
+import androidx.compose.material.icons.outlined.ThumbUpAlt
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -29,6 +41,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,10 +57,10 @@ import com.danilloteles.appnetflixapi.model.v3.MediaItem
 import com.danilloteles.appnetflixapi.repository.v3.FilmeRepository
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
+import com.danilloteles.appnetflixapi.ui.theme.GRAY
 import com.danilloteles.appnetflixapi.ui.theme.VERMELHO
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
 import com.danilloteles.appnetflixapi.utils.events.FilmeListFilterState
-import com.danilloteles.appnetflixapi.utils.custom.ConnectedButtonGroupComposableSerieCustom
 import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
 import com.danilloteles.appnetflixapi.view.itemlista.MovieItem
 import com.danilloteles.appnetflixapi.viewmodel.FilmeViewModel
@@ -99,15 +114,17 @@ fun FilmeScreen(
                 .fillMaxSize()
                 .background(BLACK)
         ) {
-            ConnectedButtonGroupComposableSerieCustom(
+            ConnectedButtonGroupComposableCustom(
                 selectedIndex = when (currentFilter) {
                     is FilmeListFilterState.Popular -> 0
                     is FilmeListFilterState.TopRated -> 1
+                    is FilmeListFilterState.NowPlaying -> 2
                 },
                 onIndexChange = { newIndex ->
                     val newFilter = when (newIndex) {
                         0 -> FilmeListFilterState.Popular
                         1 -> FilmeListFilterState.TopRated
+                        2 -> FilmeListFilterState.NowPlaying
                         else -> FilmeListFilterState.Popular
                     }
                     filmeViewModel.applyFilter(newFilter)
@@ -166,6 +183,56 @@ fun FilmeScreen(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun ConnectedButtonGroupComposableCustom(
+    selectedIndex: Int,
+    onIndexChange: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val options = listOf("Popular", "Top Séries", "Em Cartaz")
+    val unCheckedIcons = listOf(Icons.Outlined.ThumbUpAlt, Icons.Outlined.StarOutline, Icons.Outlined.Movie)
+    val checkedIcons = listOf(Icons.Filled.ThumbUp, Icons.Filled.Star, Icons.Filled.Movie)
+
+    Row(
+        modifier = modifier.padding(start = 4.dp, end = 4.dp, top = 16.dp, bottom = 0.dp),
+        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+    ) {
+
+        val modifiers = listOf(
+            Modifier.weight(0.9f),
+            Modifier.weight(1f),
+            Modifier.weight(1f),
+        )
+
+        options.forEachIndexed { index, label ->
+            ToggleButton(
+                checked = selectedIndex == index,
+                onCheckedChange = { onIndexChange(index) },
+                modifier = modifiers[index].semantics { role = Role.RadioButton },
+                shapes =
+                    when (index) {
+                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                        options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                    },
+                colors = ToggleButtonDefaults.toggleButtonColors(
+                    checkedContainerColor = VERMELHO,
+                    checkedContentColor = WHITE,
+                    containerColor = WHITE,
+                    contentColor = GRAY
+                )
+            ) {
+                Icon(
+                    if (selectedIndex == index) checkedIcons[index] else unCheckedIcons[index],
+                    contentDescription = label,
+                )
+                Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
+                Text(label)
             }
         }
     }

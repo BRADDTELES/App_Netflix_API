@@ -14,7 +14,7 @@ class PopularFilmeViewModel(
 ) : ViewModel() {
 
     val popularMoviesStream: Flow<PagingData<MediaItem>> = repository
-        .getPopularMoviesStream()
+        .recuperarFilmesPopularesStream()
         .cachedIn(viewModelScope)
 
 

@@ -17,8 +17,8 @@ import com.danilloteles.appnetflixapi.view.screens.ConteudoScreen
 import com.danilloteles.appnetflixapi.view.screens.FilmeScreen
 import com.danilloteles.appnetflixapi.view.screens.FormularioScreen
 import com.danilloteles.appnetflixapi.view.screens.LoginScreen
-import com.danilloteles.appnetflixapi.view.screens.MinhaListaScreen
 import com.danilloteles.appnetflixapi.view.screens.MeuFilmeDetalhesScreen
+import com.danilloteles.appnetflixapi.view.screens.MinhaListaScreen
 import com.danilloteles.appnetflixapi.view.screens.MinhaSerieDetalhesScreen
 import com.danilloteles.appnetflixapi.view.screens.NetflixScreen
 import com.danilloteles.appnetflixapi.view.screens.PopularFilmeDetalhesScreen

@@ -1,4 +1,4 @@
-package com.danilloteles.appnetflixapi.view.componentes
+package com.danilloteles.appnetflixapi.utils.custom
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke

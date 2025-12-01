@@ -7,7 +7,6 @@ import com.danilloteles.appnetflixapi.model.v3.filme.AddRemoveListItemRequest
 import com.danilloteles.appnetflixapi.model.v3.filme.CreateListRequest
 import com.danilloteles.appnetflixapi.model.v3.filme.CreateListResponse
 import com.danilloteles.appnetflixapi.model.v3.filme.CreateSessionRequest
-import com.danilloteles.appnetflixapi.model.v3.filme.FilmeClassificado
 import com.danilloteles.appnetflixapi.model.v3.filme.FilmeDetalhes
 import com.danilloteles.appnetflixapi.model.v3.filme.FilmeResposta
 import com.danilloteles.appnetflixapi.model.v3.filme.ListaItemResposta
@@ -45,7 +44,7 @@ interface FilmeAPI {
     ): Response<FilmeResposta>
 
     @GET("movie/now_playing")
-    suspend fun recuperarFilmesTocandoAgora(
+    suspend fun recuperarFilmesEmCartaz(
         @Query("page") page: Int
     ): Response<FilmeResposta>
 

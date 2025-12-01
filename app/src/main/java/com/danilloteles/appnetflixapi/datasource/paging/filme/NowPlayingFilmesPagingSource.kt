@@ -12,7 +12,7 @@ class NowPlayingFilmesPagingSource(
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, MediaItem> {
         return try {
             val pagina = params.key ?: 1
-            val resposta = filmeAPI.recuperarFilmesTocandoAgora(page = pagina)
+            val resposta = filmeAPI.recuperarFilmesEmCartaz(page = pagina)
             if (resposta.isSuccessful) {
                 val filmes = resposta.body()?.results ?: emptyList()
                 val mediaItems = filmes.map { it.toMediaItem() }

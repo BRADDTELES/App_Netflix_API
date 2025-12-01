@@ -7,15 +7,13 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.danilloteles.appnetflixapi.api.FilmeAPI
 import com.danilloteles.appnetflixapi.common.Result
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
 import com.danilloteles.appnetflixapi.model.v3.serie.SerieDetalhes
 import com.danilloteles.appnetflixapi.model.v4.response.TmdbListV4
 import com.danilloteles.appnetflixapi.model.video.Video
-import com.danilloteles.appnetflixapi.repository.v3.FilmeRepository
+import com.danilloteles.appnetflixapi.repository.v3.SerieRepository
 import com.danilloteles.appnetflixapi.repository.v4.RepositoryV4
-import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
 import com.danilloteles.appnetflixapi.utils.events.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,7 +22,7 @@ import kotlinx.coroutines.launch
 
 class MinhaSerieDetalhesViewModel(
     private val serieId: Int,
-    private val filmeRepository: FilmeRepository,
+    private val serieRepository: SerieRepository,
     private val repositoryV4: RepositoryV4,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val listId: String?
@@ -74,7 +72,7 @@ class MinhaSerieDetalhesViewModel(
         viewModelScope.launch {
             _videosUiState.value = UiState.Loading
             try {
-                val response = filmeRepository.recuperarVideosSerie(serieId, "pt-BR")
+                val response = serieRepository.recuperarVideosSerie(serieId, "pt-BR")
                 if (response.isSuccessful) {
                     response.body()?.let { videoResponse ->
                         Log.d("TAG-MySerieDetailsViewModel", "Total de vídeos retornados: ${videoResponse.results.size}")
@@ -130,7 +128,7 @@ class MinhaSerieDetalhesViewModel(
         viewModelScope.launch {
             _videosUiState.value = UiState.Loading
             try {
-                val response = filmeRepository.recuperarVideosSerie(serieId, "pt-BR")
+                val response = serieRepository.recuperarVideosSerie(serieId, "pt-BR")
                 if (response.isSuccessful) {
                     response.body()?.let { videoResponse ->
                         val trailersAndTeasers = videoResponse.results.filter { video ->
@@ -212,7 +210,7 @@ class MinhaSerieDetalhesViewModel(
         viewModelScope.launch {
             _uiState.value = UiState.Loading
             try {
-                val response = filmeRepository.recuperarDetalhesSerie(serieId, "pt-BR")
+                val response = serieRepository.recuperarDetalhesSerie(serieId, "pt-BR")
                 if (response.isSuccessful) {
                     response.body()?.let { details ->
                         _uiState.value = UiState.Success(details)
@@ -369,7 +367,7 @@ class MinhaSerieDetalhesViewModel(
 
     class Factory(
         private val serieId: Int,
-        private val filmeRepository: FilmeRepository,
+        private val serieRepository: SerieRepository,
         private val repositoryV4: RepositoryV4,
         private val userPreferencesRepository: UserPreferencesRepository,
         private val listId: String?
@@ -380,7 +378,7 @@ class MinhaSerieDetalhesViewModel(
                 @Suppress("UNCHECKED_CAST")
                 return MinhaSerieDetalhesViewModel(
                     serieId,
-                    filmeRepository,
+                    serieRepository,
                     repositoryV4,
                     userPreferencesRepository,
                     listId

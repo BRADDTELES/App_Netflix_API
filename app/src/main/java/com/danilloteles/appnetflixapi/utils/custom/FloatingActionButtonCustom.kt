@@ -1,4 +1,4 @@
-package com.danilloteles.appnetflixapi.view.componentes
+package com.danilloteles.appnetflixapi.utils.custom
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons

@@ -7,6 +7,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import com.danilloteles.appnetflixapi.datasource.paging.filme.NowPlayingFilmesPagingSource
 import com.danilloteles.appnetflixapi.datasource.paging.filme.PopularFilmesPagingSource
 import com.danilloteles.appnetflixapi.datasource.paging.filme.TopRatedFilmesPagingSource
 import com.danilloteles.appnetflixapi.model.v3.MediaItem
@@ -35,6 +36,7 @@ class FilmeViewModel(
                 when (filter) {
                     FilmeListFilterState.Popular -> PopularFilmesPagingSource(filmeRepository.filmeAPI)
                     FilmeListFilterState.TopRated -> TopRatedFilmesPagingSource(filmeRepository.filmeAPI)
+                    FilmeListFilterState.NowPlaying -> NowPlayingFilmesPagingSource(filmeRepository.filmeAPI)
                 }
             }
         )

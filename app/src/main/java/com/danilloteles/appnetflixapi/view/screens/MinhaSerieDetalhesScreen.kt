@@ -23,7 +23,6 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.outlined.AddToQueue
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material3.Icon
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
@@ -31,6 +30,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
@@ -72,7 +72,7 @@ import coil3.compose.AsyncImage
 import com.danilloteles.appnetflixapi.constantes.Constantes
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
 import com.danilloteles.appnetflixapi.model.v3.serie.SerieDetalhes
-import com.danilloteles.appnetflixapi.repository.v3.FilmeRepository
+import com.danilloteles.appnetflixapi.repository.v3.SerieRepository
 import com.danilloteles.appnetflixapi.repository.v4.RepositoryV4
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
@@ -97,7 +97,7 @@ fun MinhaSerieDetalhesScreen(
     val viewModel: MinhaSerieDetalhesViewModel = viewModel(
         factory = MinhaSerieDetalhesViewModel.Factory(
             serieId,
-            filmeRepository = FilmeRepository(RetrofitHelper.filmeAPI),
+            serieRepository = SerieRepository(RetrofitHelper.filmeAPI),
             repositoryV4 = RepositoryV4(),
             UserPreferencesRepository(LocalContext.current),
             listId

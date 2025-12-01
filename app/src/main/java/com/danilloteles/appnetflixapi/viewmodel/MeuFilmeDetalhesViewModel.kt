@@ -7,22 +7,18 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.danilloteles.appnetflixapi.api.FilmeAPI
 import com.danilloteles.appnetflixapi.common.Result
-import com.danilloteles.appnetflixapi.model.v3.filme.FilmeDetalhes
-import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
-import com.danilloteles.appnetflixapi.utils.events.UiState
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
+import com.danilloteles.appnetflixapi.model.v3.filme.FilmeDetalhes
 import com.danilloteles.appnetflixapi.model.v4.response.TmdbListV4
 import com.danilloteles.appnetflixapi.model.video.Video
 import com.danilloteles.appnetflixapi.repository.v3.FilmeRepository
 import com.danilloteles.appnetflixapi.repository.v4.RepositoryV4
+import com.danilloteles.appnetflixapi.utils.events.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import android.content.pm.PackageManager
-import androidx.core.net.toUri
 
 class MeuFilmeDetalhesViewModel(
     private val movieId: Int,

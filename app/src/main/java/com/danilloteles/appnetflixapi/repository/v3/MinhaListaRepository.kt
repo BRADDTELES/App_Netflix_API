@@ -1,16 +1,12 @@
+/*
 package com.danilloteles.appnetflixapi.repository.v3
 
 import android.util.Log
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.PagingData
-import com.danilloteles.appnetflixapi.api.FilmeAPI
 import com.danilloteles.appnetflixapi.api.APIV4
+import com.danilloteles.appnetflixapi.api.FilmeAPI
 import com.danilloteles.appnetflixapi.common.Result
 import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesRepository
-import com.danilloteles.appnetflixapi.datasource.paging.minhalista.MyListPagingSource
 import com.danilloteles.appnetflixapi.model.v3.ListaDetalhesResposta
-import com.danilloteles.appnetflixapi.model.v3.MediaItem
 import com.danilloteles.appnetflixapi.model.v3.filme.AccountDetailsResponse
 import com.danilloteles.appnetflixapi.model.v3.filme.AccountListsResponse
 import com.danilloteles.appnetflixapi.model.v3.filme.AddRemoveListItemRequest
@@ -20,7 +16,6 @@ import com.danilloteles.appnetflixapi.model.v3.filme.ListaItemResposta
 import com.danilloteles.appnetflixapi.model.v3.filme.ListaResposta
 import com.danilloteles.appnetflixapi.model.v4.response.AccountListsV4Response
 import com.danilloteles.appnetflixapi.model.v4.response.RemoveListV4Response
-import com.danilloteles.appnetflixapi.utils.events.SortOrder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -45,17 +40,7 @@ class MinhaListaRepository(
     }
 
 
-    // --- Métodos V3 (Mantidos por enquanto) ---
-
-    fun getMyListMoviesStream(listId: String?, sortOrder: SortOrder): Flow<PagingData<MediaItem>> {
-        return Pager(
-            config = PagingConfig(
-                pageSize = 20,
-                enablePlaceholders = false
-            ),
-            pagingSourceFactory = { MyListPagingSource(filmeAPI, userPreferencesRepository, listId ?: "", sortOrder) }
-        ).flow
-    }
+    // --- Métodos V3 ---
 
     suspend fun obterDetalhesDaConta(sessionId: String): Response<AccountDetailsResponse> {
         return filmeAPI.obterDetalhesDaConta(sessionId)
@@ -111,4 +96,4 @@ class MinhaListaRepository(
             Result.UnknownError("Ocorreu um erro inesperado: ${e.message}")
         }
     }
-}
+}*/

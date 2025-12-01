@@ -7,6 +7,7 @@ import com.danilloteles.appnetflixapi.api.FilmeAPI
 import com.danilloteles.appnetflixapi.datasource.paging.serie.PopularSeriesPagingSource
 import com.danilloteles.appnetflixapi.datasource.paging.serie.TopRatedSeriesPagingSource
 import com.danilloteles.appnetflixapi.model.v3.MediaItem
+import com.danilloteles.appnetflixapi.model.v3.serie.SerieDetalhes
 import com.danilloteles.appnetflixapi.model.video.VideoResponse
 import kotlinx.coroutines.flow.Flow
 import retrofit2.Response
@@ -14,27 +15,12 @@ import retrofit2.Response
 class SerieRepository(
     val filmeAPI: FilmeAPI
 ) {
-    fun getPopularSeriesStream(): Flow<PagingData<MediaItem>> {
-        return Pager(
-            config = PagingConfig(
-                pageSize = 20,
-                enablePlaceholders = false
-            ),
-            pagingSourceFactory = { PopularSeriesPagingSource(filmeAPI) }
-        ).flow
+
+    suspend fun recuperarDetalhesSerie(id: Int, language: String): Response<SerieDetalhes> {
+        return filmeAPI.recuperarDetalhesSerie(id, "pt-BR")
     }
 
-    fun getTopRatedSeriesStream(): Flow<PagingData<MediaItem>> {
-        return Pager(
-            config = PagingConfig(
-                pageSize = 20,
-                enablePlaceholders = false
-            ),
-            pagingSourceFactory = { TopRatedSeriesPagingSource(filmeAPI) }
-        ).flow
-    }
-
-    suspend fun recuperarVideosSerie(tvId: Int, language: String): Response<VideoResponse> {
-        return filmeAPI.recuperarVideosSerie(tvId, "pt-BR")
+    suspend fun recuperarVideosSerie(serieId: Int, language: String): Response<VideoResponse> {
+        return filmeAPI.recuperarVideosSerie(serieId, "pt-BR")
     }
 }
