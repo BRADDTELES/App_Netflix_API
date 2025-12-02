@@ -114,7 +114,14 @@ fun NetflixApp(
                 onNavigateToConteudo = { listId, listName ->
                     navController.navigate("${AppDestination.CONTEUDO_SCREEN}/$listId/$listName")
                 },
-                onNavigateToFormulario = { navController.navigate(AppDestination.LIST_FORM_ROUTE) }
+                onNavigateToFormulario = { navController.navigate(AppDestination.LIST_FORM_ROUTE) },
+                onNavigateToEditList = { listId, listName, listDescription ->
+                    val encodedName = java.net.URLEncoder.encode(listName, "UTF-8")
+                    val encodedDescription = listDescription?.let {
+                        java.net.URLEncoder.encode(it, "UTF-8")
+                    } ?: ""
+                    navController.navigate("${AppDestination.EDIT_LIST_SCREEN}/$listId/$encodedName?${AppDestination.LIST_DESCRIPTION_ARG}=$encodedDescription")
+                }
             )
         }
 
@@ -131,7 +138,45 @@ fun NetflixApp(
         }
         
         composable(route = AppDestination.LIST_FORM_ROUTE) {
-            FormularioScreen(onNavigateBack = { navController.popBackStack() })
+            FormularioScreen(
+                onNavigateBack = { navController.popBackStack() },
+                isEditMode = false
+            )
+        }
+
+        composable(
+            route = AppDestination.EDIT_LIST_ROUTE,
+            arguments = listOf(
+                navArgument(AppDestination.LIST_ID_ARG) { type = NavType.StringType },
+                navArgument(AppDestination.LIST_NAME_ARG) { type = NavType.StringType },
+                navArgument(AppDestination.LIST_DESCRIPTION_ARG) {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = ""
+                }
+            )
+        ) { backStackEntry ->
+            val listId = backStackEntry.arguments?.getString(AppDestination.LIST_ID_ARG)
+            val encodedListName = backStackEntry.arguments?.getString(AppDestination.LIST_NAME_ARG)
+            val encodedListDescription = backStackEntry.arguments?.getString(AppDestination.LIST_DESCRIPTION_ARG)
+
+            // DECODIFICAR os parâmetros aqui
+            val listName = encodedListName?.let {
+                java.net.URLDecoder.decode(it, "UTF-8")
+            } ?: ""
+            val listDescription = encodedListDescription?.let {
+                if (it.isNotBlank()) java.net.URLDecoder.decode(it, "UTF-8") else ""
+            } ?: ""
+
+            if (listId != null) {
+                FormularioScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    isEditMode = true,
+                    listId = listId,
+                    initialName = listName, // Agora está decodificado
+                    initialDescription = listDescription // Agora está decodificado
+                )
+            }
         }
 
         composable(

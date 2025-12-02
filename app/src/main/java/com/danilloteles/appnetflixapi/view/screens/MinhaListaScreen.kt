@@ -7,7 +7,9 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,6 +18,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ColorScheme
@@ -70,6 +74,7 @@ import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -85,7 +90,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun MinhaListaScreen(
     onNavigateToConteudo: (listId: String, listName: String) -> Unit,
-    onNavigateToFormulario: () -> Unit
+    onNavigateToFormulario: () -> Unit,
+    onNavigateToEditList: (listId: String, listName: String, listDescription: String?) -> Unit
 ) {
     val context = LocalContext.current
     val viewModel: MinhaListaViewModel = viewModel(
@@ -269,7 +275,7 @@ fun MinhaListaScreen(
                                         items = state.data,
                                         key = { tmdbList -> tmdbList.id }
                                     ) { tmdbList ->
-                                        DeletableListItem(
+                                        /*DeletableListItem(
                                             item = tmdbList,
                                             onDeleteRequest = {
                                                 itemToDelete = it
@@ -282,6 +288,35 @@ fun MinhaListaScreen(
                                                         contentKey = MovieNavItemData(clickedItem.id.toString(), clickedItem.name)
                                                     )
                                                 }
+                                            },
+                                            onEditClick = { clickedItem ->
+                                                onNavigateToEditList(
+                                                    clickedItem.id.toString(),
+                                                    clickedItem.name,
+                                                    clickedItem.description
+                                                )
+                                            }
+                                        )*/
+                                        SwipeableListItem( // NOVA FUNÇÃO COM SWIPE DUPLO
+                                            item = tmdbList,
+                                            onDeleteRequest = {
+                                                itemToDelete = it
+                                                showDeleteConfirmation = true
+                                            },
+                                            onItemClick = { clickedItem ->
+                                                coroutineScope.launch {
+                                                    scaffoldNavigator.navigateTo(
+                                                        pane = ListDetailPaneScaffoldRole.Detail,
+                                                        contentKey = MovieNavItemData(clickedItem.id.toString(), clickedItem.name)
+                                                    )
+                                                }
+                                            },
+                                            onEditRequest = { clickedItem ->
+                                                onNavigateToEditList(
+                                                    clickedItem.id.toString(),
+                                                    clickedItem.name,
+                                                    clickedItem.description
+                                                )
                                             }
                                         )
                                     }
@@ -304,7 +339,7 @@ fun MinhaListaScreen(
                                 movieId = navItem.itemId.toInt(),
                                 listId = navItem.listId,
                                 onBackClick = { coroutineScope.launch { scaffoldNavigator.navigateBack() } },
-                                onClick = { /* No-op, navigation is handled by scaffoldNavigator */ }
+                                onClick = { }
                             )
                         }
                         navItem.mediaType == "tv" && navItem.itemId != null -> {
@@ -312,7 +347,7 @@ fun MinhaListaScreen(
                                 serieId = navItem.itemId.toInt(),
                                 listId = navItem.listId,
                                 onBackClick = { coroutineScope.launch { scaffoldNavigator.navigateBack() } },
-                                onClick = { /* No-op, navigation is handled by scaffoldNavigator */ }
+                                onClick = { }
                             )
                         }
                         else -> {
@@ -361,10 +396,117 @@ fun MinhaListaScreen(
 }
 
 @Composable
+private fun SwipeableListItem(
+    item: TmdbListV4,
+    onDeleteRequest: (TmdbListV4) -> Unit,
+    onItemClick: (TmdbListV4) -> Unit,
+    onEditRequest: (TmdbListV4) -> Unit // NOVA FUNÇÃO PARA EDITAR
+) {
+    val dismissState = rememberSwipeToDismissBoxState()
+    val scope = rememberCoroutineScope()
+
+    SwipeToDismissBox(
+        state = dismissState,
+        backgroundContent = {
+            val color by animateColorAsState(
+                when (dismissState.targetValue) {
+                    SwipeToDismissBoxValue.Settled -> Color.LightGray
+                    SwipeToDismissBoxValue.StartToEnd -> Color.Blue // AZUL PARA EDITAR (direita → esquerda)
+                    SwipeToDismissBoxValue.EndToStart -> Color.Red // VERMELHO PARA REMOVER (esquerda → direita)
+                }, label = "background color"
+            )
+
+            Box(
+                modifier = Modifier.fillMaxSize().background(color),
+                contentAlignment = when (dismissState.targetValue) {
+                    SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
+                    SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
+                    else -> Alignment.Center
+                }
+            ) {
+                when (dismissState.targetValue) {
+                    SwipeToDismissBoxValue.StartToEnd -> {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalArrangement = Arrangement.Start,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Editar",
+                                tint = Color.White
+                            )
+                            Text(
+                                text = "Editar",
+                                color = Color.White,
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
+                        }
+                    }
+                    SwipeToDismissBoxValue.EndToStart -> {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalArrangement = Arrangement.End,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Remover",
+                                color = Color.White,
+                                modifier = Modifier.padding(end = 8.dp)
+                            )
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Remover",
+                                tint = Color.White
+                            )
+                        }
+                    }
+                    else -> {}
+                }
+            }
+        },
+        onDismiss = { direction ->
+            when (direction) {
+                SwipeToDismissBoxValue.StartToEnd -> {
+                    // SWIPE DA ESQUERDA PARA DIREITA = EDITAR
+                    onEditRequest(item)
+                }
+                SwipeToDismissBoxValue.EndToStart -> {
+                    // SWIPE DA DIREITA PARA ESQUERDA = REMOVER
+                    onDeleteRequest(item)
+                }
+                else -> {}
+            }
+            scope.launch {
+                dismissState.reset()
+            }
+        },
+    ) {
+        ListItem(
+            headlineContent = { Text(item.name) },
+            supportingContent = {
+                Text(
+                    text = "${item.number_of_items} conteúdos. Deslize → para editar ou ← para remover.",
+                    fontSize = 12.sp
+                )
+            },
+            colors = ListItemDefaults.colors(
+                containerColor = Color.Black,
+                headlineColor = Color.White,
+                supportingColor = Color.White
+            ),
+            modifier = Modifier.clickable { onItemClick(item) }
+        )
+    }
+}
+
+
+/*@Composable
 private fun DeletableListItem(
     item: TmdbListV4,
     onDeleteRequest: (TmdbListV4) -> Unit,
-    onItemClick: (TmdbListV4) -> Unit
+    onItemClick: (TmdbListV4) -> Unit,
+    onEditClick: (TmdbListV4) -> Unit
 ) {
     val dismissState = rememberSwipeToDismissBoxState()
     val scope = rememberCoroutineScope()
@@ -393,6 +535,15 @@ private fun DeletableListItem(
         ListItem(
             headlineContent = { Text(item.name) },
             supportingContent = { Text(text = "${item.number_of_items} conteúdos. Deslize para a esquerda para remover.", fontSize = 12.sp) },
+            trailingContent = {
+                IconButton(onClick = { onEditClick(item) }) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Editar Lista",
+                        tint = Color.White
+                    )
+                }
+            },
             colors = ListItemDefaults.colors(
                 containerColor = Color.Black,
                 headlineColor = Color.White,
@@ -401,7 +552,7 @@ private fun DeletableListItem(
             modifier = Modifier.clickable { onItemClick(item) }
         )
     }
-}
+}*/
 
 @Composable
 private fun ConfirmationAlertDialog(
@@ -486,6 +637,7 @@ fun fabMenuColorScheme(): ColorScheme {
 private fun MinhaListaScreenPreview(){
     MinhaListaScreen(
         onNavigateToConteudo = { _, _ -> },
-        onNavigateToFormulario = {}
+        onNavigateToFormulario = {},
+        onNavigateToEditList = { _, _, _ -> }
     )
 }

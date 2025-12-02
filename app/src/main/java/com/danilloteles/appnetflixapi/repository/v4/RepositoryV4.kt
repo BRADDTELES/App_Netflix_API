@@ -5,6 +5,7 @@ import com.danilloteles.appnetflixapi.datasource.datastore.UserPreferencesReposi
 import com.danilloteles.appnetflixapi.model.v4.request.AccessTokenV4Request
 import com.danilloteles.appnetflixapi.model.v4.request.AddItemsV4Request
 import com.danilloteles.appnetflixapi.model.v4.request.CreateListV4Request
+import com.danilloteles.appnetflixapi.model.v4.request.EditListV4Request
 import com.danilloteles.appnetflixapi.model.v4.request.MediaItemV4Request
 import com.danilloteles.appnetflixapi.model.v4.request.RemoveItemsV4Request
 import com.danilloteles.appnetflixapi.model.v4.request.RequestTokenV4Request
@@ -12,6 +13,7 @@ import com.danilloteles.appnetflixapi.model.v4.response.AccessTokenV4Response
 import com.danilloteles.appnetflixapi.model.v4.response.AccountListsV4Response
 import com.danilloteles.appnetflixapi.model.v4.response.AddItemsV4Response
 import com.danilloteles.appnetflixapi.model.v4.response.CreateListV4Response
+import com.danilloteles.appnetflixapi.model.v4.response.EditListV4Response
 import com.danilloteles.appnetflixapi.model.v4.response.ListDetailsV4Response
 import com.danilloteles.appnetflixapi.model.v4.response.RemoveItemsV4Response
 import com.danilloteles.appnetflixapi.model.v4.response.RemoveListV4Response
@@ -64,6 +66,15 @@ class RepositoryV4(
             apiV4.getListDetails(
                 "Bearer $accessToken",
                 listId
+            )
+        }
+
+    suspend fun editList(accessToken: String, listId: String, nome: String?, descricao: String?): Result<EditListV4Response> =
+        safeApiCall {
+            apiV4.editList(
+                "Bearer $accessToken",
+                listId,
+                EditListV4Request(name = nome, description = descricao)
             )
         }
 

@@ -12,6 +12,9 @@ object AppDestination {
     const val FILMES_LIST_SCREEN = "filmes_list"
     const val MY_MOVIE_DETAILS = "my_movie_details"
     const val MY_SERIES_DETAILS = "my_serie_details"
+    const val EDIT_LIST_SCREEN = "edit_list"
+    const val LIST_NAME_ARG = "listName"
+    const val LIST_DESCRIPTION_ARG = "listDescription"
 
     const val MOVIE_ID_ARG = "movieId"
     const val SERIE_ID_ARG = "serieId"
@@ -26,4 +29,5 @@ object AppDestination {
     val LIST_FORM_ROUTE = LIST_FORM_SCREEN
     val MY_MOVIE_DETAILS_ROUTE = "$MY_MOVIE_DETAILS/{$MOVIE_ID_ARG}?$LIST_ID_ARG={$LIST_ID_ARG}"
     val MY_SERIES_DETAILS_ROUTE = "$MY_SERIES_DETAILS/{$SERIE_ID_ARG}?$LIST_ID_ARG={$LIST_ID_ARG}"
+    val EDIT_LIST_ROUTE = "$EDIT_LIST_SCREEN/{$LIST_ID_ARG}/{$LIST_NAME_ARG}?${LIST_DESCRIPTION_ARG}={${LIST_DESCRIPTION_ARG}}"
 }

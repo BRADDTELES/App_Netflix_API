@@ -58,7 +58,11 @@ import kotlinx.coroutines.delay
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FormularioScreen(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    isEditMode: Boolean = false,
+    listId: String? = null,
+    initialName: String = "",
+    initialDescription: String = ""
 ) {
     val context = LocalContext.current
     val viewModel: FormularioViewModel = viewModel(
@@ -72,14 +76,15 @@ fun FormularioScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var listName by remember { mutableStateOf("") }
-    var listDescription by remember { mutableStateOf("") }
+    var listName by remember { mutableStateOf(initialName) }
+    var listDescription by remember { mutableStateOf(initialDescription) }
 
     LaunchedEffect(uiState) {
         when (val state = uiState) {
             is UiState.Success -> {
-                snackbarHostState.showSnackbar("Lista criada com sucesso!")
-                delay(500) // Dá tempo para o usuário ver o snackbar
+                val message = if (isEditMode) "Lista atualizada com sucesso!" else "Lista criada com sucesso!"
+                snackbarHostState.showSnackbar(message)
+                delay(1500) // Dá tempo para o usuário ver o snackbar
                 onNavigateBack()
             }
             is UiState.Error -> {
@@ -94,7 +99,7 @@ fun FormularioScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Nova Lista",
+                        text = if (isEditMode) "Editar Lista" else "Nova Lista",
                         color = WHITE,
                         fontWeight = FontWeight.Normal,
                         style = MaterialTheme.typography.headlineMedium)
@@ -163,7 +168,6 @@ fun FormularioScreen(
                 singleLine = false,
             )
 
-
             Spacer(modifier = Modifier.padding(bottom = 40.dp))
 
             if (uiState is UiState.Loading) {
@@ -172,7 +176,15 @@ fun FormularioScreen(
                 Button(
                     onClick = {
                         if (listName.isNotBlank()) {
-                            viewModel.createList(listName, listDescription)
+                            if (isEditMode && listId != null) {
+                                viewModel.editList(
+                                    listId = listId,
+                                    name = listName,
+                                    description = listDescription.takeIf { it.isNotBlank() }
+                                )
+                            } else {
+                                viewModel.createList(listName, listDescription)
+                            }
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
@@ -188,12 +200,12 @@ fun FormularioScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.SaveAs,
-                        contentDescription = "Salvar",
+                        contentDescription = if (isEditMode) "Salvar Alterações" else "Salvar",
                         tint = WHITE
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "SALVAR",
+                        text = if (isEditMode) "SALVAR ALTERAÇÕES" else "SALVAR",
                         color = WHITE,
                         fontWeight = FontWeight.SemiBold
                     )

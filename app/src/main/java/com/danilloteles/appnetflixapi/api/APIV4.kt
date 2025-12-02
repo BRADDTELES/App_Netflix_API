@@ -3,12 +3,14 @@ package com.danilloteles.appnetflixapi.api
 import com.danilloteles.appnetflixapi.model.v4.request.AccessTokenV4Request
 import com.danilloteles.appnetflixapi.model.v4.request.AddItemsV4Request
 import com.danilloteles.appnetflixapi.model.v4.request.CreateListV4Request
+import com.danilloteles.appnetflixapi.model.v4.request.EditListV4Request
 import com.danilloteles.appnetflixapi.model.v4.request.RemoveItemsV4Request
 import com.danilloteles.appnetflixapi.model.v4.request.RequestTokenV4Request
 import com.danilloteles.appnetflixapi.model.v4.response.AccessTokenV4Response
 import com.danilloteles.appnetflixapi.model.v4.response.AccountListsV4Response
 import com.danilloteles.appnetflixapi.model.v4.response.AddItemsV4Response
 import com.danilloteles.appnetflixapi.model.v4.response.CreateListV4Response
+import com.danilloteles.appnetflixapi.model.v4.response.EditListV4Response
 import com.danilloteles.appnetflixapi.model.v4.response.ListDetailsV4Response
 import com.danilloteles.appnetflixapi.model.v4.response.RemoveItemsV4Response
 import com.danilloteles.appnetflixapi.model.v4.response.RemoveListV4Response
@@ -20,6 +22,7 @@ import retrofit2.http.GET
 import retrofit2.http.HTTP
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 
 interface APIV4 {
@@ -50,6 +53,13 @@ interface APIV4 {
         @Header("Authorization") authorization: String,
         @Path("list_id") listId: String
     ): ListDetailsV4Response
+
+    @PUT("list/{list_id}")
+    suspend fun editList(
+        @Header("Authorization") authorization: String,
+        @Path("list_id") listId: String,
+        @Body body: EditListV4Request
+    ): EditListV4Response
 
     @DELETE("list/{list_id}")
     suspend fun removeList(
