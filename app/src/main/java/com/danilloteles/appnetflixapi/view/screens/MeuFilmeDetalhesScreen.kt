@@ -520,7 +520,7 @@ fun MeuConteudoFilmeDetalhes(
                     val displayOverview = LanguageHelper.getDisplayOverview(filme.overview)
 
                     Text(
-                        text = displayOverview,
+                        text = displayOverview ?: filme.overview,
                         color = WHITE,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,

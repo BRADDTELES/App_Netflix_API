@@ -38,6 +38,7 @@ import com.danilloteles.appnetflixapi.repository.v3.FilmeRepository
 import com.danilloteles.appnetflixapi.retrofit.RetrofitHelper
 import com.danilloteles.appnetflixapi.ui.theme.BLACK
 import com.danilloteles.appnetflixapi.ui.theme.WHITE
+import com.danilloteles.appnetflixapi.utils.common.LanguageHelper
 import com.danilloteles.appnetflixapi.utils.events.UiState
 import com.danilloteles.appnetflixapi.view.componentes.LoadingIndicatorCustom
 import com.danilloteles.appnetflixapi.view.componentes.NetflixTopBar
@@ -123,21 +124,40 @@ fun ConteudoFilme(
                     contentDescription = "Imagem da capa do filme",
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(1.5f / 2f),
+                        .aspectRatio(1.5f / 2.5f),
                     contentScale = ContentScale.Crop
                 )
             }
             Spacer(modifier = Modifier.height(16.dp))
+            val displayTitle = LanguageHelper.getDisplayTitle(
+                title = filme.title,
+                originalTitle = filme.original_title
+            )
+            val isTranslated = LanguageHelper.isTranslated(
+                title = filme.title,
+                originalTitle = filme.original_title
+            )
             Text(
-                text = filme.title,
+                text = displayTitle,
                 color = WHITE,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
+            // Mostrar título original se for traduzido
+            if (isTranslated) {
+                Text(
+                    text = filme.original_title,
+                    color = WHITE.copy(alpha = 0.7f),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Normal,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                )
+            }
             Spacer(modifier = Modifier.height(16.dp))
+            val displayOverview = LanguageHelper.getDisplayOverview(filme.overview)
             Text(
-                text = filme.overview,
+                text = displayOverview,
                 color = WHITE,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,

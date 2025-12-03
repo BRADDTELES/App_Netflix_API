@@ -20,7 +20,7 @@ object LanguageHelper {
     fun getDisplayOverview(overview: String?): String {
         return when {
             !overview.isNullOrBlank() -> overview
-            else -> "Sinopse não disponível."
+            else -> "Sinopse em português não disponível."
         }
     }
 

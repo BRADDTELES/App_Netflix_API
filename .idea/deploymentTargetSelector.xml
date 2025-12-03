@@ -13,9 +13,6 @@
         </DropdownSelection>
         <DialogSelection />
       </SelectionState>
-      <SelectionState runConfigName="NetflixVideoPlayerPreview">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
       <SelectionState runConfigName="MeuConteudoFilmeDetalhesPreview">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
