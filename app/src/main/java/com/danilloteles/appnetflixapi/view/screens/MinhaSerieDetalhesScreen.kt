@@ -297,9 +297,9 @@ fun MeuConteudoSerieDetalhes(
                 TopAppBar(
                     title = {
                         Text(
-                            text = "Netflix",
+                            text = "Detalhes",
                             color = Color.White,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.W400,
                             style = MaterialTheme.typography.headlineMedium
                         )
                     },

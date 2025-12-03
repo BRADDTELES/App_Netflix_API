@@ -2,5 +2,8 @@
 <resources>
 
     <style name="Theme.AppNetflixAPI" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.StreamDTCSplashScreen" parent="Theme.SplashScreen" >
+
+    </style>
 
 </resources>

@@ -52,7 +52,7 @@ fun MenuSection(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(horizontal = 8.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -75,8 +75,6 @@ fun NetflixNavegacaoRow(
     onFilmesListClick: () -> Unit = {}
 ) {
 
-    val imagemLogo = R.drawable.logo
-
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Start,
@@ -84,26 +82,26 @@ fun NetflixNavegacaoRow(
     ) {
 
         AsyncImage(
-            model = imagemLogo,
-            contentDescription = "Logo da Netflix",
-            modifier = Modifier.size(48.dp)
+            model = R.drawable.slogan_transparente,
+            contentDescription = "Logo StreamDTC",
+            modifier = Modifier.size(100.dp)
         )
 
-        Spacer(modifier = Modifier.width(24.dp))
+        Spacer(modifier = Modifier.width(8.dp))
 
         TextButtonSample(
             onClick = onSeriesListClick,
             texto = "Séries"
         )
 
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(8.dp))
 
         TextButtonSample(
             onClick = onFilmesListClick,
             texto = "Filmes"
         )
 
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(8.dp))
 
         TextButtonSample(
             onClick = onMyListClick,

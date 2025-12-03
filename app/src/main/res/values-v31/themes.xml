@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.AppNetflixAPI" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.StreamDTCSplashScreen" parent="Theme.SplashScreen" >
+        <item name="windowSplashScreenAnimatedIcon">@drawable/icon_streamdtc</item>
+        <!--<item name="android:windowSplashScreenBrandingImage">@drawable/icon_streamdtc_alt1</item>-->
+        <item name="android:windowSplashScreenBackground">@color/black</item>
+        <item name="postSplashScreenTheme">@style/Theme.AppNetflixAPI</item>
+    </style>
+
+</resources>

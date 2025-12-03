@@ -16,9 +16,9 @@ fun NetflixTopBar() {
     TopAppBar(
         title = {
             Text(
-                text = "NetFlix",
+                text = "StreamDTC",
                 color = Color.White,
-                fontWeight = FontWeight.SemiBold,
+                fontWeight = FontWeight.W500,
                 style = MaterialTheme.typography.headlineMedium
             )
         },

@@ -87,13 +87,10 @@ fun SplashScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Image(
-                painter = painterResource(R.drawable.ic_netflix_splash),
-                contentDescription = "Netflix Logo",
-                modifier = Modifier.size(120.dp),
-                colorFilter = ColorFilter.tint(VERMELHO)
+                painter = painterResource(R.drawable.slogan_transparente),
+                contentDescription = "StreamDTC Logo",
+                modifier = Modifier.size(200.dp)
             )
-
-            Spacer(modifier = Modifier.height(32.dp))
             IndeterminateCircularProgressIndicatorSample()
         }
 

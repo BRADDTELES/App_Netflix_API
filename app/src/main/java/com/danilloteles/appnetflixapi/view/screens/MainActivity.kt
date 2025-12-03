@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -41,17 +42,24 @@ import com.danilloteles.appnetflixapi.view.componentes.NetflixTopBar
 import com.danilloteles.appnetflixapi.view.componentes.PopularMoviesSection
 import com.danilloteles.appnetflixapi.view.navigation.NetflixApp
 import com.danilloteles.appnetflixapi.viewmodel.PopularFilmeViewModel
+import com.danilloteles.appnetflixapi.viewmodel.SplashScreenViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 class MainActivity : ComponentActivity() {
+
+    private val splashScreenViewModel : SplashScreenViewModel by lazy {
+        ViewModelProvider(this@MainActivity)[SplashScreenViewModel::class.java]
+    }
 
     companion object {
         val deeplinkRequestToken: MutableStateFlow<String?> = MutableStateFlow(null)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        installSplashScreen().apply {
+            setKeepOnScreenCondition { splashScreenViewModel.isSplashScreenVisible.value }
+        }
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 

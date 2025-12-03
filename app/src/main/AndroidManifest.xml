@@ -28,12 +28,12 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AppNetflixAPI">
+        android:theme="@style/Theme.StreamDTCSplashScreen">
         <activity
             android:name=".view.screens.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.AppNetflixAPI"
+            android:theme="@style/Theme.StreamDTCSplashScreen"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize"
             android:launchMode="singleTask">
             <intent-filter>

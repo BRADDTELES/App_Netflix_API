@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "App Netflix API"
+rootProject.name = "StreamDTC"
 include(":app")
