@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamDTC - Apresentação do App</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <header>
+        <nav>
+            <div class="logo">StreamDTC</div>
+            <ul>
+                <li><a href="#sobre">Sobre</a></li>
+                <li><a href="#telas">Telas</a></li>
+                <li><a href="#tecnologias">Tecnologias</a></li>
+                <li><a href="#desafios">Desafios</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="hero">
+            <div class="hero-content">
+                <h1>StreamDTC</h1>
+                <p>Uma experiência de streaming moderna, construída com as melhores tecnologias Android.</p>
+                <a href="https://youtube.com/shorts/ZeeMcsxKFPw" target="_blank" class="cta-button">Ver Demonstração em Vídeo</a>
+            </div>
+        </section>
+
+        <section id="sobre" class="content-section">
+            <h2>Sobre o Projeto</h2>
+            <p>
+                StreamDTC é um aplicativo Android que simula uma interface de streaming como a da Netflix, utilizando a API do The Movie DB (TMDB) como fonte de dados. O projeto foi desenvolvido como um estudo aprofundado sobre arquitetura de software moderna no Android, componentização de UI com Jetpack Compose e a integração de APIs robustas.
+            </p>
+        </section>
+
+        <section id="telas" class="content-section">
+            <h2>Telas do Aplicativo</h2>
+            <div class="gallery-wrapper">
+                <div class="scroll-indicator-left">&lt;</div>
+                <div class="gallery">
+                    <img src="img/1. tela_principal.png" alt="Tela Principal">
+                    <img src="img/2. tela_detalhes.png" alt="Tela de Detalhes">
+                    <img src="img/3. tela_filmes.png" alt="Tela de Filmes">
+                    <img src="img/4. tela_series.png" alt="Tela de Séries">
+                    <img src="img/5. tela_minha_listas.png" alt="Tela Minhas Listas">
+                    <img src="img/6. tela_detalhes_da_lista.png" alt="Tela Detalhes da Lista">
+                    <img src="img/7. tela_formulario.png" alt="Tela de Formulário">
+                    <img src="img/8. tela_splashscreen.png" alt="Tela de SplashScreen">
+                </div>
+                <div class="scroll-indicator-right">&gt;</div>
+            </div>
+        </section>
+        
+        <section id="video-section" class="content-section">
+            <h2>Demonstração Rápida</h2>
+            <div class="video-container">
+                <a href="https://youtube.com/shorts/ZeeMcsxKFPw" target="_blank" title="Clique para assistir">
+                    <img src="https://i.ytimg.com/vi/ZeeMcsxKFPw/hqdefault.jpg" alt="Demonstração do App StreamDTC">
+                </a>
+            </div>
+        </section>
+
+        <section id="tecnologias" class="content-section">
+            <h2>Tecnologias e Arquitetura</h2>
+            <div class="tech-grid">
+                <div class="tech-card">
+                    <h3>UI Moderna</h3>
+                    <p>Interface construída 100% com <strong>Jetpack Compose</strong>, com ênfase no <strong>Material 3 Expressive</strong> para temas adaptáveis e componentes dinâmicos que enriquecem a experiência visual.</p>
+                </div>
+                <div class="tech-card">
+                    <h3>Arquitetura MVVM</h3>
+                    <p>Utilização do padrão <strong>Model-View-ViewModel</strong> para uma separação clara de responsabilidades, facilitando a manutenção e escalabilidade do código.</p>
+                </div>
+                <div class="tech-card">
+                    <h3>Carregamento e Gerenciamento de Imagens com Coil</h3>
+                    <p>Utilização da biblioteca <strong>Coil</strong> para o carregamento eficiente, exibição e cache de imagens de filmes e séries, garantindo uma interface fluida e de alta performance visual, essencial para um aplicativo rico em mídia.</p>
+                </div>
+                <div class="tech-card">
+                    <h3>API The Movie DB (v3 & v4)</h3>
+                    <p>Integração com as versões v3 e v4 da API, utilizando <strong>Retrofit</strong> e <strong>Ktor</strong> para comunicação de rede e realizando operações GET, POST, PUT e DELETE.</p>
+                </div>
+                <div class="tech-card">
+                    <h3>Dados e Paginação</h3>
+                    <p><strong>Paging 3</strong> para carregamento eficiente de listas infinitas e <strong>DataStore</strong> para persistência de dados locais de forma assíncrona.</p>
+                </div>
+                <div class="tech-card">
+                    <h3>Assincronismo</h3>
+                    <p><strong>Kotlin Coroutines & Flow</strong> para gerenciar operações em background de forma reativa e eficiente, garantindo uma UI sempre fluida.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="desafios" class="content-section">
+            <h2>Desafios e Soluções</h2>
+            <div class="challenge-card">
+                <h3>Autenticação via WebView e Polling</h3>
+                <p>Um dos maiores desafios foi a autenticação. Para obter o access token sem que o usuário saísse do app, implementei um fluxo com <strong>OpenWebView</strong>. A aplicação monitora o processo de autenticação usando uma técnica de <strong>Polling</strong>, capturando o token assim que ele é gerado. A diferença entre os fluxos de autenticação das APIs v3 e v4 da TMDb exigiu ajustes precisos para garantir a estabilidade.</p>
+            </div>
+            <div class="challenge-card">
+                <h3>Conflito de IDs e a Migração para a API v4</h3>
+                <p>Na API v3, ao adicionar filmes e séries a uma mesma lista, encontrei um problema crítico: os IDs de filmes podiam ser iguais aos de séries, causando a exibição de dados incorretos. A solução foi migrar para a <strong>API v4</strong>, que utiliza identificadores únicos para cada tipo de mídia. Essa mudança não apenas corrigiu o problema, mas também abriu portas para funcionalidades mais avançadas, como a manipulação completa de listas com requisições <strong>POST, PUT e DELETE</strong>.</p>
+            </div>
+            <div class="challenge-card">
+                <h3>Aprendizados</h3>
+                <p>A customização da UI foi muito facilitada pelo <strong>Material 3 Expressive</strong>, que permitiu a criação de temas adaptáveis de forma simples. Essas experiências reforçaram a importância de testar exaustivamente a integração com APIs e de não hesitar em migrar para versões mais novas e robustas quando um obstáculo técnico fundamental aparece. </p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>
+            <a href="https://opensource.org/licenses/MIT" target="_blank"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+        </p>
+        <p>Projeto StreamDTC desenvolvido por Danillo Teles.</p>
+    </footer>
+
+    <script src="javascript/script.js"></script>
+</body>
+</html>
