@@ -9,9 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -22,13 +20,13 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -45,17 +43,25 @@ fun SplashScreen(
 
     val context = LocalContext.current
 
-    DisposableEffect(Unit) {
-        val mediaPlayer = MediaPlayer.create(context, R.raw.netflix_intro)
-        mediaPlayer.start()
-        onDispose {
-            mediaPlayer.release()
-        }
-    }
+    // Controla o lifecycle do MediaPlayer
+    var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
 
     LaunchedEffect(Unit) {
-        delay(6000)
+        // Delay para sincronizar com a animação (ex: 1000ms = 1 segundo após a tela aparecer)
+        delay(500) // AJUSTE ESSE VALOR CONFORME SUA ANIMAÇÃO
+        val player  = MediaPlayer.create(context, R.raw.netflix_intro)
+        mediaPlayer = player
+        player.start()
+        delay(5000) // 6000ms total - 1000ms de delay = 5000ms restantes
         onTimeout()
+    }
+
+    // Libera o MediaPlayer quando a composição é descartada
+    DisposableEffect(Unit) {
+        onDispose {
+            mediaPlayer?.release()
+            mediaPlayer = null
+        }
     }
 
     Box(

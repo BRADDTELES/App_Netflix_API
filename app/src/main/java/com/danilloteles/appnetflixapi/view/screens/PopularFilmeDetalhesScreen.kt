@@ -142,7 +142,7 @@ fun ConteudoFilme(
                     contentDescription = "Imagem da capa do filme",
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(1.5f / 2.5f),
+                        .aspectRatio(1.5f / 2f),
                     contentScale = ContentScale.Crop
                 )
             }

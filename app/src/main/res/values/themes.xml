@@ -3,7 +3,12 @@
 
     <style name="Theme.AppNetflixAPI" parent="android:Theme.Material.Light.NoActionBar" />
     <style name="Theme.StreamDTCSplashScreen" parent="Theme.SplashScreen" >
-
+        <!-- Ícone estático para APIs < 31 -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/icon_streamdtc</item>
+        <!-- Fundo compatível -->
+        <item name="windowSplashScreenBackground">@color/black</item>
+        <!-- Tema após o splash -->
+        <item name="postSplashScreenTheme">@style/Theme.AppNetflixAPI</item>
     </style>
 
 </resources>
